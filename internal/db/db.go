@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/imba28/spolyr/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -122,24 +121,38 @@ func New(username, password string) (*Access, error) {
 	}
 
 	db := client.Database("spolyr")
-	idxOptions := options.Index()
-	idxOptions.SetName("fulltext_index").SetWeights(map[string]int{
-		"name":       9,
-		"artist":     5,
-		"album_name": 4,
-		"lyrics":     2,
-	})
-	idx := mongo.IndexModel{
-		Keys:    bson.M{"name": "text", "artist": "text", "album_name": "text"},
-		Options: idxOptions,
-	}
-	_, err = db.Collection(model.TrackCollection).Indexes().CreateOne(ctx, idx)
+	err = createIndices(db)
 	if err != nil {
-		fmt.Sprintln(err)
 		return nil, err
 	}
+
 	return &Access{
 		db,
 		context.TODO(),
 	}, nil
+}
+
+func createIndices(db *mongo.Database) error {
+	_, err := db.Collection(model.TrackCollection).Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{Key: "spotify_id", Value: 1}},
+			Options: options.Index().SetUnique(true).SetName("spotify_id_index"),
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	fullTextIndex := mongo.IndexModel{
+		Keys: bson.M{"name": "text", "artist": "text", "album_name": "text"},
+		Options: options.Index().SetName("fulltext_index").SetWeights(map[string]int{
+			"name":       9,
+			"artist":     5,
+			"album_name": 4,
+			"lyrics":     2,
+		}),
+	}
+	_, err = db.Collection(model.TrackCollection).Indexes().CreateOne(context.Background(), fullTextIndex)
+	return err
 }
