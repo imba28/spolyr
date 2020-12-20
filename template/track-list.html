@@ -1,5 +1,5 @@
 {{ define "track-list" }}
-    <table class="table" id="tracks">
+    <table class="table table-sm table-hover" id="tracks">
         <thead class="thead-light">
         <tr>
             <th scope="col">Title</th>
@@ -17,19 +17,15 @@
             <td>{{ .AlbumName }}</td>
             <td>
                 {{ if .Loaded }}
-                    <div>
-                        <small><i class="fas fa-quote-right" title="Lyrics available"></i></small>
-                    </div>
+                    <small><i class="fas fa-quote-right" title="Lyrics available"></i></small>
                 {{ end }}
 
                 {{ if .PreviewURL }}
-                    <div>
-                        <small><i class="fas fa-music" title="Audio snippet available"></i></small>
-                    </div>
+                    <small><i class="fas fa-music" title="Audio snippet available"></i></small>
                 {{ end }}
             </td>
             <td class="text-right">
-                <a href="/tracks/id/{{ .SpotifyID }}" class="btn btn-primary">Details</a><br>
+                <a href="/tracks/id/{{ .SpotifyID }}" class="btn btn-primary btn-sm">Details</a><br>
             </td>
         </tr>
         {{ end }}
