@@ -16,6 +16,18 @@
                             Tracks without lyrics
                         </a>
                     </li>
+                    {{ if .User }}
+                        <li>
+                            <a href="/sync-tracks" class="text-light">
+                                Sync tracks
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/sync-lyrics" class="text-light">
+                                Download lyrics
+                            </a>
+                        </li>
+                    {{ end }}
                 </ul>
             </div>
 

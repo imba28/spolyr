@@ -53,10 +53,11 @@
                         <div  class="card-body">
                             <h3 class="card-title">
                                 Lyrics
-
-                                <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="d-inline-block">
-                                    <small><i class="fas fa-edit"></i></small>
-                                </a>
+                                {{ if .User }}
+                                    <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="d-inline-block">
+                                        <small><i class="fas fa-edit"></i></small>
+                                    </a>
+                                {{ end }}
                             </h3>
 
                             <div class="card-text">
@@ -68,6 +69,6 @@
             </div>
         </div>
     </div>
-    {{ template "footer" }}
+    {{ template "footer" . }}
 </body>
 </html>
