@@ -1,25 +1,31 @@
 {{ define "track-list" }}
-    <table class="table">
+    <table class="table" id="tracks">
         <thead class="thead-light">
         <tr>
             <th scope="col">Title</th>
             <th scope="col">Artist</th>
             <th scope="col">Album</th>
-            <th scope="col">Lyrics?</th>
+            <th scope="col"></th>
             <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
         {{ range . }}
-        <tr>
+        <tr data-preview-url="{{ .PreviewURL }}">
             <td>{{ .Name }}</td>
             <td>{{ .Artist }}</td>
             <td>{{ .AlbumName }}</td>
             <td>
                 {{ if .Loaded }}
-                Yes
-                {{ else }}
-                No
+                    <div>
+                        <small><i class="fas fa-quote-right" title="Lyrics available"></i></small>
+                    </div>
+                {{ end }}
+
+                {{ if .PreviewURL }}
+                    <div>
+                        <small><i class="fas fa-music" title="Audio snippet available"></i></small>
+                    </div>
                 {{ end }}
             </td>
             <td class="text-right">
@@ -29,4 +35,30 @@
         {{ end }}
         </tbody>
     </table>
+    <audio class="hide" id="player"></audio>
+    <script>
+        let timeout = null
+        const tracks = document.querySelectorAll("#tracks tbody tr")
+        const audio = document.getElementById("player");
+
+        tracks.forEach(function(track) {
+            track.addEventListener("mouseenter", function() {
+                clearTimeout(timeout)
+                if (!track.dataset.previewUrl) {
+                    return
+                }
+
+                timeout = setTimeout(function() {
+                    console.log("started playing", track.dataset.previewUrl)
+                    audio.src = track.dataset.previewUrl
+                    audio.play()
+                }, 300)
+            })
+            track.addEventListener("mouseleave", function() {
+                clearTimeout(timeout)
+                audio.pause();
+                audio.currentTime = 0;
+            })
+        })
+    </script>
 {{ end }}
