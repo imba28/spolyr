@@ -21,6 +21,15 @@ func (a Access) FindTrack(spotifyID string) (*model.Track, error) {
 	return &t, a.db.Collection(model.TrackCollection).FindOne(a.ctx, filter).Decode(&t)
 }
 
+func (a Access) TracksWithoutLyrics() ([]*model.Track, error) {
+	filter := bson.M{"loaded": bson.M{"$ne": true}}
+	res, err := a.db.Collection(model.TrackCollection).Find(a.ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	return a.decodeTracks(res)
+}
+
 func (a Access) TracksWithLyricsCount() (int64, error) {
 	filter := bson.M{"loaded": bson.M{"$eq": true}}
 	return a.db.Collection(model.TrackCollection).CountDocuments(a.ctx, filter)

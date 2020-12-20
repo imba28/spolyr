@@ -58,6 +58,22 @@ func (co Controller) TrackDetailHandler(c *gin.Context) {
 	})
 }
 
+func (co Controller) TrackMissingLyricsHandler(c *gin.Context) {
+	tracks, err := co.db.TracksWithoutLyrics()
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	session := sessions.Default(c)
+	userEmail := session.Get("userEmail")
+
+	c.HTML(http.StatusOK, "tracks.html", gin.H{
+		"Tracks": tracks,
+		"User":   userEmail,
+	})
+}
+
 func (co Controller) TrackSearchHandler(c *gin.Context) {
 	query := c.Query("q")
 

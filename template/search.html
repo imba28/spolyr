@@ -10,22 +10,24 @@
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="container">
-    {{ template "navbar" . }}
+    <div class="container">
+        {{ template "navbar" . }}
 
-    <form method="get" action="/search" class="mt-5 mb-4">
-        <div class="input-group">
-            <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics" value="{{ .Query }}">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
+        <form method="get" action="/search" class="mt-5 mb-4">
+            <div class="input-group">
+                <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics" value="{{ .Query }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </div>
-        </div>
-        <span class="text-muted mt-1">{{ len .Tracks }} search results</span>
-    </form>
+            <span class="text-muted mt-1">{{ len .Tracks }} search results</span>
+        </form>
 
-    {{ template "track-list" .Tracks }}
-</div>
+        {{ template "track-list" .Tracks }}
+    </div>
+{{ template "footer" }}
+
 </body>
 </html>

@@ -28,7 +28,6 @@ func setupRouter() *gin.Engine {
 	})
 	r.LoadHTMLGlob("template/*.html")
 
-
 	controller := api.New(dbConn)
 
 	r.GET("/", controller.HomePageHandler)
@@ -37,7 +36,8 @@ func setupRouter() *gin.Engine {
 	r.GET("/callback", controller.SpotifyAuthCallbackHandler)
 	r.GET("/sync-tracks", controller.TrackSyncHandler)
 	r.GET("/sync-lyrics", controller.LyricsSyncHandler)
-	r.GET("/tracks/:spotifyID", controller.TrackDetailHandler)
+	r.GET("/tracks/id/:spotifyID", controller.TrackDetailHandler)
+	r.GET("/tracks/missing-lyrics", controller.TrackMissingLyricsHandler)
 	r.GET("/search", controller.TrackSearchHandler)
 	r.Static("static", "public")
 

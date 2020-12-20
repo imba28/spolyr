@@ -10,49 +10,52 @@
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="container">
-    {{ template "navbar" . }}
+    <div class="container">
+        {{ template "navbar" . }}
 
-    <div class="mt-2 mb-2">
-        <a href="javascript:window.history.back()" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
+        <div class="mt-2 mb-2">
+            <a href="javascript:window.history.back()" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
 
-    <div class="row">
-        <div class="col-md-4 col-sm-12">
-            <div class="card position-sticky" style="top: 1em">
-                {{ if .Track.ImageURL }}
-                <img class="card-img-top" src="{{ .Track.ImageURL }}" alt="album cover of {{ .Track.AlbumName }} from {{ .Track.Artist }}">
-                {{ end }}
-                <div class="card-body">
-                    <h5 class="card-title">{{ .Track.Name }}</h5>
-                    <p class="card-text">
-                        {{ .Track.Artist }} - {{ .Track.AlbumName }}
-                    </p>
-                    <div class="card-text">
-                        <audio controls preload="none" style="width: 100%">
-                            <source src="{{ .Track.PreviewURL }}" type="audio/mpeg">
-                        </audio>
-                        <a href="https://open.spotify.com/track/{{ .Track.SpotifyID }}" class="d-inline-block mt-1 btn btn-primary" target="_blank">
-                            <i class="fab fa-spotify"></i> to Spotify
-                        </a>
+        <div class="row">
+            <div class="col-md-4 col-sm-12">
+                <div class="card position-sticky" style="top: 1em">
+                    {{ if .Track.ImageURL }}
+                    <img class="card-img-top" src="{{ .Track.ImageURL }}" alt="album cover of {{ .Track.AlbumName }} from {{ .Track.Artist }}">
+                    {{ end }}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ .Track.Name }}</h5>
+                        <p class="card-text">
+                            {{ .Track.Artist }} - {{ .Track.AlbumName }}
+                        </p>
+                        <div class="card-text">
+                            <audio controls preload="none" style="width: 100%">
+                                <source src="{{ .Track.PreviewURL }}" type="audio/mpeg">
+                            </audio>
+                            <a href="https://open.spotify.com/track/{{ .Track.SpotifyID }}" class="d-inline-block mt-1 btn btn-primary" target="_blank">
+                                <i class="fab fa-spotify"></i> to Spotify
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-12">
+                <div class="card">
+                    <div  class="card-body">
+                        <h3 class="card-title">
+                            Lyrics
+                        </h3>
+                        <div class="card-text">
+                            {{ formatHTML .Track.Lyrics }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-8 col-sm-12">
-            <div class="card">
-                <div  class="card-body">
-                    <h3 class="card-title">
-                        Lyrics
-                    </h3>
-                    <div class="card-text">
-                        {{ formatHTML .Track.Lyrics }}
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+
+    {{ template "footer" }}
 </body>
 </html>

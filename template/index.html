@@ -13,7 +13,7 @@
 <div class="container">
     {{ template "navbar" . }}
 
-    <form method="get" action="/search" class="mt-5 mb-4">
+    <form method="get" action="/search" class="mb-4">
         <div class="input-group mb-3">
             <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics">
             <div class="input-group-append">
@@ -35,18 +35,21 @@
         <h3>Latest songs</h3>
         <div class="row">
             {{ range .TracksLatest }}
-                <div class="col-md-3 col-sm-6">
-                    <div class="card">
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card" style="height: 100%">
                         {{ if .ImageURL }}
                         <img class="card-img-top" src="{{ .ImageURL }}" alt="album cover of {{ .AlbumName }} from {{ .Artist }}">
                         {{ end }}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ .Name }}</h5>
-                            <p class="card-text">
-                                {{ .Artist }}
-                            </p>
+                        <div class="card-body d-flex justify-content-between flex-column">
+                            <div>
+                                <h5 class="card-title">{{ .Name }}</h5>
+                                <p class="card-text">
+                                    {{ .Artist }}
+                                </p>
+                            </div>
+
                             <div class="card-text mt-1">
-                                <a href="/tracks/{{ .SpotifyID }}" class="d-inline-block btn btn-primary">
+                                <a href="/tracks/id/{{ .SpotifyID }}" class="d-inline-block btn btn-primary">
                                     Details
                                 </a>
                                 <a href="https://open.spotify.com/track/{{ .SpotifyID }}" class="d-inline-block btn btn-primary" target="_blank">
@@ -60,5 +63,8 @@
         </div>
     {{ end }}
 </div>
+
+{{ template "footer" }}
+
 </body>
 </html>
