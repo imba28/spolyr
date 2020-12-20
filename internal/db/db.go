@@ -11,7 +11,7 @@ import (
 )
 
 type Access struct {
-	db *mongo.Database
+	db  *mongo.Database
 	ctx context.Context
 }
 
@@ -21,17 +21,40 @@ func (a Access) FindTrack(spotifyID string) (*model.Track, error) {
 	return &t, a.db.Collection(model.TrackCollection).FindOne(a.ctx, filter).Decode(&t)
 }
 
+func (a Access) TracksWithLyricsCount() (int64, error) {
+	filter := bson.M{"loaded": bson.M{"$eq": true}}
+	return a.db.Collection(model.TrackCollection).CountDocuments(a.ctx, filter)
+}
+
+func (a Access) TrackCount() (int64, error) {
+	return a.db.Collection(model.TrackCollection).EstimatedDocumentCount(a.ctx)
+}
+
+func (a Access) LatestTracks(limit int64) ([]*model.Track, error) {
+	opts := options.Find().SetLimit(limit)
+	cur, err := a.db.Collection(model.TrackCollection).Find(a.ctx, bson.D{{}}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.decodeTracks(cur)
+}
+
 func (a Access) FindTracks(filter interface{}) ([]*model.Track, error) {
 	if filter == nil {
 		filter = bson.D{{}}
 	}
 
-	var tracks []*model.Track
-
 	cur, err := a.db.Collection(model.TrackCollection).Find(a.ctx, filter)
 	if err != nil {
-		return tracks, err
+		return nil, err
 	}
+
+	return a.decodeTracks(cur)
+}
+
+func (a Access) decodeTracks(cur *mongo.Cursor) ([]*model.Track, error) {
+	var tracks []*model.Track
 
 	for cur.Next(a.ctx) {
 		var t model.Track
@@ -48,11 +71,6 @@ func (a Access) FindTracks(filter interface{}) ([]*model.Track, error) {
 	}
 
 	cur.Close(a.ctx)
-
-	if len(tracks) == 0 {
-		return tracks, mongo.ErrNoDocuments
-	}
-
 	return tracks, nil
 }
 
@@ -103,7 +121,7 @@ func New(username, password string) (*Access, error) {
 		"lyrics":     2,
 	})
 	idx := mongo.IndexModel{
-		Keys: bson.M{"name": "text", "artist": "text", "album_name": "text"},
+		Keys:    bson.M{"name": "text", "artist": "text", "album_name": "text"},
 		Options: idxOptions,
 	}
 	_, err = db.Collection(model.TrackCollection).Indexes().CreateOne(ctx, idx)

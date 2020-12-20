@@ -22,18 +22,19 @@ type Controller struct {
 }
 
 func (co Controller) HomePageHandler(c *gin.Context) {
-	tracks, err := co.db.FindTracks(nil)
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
+	trackCount, _ := co.db.TrackCount()
+	tracksWithLyrics, _ := co.db.TracksWithLyricsCount()
+
+	latestTracks, _ := co.db.LatestTracks(8)
 
 	session := sessions.Default(c)
 	userEmail := session.Get("userEmail")
 
 	c.HTML(http.StatusOK, "index.html", gin.H{
-		"Tracks": tracks,
-		"User": userEmail,
+		"TrackCount":            trackCount,
+		"TracksWithLyricsCount": tracksWithLyrics,
+		"TracksLatest":          latestTracks,
+		"User":                  userEmail,
 	})
 }
 
@@ -53,7 +54,7 @@ func (co Controller) TrackDetailHandler(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "track.html", gin.H{
 		"Track": track,
-		"User": userEmail,
+		"User":  userEmail,
 	})
 }
 
@@ -61,7 +62,7 @@ func (co Controller) TrackSearchHandler(c *gin.Context) {
 	query := c.Query("q")
 
 	if strings.Index(query, " ") > -1 && strings.Index(query, "\"") == -1 && strings.Index(query, "-") == -1 {
-		qs :=  strings.Split(query, " ")
+		qs := strings.Split(query, " ")
 		for i := range qs {
 			qs[i] = "\"" + qs[i] + "\""
 		}
@@ -87,15 +88,16 @@ func (co Controller) TrackSearchHandler(c *gin.Context) {
 	userEmail := session.Get("userEmail")
 
 	c.HTML(http.StatusOK, "search.html", gin.H{
-		"Query": c.Query("q"),
+		"Query":  c.Query("q"),
 		"Tracks": tracks,
-		"User": userEmail,
+		"User":   userEmail,
 	})
 }
 
 const redirectURI = "http://localhost:8080/callback"
 const state = "spolyrCSRF"
-var auth  = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
+
+var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
 
 func (co Controller) SpotifyAuthCallbackHandler(c *gin.Context) {
 	tok, err := auth.Token(state, c.Request)
