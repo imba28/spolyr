@@ -9,61 +9,62 @@
     <link rel="stylesheet" href="/static/css/main.css">
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
-<body>
-    {{ template "navbar" . }}
+<body class="d-flex flex-column justify-content-between min-vh-100">
+    <div class="wrapper">
+        {{ template "navbar" . }}
 
-    <div class="container">
-        <form method="get" action="/search" class="mb-4">
-            <div class="input-group mb-3">
-                <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
+        <div class="container">
+            <form method="get" action="/search" class="mb-4">
+                <div class="input-group mb-3">
+                    <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            {{ if gt .TrackCount 0 }}
-                <span class="text-muted mt-1">Indexed {{ .TrackCount }} tracks
-                {{ if gt .TracksWithLyricsCount 0 }}
-                    including {{ .TracksWithLyricsCount }} tracks with known lyrics.
+                {{ if gt .TrackCount 0 }}
+                    <span class="text-muted mt-1">Indexed {{ .TrackCount }} tracks
+                    {{ if gt .TracksWithLyricsCount 0 }}
+                        including {{ .TracksWithLyricsCount }} tracks with known lyrics.
+                    {{ end }}
+                    </span>
                 {{ end }}
-                </span>
-            {{ end }}
-        </form>
+            </form>
 
-        {{ if .TracksLatest }}
-            <h3>Latest songs</h3>
-            <div class="row">
-                {{ range .TracksLatest }}
-                    <div class="col-md-3 col-sm-6 mb-4">
-                        <div class="card" style="height: 100%">
-                            {{ if .ImageURL }}
-                            <img class="card-img-top" src="{{ .ImageURL }}" alt="album cover of {{ .AlbumName }} from {{ .Artist }}">
-                            {{ end }}
-                            <div class="card-body d-flex justify-content-between flex-column">
-                                <div>
-                                    <h5 class="card-title">{{ .Name }}</h5>
-                                    <p class="card-text">
-                                        {{ .Artist }}
-                                    </p>
-                                </div>
+            {{ if .TracksLatest }}
+                <h3>Latest songs</h3>
+                <div class="row">
+                    {{ range .TracksLatest }}
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="card" style="height: 100%">
+                                {{ if .ImageURL }}
+                                <img class="card-img-top" src="{{ .ImageURL }}" alt="album cover of {{ .AlbumName }} from {{ .Artist }}">
+                                {{ end }}
+                                <div class="card-body d-flex justify-content-between flex-column">
+                                    <div>
+                                        <h5 class="card-title">{{ .Name }}</h5>
+                                        <p class="card-text">
+                                            {{ .Artist }}
+                                        </p>
+                                    </div>
 
-                                <div class="card-text mt-1">
-                                    <a href="/tracks/id/{{ .SpotifyID }}" class="d-inline-block btn btn-primary">
-                                        Details
-                                    </a>
-                                    <a href="https://open.spotify.com/track/{{ .SpotifyID }}" class="d-inline-block btn btn-primary" target="_blank">
-                                        <i class="fab fa-spotify"></i> to Spotify
-                                    </a>
+                                    <div class="card-text mt-1">
+                                        <a href="/tracks/id/{{ .SpotifyID }}" class="d-inline-block btn btn-primary">
+                                            Details
+                                        </a>
+                                        <a href="https://open.spotify.com/track/{{ .SpotifyID }}" class="d-inline-block btn btn-primary" target="_blank">
+                                            <i class="fab fa-spotify"></i> to Spotify
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {{ end }}
-            </div>
-        {{ end }}
+                    {{ end }}
+                </div>
+            {{ end }}
+        </div>
     </div>
-
     {{ template "footer" }}
 </body>
 </html>
