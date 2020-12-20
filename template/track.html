@@ -20,6 +20,12 @@
                 </a>
             </div>
 
+            {{ if .Success }}
+                <div class="alert alert-success">
+                    {{ .Success }}
+                </div>
+            {{ end }}
+
             <div class="row">
                 <div class="col-md-4 col-sm-12">
                     <div class="card position-sticky" style="top: 1em">
@@ -47,7 +53,12 @@
                         <div  class="card-body">
                             <h3 class="card-title">
                                 Lyrics
+
+                                <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="d-inline-block">
+                                    <small><i class="fas fa-edit"></i></small>
+                                </a>
                             </h3>
+
                             <div class="card-text">
                                 {{ formatHTML .Track.Lyrics }}
                             </div>

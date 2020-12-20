@@ -37,6 +37,8 @@ func setupRouter() *gin.Engine {
 	r.GET("/sync-tracks", controller.TrackSyncHandler)
 	r.GET("/sync-lyrics", controller.LyricsSyncHandler)
 	r.GET("/tracks/id/:spotifyID", controller.TrackDetailHandler)
+	r.POST("/tracks/id/:spotifyID/edit", controller.TrackUpdateHandler)
+	r.GET("/tracks/id/:spotifyID/edit", controller.TrackEditFormHandler)
 	r.GET("/tracks/missing-lyrics", controller.TrackMissingLyricsHandler)
 	r.GET("/search", controller.TrackSearchHandler)
 	r.Static("static", "public")

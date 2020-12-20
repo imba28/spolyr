@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Spolyr</title>
+
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
+</head>
+<body class="d-flex flex-column justify-content-between min-vh-100">
+<div class="wrapper">
+    {{ template "navbar" . }}
+
+    <div class="container">
+        <div class="mt-2 mb-2">
+            <a href="javascript:window.history.back()" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {{ if .Error }}
+        <div class="alert alert-danger">
+            {{ .Error }}
+        </div>
+        {{ end }}
+
+        <div class="row">
+            <div class="col-md-4 col-sm-12">
+                <div class="card position-sticky" style="top: 1em">
+                    {{ if .Track.ImageURL }}
+                    <img class="card-img-top" src="{{ .Track.ImageURL }}" alt="album cover of {{ .Track.AlbumName }} from {{ .Track.Artist }}">
+                    {{ end }}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ .Track.Name }}</h5>
+                        <p class="card-text">
+                            <a href="/search?q={{ .Track.Artist }}">{{ .Track.Artist }}</a> - {{ .Track.AlbumName }}
+                        </p>
+                        <div class="card-text">
+                            <audio controls preload="none" style="width: 100%">
+                                <source src="{{ .Track.PreviewURL }}" type="audio/mpeg">
+                            </audio>
+                            <a href="https://open.spotify.com/track/{{ .Track.SpotifyID }}" class="d-inline-block mt-1 btn btn-primary" target="_blank">
+                                <i class="fab fa-spotify"></i> to Spotify
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-12">
+                <div class="card">
+                    <div  class="card-body">
+                        <h3 class="card-title">
+                            Lyrics
+                        </h3>
+
+                        <div class="card-text">
+                            <form method="POST">
+                                <div class="form-group">
+                                    <textarea class="form-control" rows="{{ .TextareaRowCount }}" name="lyrics">{{ .Track.Lyrics }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    Save
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ template "footer" }}
+</body>
+</html>

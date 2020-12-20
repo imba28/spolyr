@@ -58,6 +58,67 @@ func (co Controller) TrackDetailHandler(c *gin.Context) {
 	})
 }
 
+func (co Controller) TrackUpdateHandler(c *gin.Context) {
+	track, err := co.db.FindTrack(c.Param("spotifyID"))
+	if err != nil {
+		c.String(http.StatusNotFound, "track not found")
+		return
+	}
+
+	session := sessions.Default(c)
+	userEmail := session.Get("userEmail")
+
+	lyrics := strings.TrimSpace(c.PostForm("lyrics"))
+	if len(lyrics) == 0 {
+		c.HTML(http.StatusBadRequest, "track-edit.html", gin.H{
+			"Track":            track,
+			"User":             userEmail,
+			"TextareaRowCount": 20,
+			"Error":            "Please provide some lyrics!",
+		})
+		return
+	}
+	track.Lyrics = lyrics
+	track.Loaded = true
+	err = co.db.SaveTrack(track)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "track-edit.html", gin.H{
+			"Track":            track,
+			"User":             userEmail,
+			"TextareaRowCount": 20,
+			"Error":            "Could not update lyrics",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "track.html", gin.H{
+		"Track":   track,
+		"User":    userEmail,
+		"Success": "Lyrics of track updated!",
+	})
+}
+
+func (co Controller) TrackEditFormHandler(c *gin.Context) {
+	track, err := co.db.FindTrack(c.Param("spotifyID"))
+	if err == mongo.ErrNoDocuments {
+		c.String(http.StatusNotFound, "track not found")
+		return
+	}
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	session := sessions.Default(c)
+	userEmail := session.Get("userEmail")
+
+	c.HTML(http.StatusOK, "track-edit.html", gin.H{
+		"Track":            track,
+		"User":             userEmail,
+		"TextareaRowCount": 20,
+	})
+}
+
 func (co Controller) TrackMissingLyricsHandler(c *gin.Context) {
 	tracks, err := co.db.TracksWithoutLyrics()
 	if err != nil {
