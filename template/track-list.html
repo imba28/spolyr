@@ -1,0 +1,32 @@
+{{ define "track-list" }}
+    <table class="table">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Artist</th>
+            <th scope="col">Album</th>
+            <th scope="col">Lyrics?</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range . }}
+        <tr>
+            <td>{{ .Name }}</td>
+            <td>{{ .Artist }}</td>
+            <td>{{ .AlbumName }}</td>
+            <td>
+                {{ if .Loaded }}
+                Yes
+                {{ else }}
+                No
+                {{ end }}
+            </td>
+            <td>
+                <a href="/tracks/{{ .SpotifyID }}">Details</a><br>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+{{ end }}

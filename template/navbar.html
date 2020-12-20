@@ -1,0 +1,17 @@
+{{define "navbar"}}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary justify-content-between">
+        <a class="navbar-brand" href="/">Spolyr</a>
+        <div>
+            {{ if .User }}
+                {{ .User }}
+                <a href="/logout" class="ml-1 btn btn-dark" title="Sign out">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            {{ else }}
+                <a href="/login" class="btn btn-dark" title="Sign in">
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+            {{ end }}
+        </div>
+    </nav>
+{{ end }}
