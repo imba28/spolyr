@@ -6,18 +6,25 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/internal/model"
 	"github.com/rhnvrm/lyric-api-go"
 	"github.com/zmb3/spotify"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
+	"html/template"
 	"log"
-	"strings"
-
+	"math"
 	"net/http"
+	"strings"
 )
 
 type Controller struct {
+	syncLyrics              chan bool
+	syncLyricsTracksCurrent int
+	syncLyricsTrackTotal    int
+	syncLog                 []string
+
 	db *db.Access
 }
 
@@ -248,46 +255,81 @@ func (co Controller) TrackSyncHandler(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
-func (co Controller) LyricsSyncHandler(c *gin.Context) {
-	tracks, err := co.db.FindTracks(nil)
-	if err != nil {
-		c.Abort()
-		c.Error(err)
-		return
-	}
-
-	l := lyrics.New(
-		lyrics.WithGeniusLyrics("DBGzQI4tQoQ3sBTXbHXI1Yxa1GKWbOIJc3u84VNYQxJLqNXfDXX3p88_Ix7xAwbi"),
-		lyrics.WithMusixMatch(),
-		lyrics.WithSongLyrics(),
-	)
-
-	for i := range tracks {
-		if len(tracks[i].Lyrics) > 0 {
-			continue
-		}
-
-		artist := tracks[i].Artist
-		if strings.Index(tracks[i].Artist, ", ") > -1 {
-			artist = strings.Split(artist, ", ")[0]
-		}
-		lyric, err := l.Search(artist, tracks[i].Name)
+func (co *Controller) LyricsSyncHandler(c *gin.Context) {
+	if c.Request.Method == "POST" {
+		tracks, err := co.db.TracksWithoutLyrics()
 		if err != nil {
-			log.Println(artist, tracks[i].Name, err)
-			continue
-		}
-		tracks[i].Lyrics = lyric
-		tracks[i].Loaded = true
-		err = co.db.SaveTrack(tracks[i])
-		if err != nil {
+			c.Abort()
 			c.Error(err)
 			return
 		}
-		fmt.Println(artist, tracks[i].Name, "SAVED")
+
+		co.startLyricsSync(tracks)
 	}
-	c.String(http.StatusOK, "OK")
+
+	session := sessions.Default(c)
+	userEmail := session.Get("userEmail")
+	c.HTML(http.StatusOK, "track-lyrics-sync.html", gin.H{
+		"Syncing":           co.syncLyricsTracksCurrent > -1,
+		"SyncedTracks":      co.syncLyricsTracksCurrent,
+		"TotalTracksToSync": co.syncLyricsTrackTotal,
+		"SyncProgressValue": math.Round(float64(co.syncLyricsTracksCurrent) / float64(co.syncLyricsTrackTotal) * 100),
+		"SyncLog":           template.HTML(strings.Join(co.syncLog, "<br>")),
+		"User":              userEmail,
+	})
+}
+
+func (co *Controller) startLyricsSync(tracks []*model.Track) {
+	select {
+	case co.syncLyrics <- true:
+		co.syncLyricsTracksCurrent = 0
+		co.syncLyricsTrackTotal = len(tracks)
+
+		go func() {
+			defer func() {
+				<-co.syncLyrics
+				co.syncLyricsTracksCurrent = -1
+				co.syncLog = nil
+			}()
+
+			l := lyrics.New(
+				lyrics.WithGeniusLyrics("DBGzQI4tQoQ3sBTXbHXI1Yxa1GKWbOIJc3u84VNYQxJLqNXfDXX3p88_Ix7xAwbi"),
+				lyrics.WithMusixMatch(),
+				lyrics.WithSongLyrics(),
+			)
+
+			for i := range tracks {
+				co.syncLyricsTracksCurrent++
+
+				artist := tracks[i].Artist
+				if strings.Index(tracks[i].Artist, ", ") > -1 {
+					artist = strings.Split(artist, ", ")[0]
+				}
+				lyric, err := l.Search(artist, tracks[i].Name)
+				if err != nil {
+					co.syncLog = append(co.syncLog, fmt.Sprintf("%s - %s: %s", artist, tracks[i].Name, err.Error()))
+					log.Println(artist, tracks[i].Name, err)
+					continue
+				}
+
+				tracks[i].Lyrics = lyric
+				tracks[i].Loaded = true
+				err = co.db.SaveTrack(tracks[i])
+				if err != nil {
+					co.syncLog = append(co.syncLog, fmt.Sprintf("%s - %s: %s", artist, tracks[i].Name, err.Error()))
+					log.Println(artist, tracks[i].Name, err)
+				}
+			}
+		}()
+	default:
+		//
+	}
 }
 
 func New(db *db.Access) Controller {
-	return Controller{db}
+	return Controller{
+		db:                      db,
+		syncLyricsTracksCurrent: -1,
+		syncLyrics:              make(chan bool, 1),
+	}
 }
