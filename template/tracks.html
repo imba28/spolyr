@@ -10,9 +10,9 @@
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
-        {{ template "navbar" . }}
+    {{ template "navbar" . }}
 
+    <div class="container">
         <div class="text-muted">{{ len .Tracks }} tracks</div>
 
         {{ template "track-list" .Tracks }}

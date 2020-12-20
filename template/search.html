@@ -10,9 +10,9 @@
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
-        {{ template "navbar" . }}
+    {{ template "navbar" . }}
 
+    <div class="container">
         <form method="get" action="/search" class="mt-5 mb-4">
             <div class="input-group">
                 <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics" value="{{ .Query }}">
@@ -27,7 +27,7 @@
 
         {{ template "track-list" .Tracks }}
     </div>
-{{ template "footer" }}
 
+    {{ template "footer" }}
 </body>
 </html>
