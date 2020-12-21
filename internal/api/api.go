@@ -16,6 +16,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -178,7 +179,8 @@ func (co Controller) TrackSearchHandler(c *gin.Context) {
 	})
 }
 
-const redirectURI = "http://localhost:8080/callback"
+var redirectURI = getenv("HOSTNAME", "http://localhost:8080") + "/callback"
+
 const state = "spolyrCSRF"
 
 var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
@@ -332,4 +334,12 @@ func New(db *db.Access) Controller {
 		syncLyricsTracksCurrent: -1,
 		syncLyrics:              make(chan bool, 1),
 	}
+}
+
+func getenv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }
