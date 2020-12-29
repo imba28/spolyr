@@ -1,0 +1,32 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+trigger:
+  event:
+    exclude:
+      - pull_request
+
+steps:
+- name: test
+  image: golang:1.15
+  commands:
+  - go test ./...
+
+- name: build
+  image: golang:1.15
+  commands:
+  - make bundle
+
+- name: gitea_release
+  image: plugins/gitea-release
+  settings:
+    base_url: https://git.luxs.at
+    title: Spolyr Release
+    api_key:
+      from_secret: gitea_token
+    files:
+      - ./dist/*
+  when:
+    event: tag
