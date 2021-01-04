@@ -85,9 +85,10 @@ func createIndices(db *mongo.Database) error {
 }
 
 func newMongoTrackStore(db *mongo.Database) (TrackStore, error) {
+	err := createIndices(db)
 	return MongoTrackStore{
 		conn: db,
-	}, nil
+	}, err
 }
 
 var _ TrackStore = MongoTrackStore{}
