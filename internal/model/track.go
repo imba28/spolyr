@@ -6,18 +6,16 @@ import (
 	"strings"
 )
 
-const TrackCollection = "tracks"
-
 type Track struct {
-	ID primitive.ObjectID `bson:"_id"`
-	SpotifyID string `bson:"spotify_id"`
-	Artist string `bson:"artist"`
-	AlbumName string `bson:"album_name"`
-	ImageURL string `bson:"image_url"`
-	PreviewURL string `bson:"preview_url"`
-	Name string `bson:"name"`
-	Lyrics string `bson:"lyrics"`
-	Loaded bool `bson:"loaded"`
+	ID         primitive.ObjectID `bson:"_id"`
+	SpotifyID  string             `bson:"spotify_id"`
+	Artist     string             `bson:"artist"`
+	AlbumName  string             `bson:"album_name"`
+	ImageURL   string             `bson:"image_url"`
+	PreviewURL string             `bson:"preview_url"`
+	Name       string             `bson:"name"`
+	Lyrics     string             `bson:"lyrics"`
+	Loaded     bool               `bson:"loaded"`
 }
 
 func NewTrack(t spotify.SavedTrack) Track {
@@ -32,11 +30,11 @@ func NewTrack(t spotify.SavedTrack) Track {
 	}
 
 	return Track{
-		SpotifyID: t.ID.String(),
-		Artist: strings.Join(artists, ", "),
-		AlbumName: t.Album.Name,
-		ImageURL: imageUrl,
+		SpotifyID:  t.ID.String(),
+		Artist:     strings.Join(artists, ", "),
+		AlbumName:  t.Album.Name,
+		ImageURL:   imageUrl,
 		PreviewURL: t.PreviewURL,
-		Name: t.Name,
+		Name:       t.Name,
 	}
 }

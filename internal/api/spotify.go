@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func SyncTracks(client spotify.Client, access *db.Access) error {
+func SyncTracks(client spotify.Client, access *db.Repositories) error {
 	tracks, err := client.CurrentUsersTracks()
 	if err != nil {
 		return err
@@ -15,7 +15,7 @@ func SyncTracks(client spotify.Client, access *db.Access) error {
 	for {
 		for i := range tracks.Tracks {
 			track := model.NewTrack(tracks.Tracks[i])
-			err := access.SaveTrack(&track)
+			err := access.Tracks.Save(&track)
 			if err != nil {
 				return err
 			}

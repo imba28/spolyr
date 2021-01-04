@@ -9,7 +9,6 @@ import (
 	"github.com/imba28/spolyr/internal/model"
 	"github.com/rhnvrm/lyric-api-go"
 	"github.com/zmb3/spotify"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
 	"html/template"
@@ -26,14 +25,14 @@ type Controller struct {
 	syncLyricsTrackTotal    int
 	syncLog                 []string
 
-	db *db.Access
+	db *db.Repositories
 }
 
 func (co Controller) HomePageHandler(c *gin.Context) {
-	trackCount, _ := co.db.TrackCount()
-	tracksWithLyrics, _ := co.db.TracksWithLyricsCount()
+	trackCount, _ := co.db.Tracks.Count()
+	tracksWithLyrics, _ := co.db.Tracks.CountWithLyrics()
 
-	latestTracks, _ := co.db.LatestTracks(8)
+	latestTracks, _ := co.db.Tracks.LatestTracks(8)
 
 	session := sessions.Default(c)
 	userEmail := session.Get("userEmail")
@@ -47,7 +46,7 @@ func (co Controller) HomePageHandler(c *gin.Context) {
 }
 
 func (co Controller) TrackDetailHandler(c *gin.Context) {
-	track, err := co.db.FindTrack(c.Param("spotifyID"))
+	track, err := co.db.Tracks.FindTrack(c.Param("spotifyID"))
 	if err == mongo.ErrNoDocuments {
 		c.String(http.StatusNotFound, "track not found")
 		return
@@ -67,7 +66,7 @@ func (co Controller) TrackDetailHandler(c *gin.Context) {
 }
 
 func (co Controller) TrackUpdateHandler(c *gin.Context) {
-	track, err := co.db.FindTrack(c.Param("spotifyID"))
+	track, err := co.db.Tracks.FindTrack(c.Param("spotifyID"))
 	if err != nil {
 		c.String(http.StatusNotFound, "track not found")
 		return
@@ -88,7 +87,7 @@ func (co Controller) TrackUpdateHandler(c *gin.Context) {
 	}
 	track.Lyrics = lyrics
 	track.Loaded = true
-	err = co.db.SaveTrack(track)
+	err = co.db.Tracks.Save(track)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "track-edit.html", gin.H{
 			"Track":            track,
@@ -107,7 +106,7 @@ func (co Controller) TrackUpdateHandler(c *gin.Context) {
 }
 
 func (co Controller) TrackEditFormHandler(c *gin.Context) {
-	track, err := co.db.FindTrack(c.Param("spotifyID"))
+	track, err := co.db.Tracks.FindTrack(c.Param("spotifyID"))
 	if err == mongo.ErrNoDocuments {
 		c.String(http.StatusNotFound, "track not found")
 		return
@@ -128,7 +127,7 @@ func (co Controller) TrackEditFormHandler(c *gin.Context) {
 }
 
 func (co Controller) TrackMissingLyricsHandler(c *gin.Context) {
-	tracks, err := co.db.TracksWithoutLyrics()
+	tracks, err := co.db.Tracks.TracksWithoutLyrics()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -154,16 +153,7 @@ func (co Controller) TrackSearchHandler(c *gin.Context) {
 		query = strings.Join(qs, " ")
 	}
 
-	filter := bson.M{}
-	if len(query) > 0 {
-		filter = bson.M{
-			"$text": bson.M{
-				"$search": query,
-			},
-		}
-	}
-
-	tracks, err := co.db.FindTracks(filter)
+	tracks, err := co.db.Tracks.Search(query)
 	if err != nil && err != mongo.ErrNoDocuments {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
@@ -259,7 +249,7 @@ func (co Controller) TrackSyncHandler(c *gin.Context) {
 
 func (co *Controller) LyricsSyncHandler(c *gin.Context) {
 	if c.Request.Method == "POST" {
-		tracks, err := co.db.TracksWithoutLyrics()
+		tracks, err := co.db.Tracks.TracksWithoutLyrics()
 		if err != nil {
 			c.Abort()
 			c.Error(err)
@@ -316,7 +306,7 @@ func (co *Controller) startLyricsSync(tracks []*model.Track) {
 
 				tracks[i].Lyrics = lyric
 				tracks[i].Loaded = true
-				err = co.db.SaveTrack(tracks[i])
+				err = co.db.Tracks.Save(tracks[i])
 				if err != nil {
 					co.syncLog = append(co.syncLog, fmt.Sprintf("%s - %s: %s", artist, tracks[i].Name, err.Error()))
 					log.Println(artist, tracks[i].Name, err)
@@ -328,7 +318,7 @@ func (co *Controller) startLyricsSync(tracks []*model.Track) {
 	}
 }
 
-func New(db *db.Access) Controller {
+func New(db *db.Repositories) Controller {
 	return Controller{
 		db:                      db,
 		syncLyricsTracksCurrent: -1,
