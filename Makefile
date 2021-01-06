@@ -18,7 +18,7 @@ bundle: build
 	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe template docker-compose.yml
 
 test:
-	go test -coverprofile cover.out ./internal/...
+	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 go test -coverprofile cover.out ./internal/...
 	go tool cover -html=cover.out -o cover.html
 
 test-units:

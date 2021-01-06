@@ -13,7 +13,12 @@ import (
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
-	dbConn, err := db.New("root", "example", "spolyr")
+
+	databaseUsername := db.GetEnv("DATABASE_USER", "root")
+	databasePassword := db.GetEnv("DATABASE_PASSWORD", "example")
+	databaseHost := db.GetEnv("DATABASE_HOST", "127.0.0.1")
+
+	dbConn, err := db.New(databaseUsername, databasePassword, "spolyr", databaseHost)
 	if err != nil {
 		log.Fatal(err)
 	}

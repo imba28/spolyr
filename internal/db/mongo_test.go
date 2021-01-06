@@ -10,10 +10,8 @@ import (
 	"testing"
 )
 
-const testDatabaseName = "tests"
-
 func setUp() *Repositories {
-	repos, err := New("root", "example", testDatabaseName)
+	repos, err := New(GetEnv(EnvUsername, ""), GetEnv(EnvPassword, ""), testDatabaseName, GetEnv(EnvHost, ""))
 	if err != nil {
 		panic(err)
 	}
