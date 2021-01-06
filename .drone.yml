@@ -12,7 +12,8 @@ steps:
 - name: test
   image: golang:1.15
   commands:
-  - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test ./...
+  - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test -coverprofile cover.out ./...
+  - go tool cover -func cover.out
 
 - name: build
   image: golang:1.15
