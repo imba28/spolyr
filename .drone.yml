@@ -12,7 +12,7 @@ steps:
 - name: test
   image: golang:1.15
   commands:
-  - go test ./...
+  - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test ./...
 
 - name: build
   image: golang:1.15
@@ -30,3 +30,11 @@ steps:
       - ./dist/*
   when:
     event: tag
+
+services:
+  - name: mongo
+    image: mongo:4
+    detach: true
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: test
