@@ -13,7 +13,7 @@ import (
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
-	dbConn, err := db.New("root", "example")
+	dbConn, err := db.New("root", "example", "spolyr")
 	if err != nil {
 		log.Fatal(err)
 	}

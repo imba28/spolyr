@@ -39,12 +39,12 @@ func (t TrackRepository) CountWithLyrics() (int64, error) {
 }
 
 func (t TrackRepository) Count() (int64, error) {
-	filter := bson.M{"loaded": bson.M{"$eq": true}}
-	return t.store.Count(filter)
+	return t.store.Count(bson.M{})
 }
 
 func (t TrackRepository) LatestTracks(limit int64) ([]*model.Track, error) {
-	opts := options.Find().SetLimit(limit)
+	opts := options.Find().SetLimit(limit).
+		SetSort(bson.D{{"_id", -1}})
 	return t.store.Find(bson.D{{}}, opts)
 }
 

@@ -8,9 +8,10 @@ import (
 
 type Repositories struct {
 	Tracks TrackRepository
+	client *mongo.Client
 }
 
-func New(username, password string) (*Repositories, error) {
+func New(username, password, databaseName string) (*Repositories, error) {
 	ctx := context.Background()
 
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/").SetAuth(options.Credential{
@@ -27,7 +28,7 @@ func New(username, password string) (*Repositories, error) {
 		return nil, err
 	}
 
-	db := client.Database("spolyr")
+	db := client.Database(databaseName)
 	trackStore, err := newMongoTrackStore(db)
 	if err != nil {
 		return nil, err
@@ -35,5 +36,6 @@ func New(username, password string) (*Repositories, error) {
 
 	return &Repositories{
 		NewTrackRepository(trackStore),
+		client,
 	}, nil
 }

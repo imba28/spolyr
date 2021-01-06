@@ -20,3 +20,6 @@ bundle: build
 test:
 	go test -coverprofile cover.out ./internal/...
 	go tool cover -html=cover.out -o cover.html
+
+test-units:
+	go test -short ./internal/...
