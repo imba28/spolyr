@@ -1,4 +1,4 @@
-.PHONY: all clean bundle build
+.PHONY: all clean bundle build test
 all: teamspeak3-viewer
 
 build:
@@ -16,3 +16,7 @@ bundle: build
 	mkdir -p ./dist
 	tar -czvf dist/spolyr-linux-amd64.tar.gz public spolyr template docker-compose.yml
 	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe template docker-compose.yml
+
+test:
+	go test -coverprofile cover.out ./internal/...
+	go tool cover -html=cover.out -o cover.html
