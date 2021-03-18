@@ -6,9 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/api"
 	"github.com/imba28/spolyr/internal/db"
-	"html/template"
 	"log"
-	"strings"
 )
 
 func setupRouter() *gin.Engine {
@@ -25,13 +23,6 @@ func setupRouter() *gin.Engine {
 
 	store := cookie.NewStore([]byte("spolyr-cookie-secret"))
 	r.Use(sessions.Sessions("session", store))
-
-	r.SetFuncMap(template.FuncMap{
-		"formatHTML": func(raw string) template.HTML {
-			return template.HTML(strings.ReplaceAll(raw, "\n", "<br/>"))
-		},
-	})
-	r.LoadHTMLGlob("template/*.html")
 
 	controller := api.New(dbConn)
 

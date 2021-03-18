@@ -1,6 +1,6 @@
 module github.com/imba28/spolyr
 
-go 1.13
+go 1.16
 
 require (
 	github.com/gin-contrib/sessions v0.0.3

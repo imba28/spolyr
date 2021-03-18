@@ -1,18 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <title>Spolyr</title>
-
-    <link rel="stylesheet" href="/static/css/main.css">
-    <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
-</head>
-<body class="d-flex flex-column justify-content-between min-vh-100">
-<div class="wrapper">
-    {{ template "navbar" . }}
-
+{{ define "content" }}
     <div class="container">
         <div class="mt-2 mb-2">
             <a href="javascript:window.history.back()" class="btn btn-primary">
@@ -71,7 +57,4 @@
             </div>
         </div>
     </div>
-</div>
-{{ template "footer" . }}
-</body>
-</html>
+{{ end }}
