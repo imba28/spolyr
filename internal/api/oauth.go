@@ -6,11 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/zmb3/spotify"
 	"net/http"
+	"os"
 )
 
 const state = "spolyrCSRF"
 
-var redirectURI = getenv("HOSTNAME", "http://localhost:8080") + "/callback"
+var redirectURI = getEnv("HOSTNAME", "http://localhost:8080") + "/callback"
 var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
 
 func (co Controller) SpotifyAuthCallbackHandler(c *gin.Context) {
@@ -59,4 +60,12 @@ func (co Controller) LogoutHandler(c *gin.Context) {
 
 func (co Controller) LoginHandler(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, auth.AuthURL(state))
+}
+
+func getEnv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }

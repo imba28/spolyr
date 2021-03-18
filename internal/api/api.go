@@ -4,7 +4,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"os"
 )
 
 func New(c Controller) *gin.Engine {
@@ -28,12 +27,4 @@ func New(c Controller) *gin.Engine {
 	r.Static("static", "public")
 
 	return r
-}
-
-func getenv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
 }
