@@ -101,7 +101,7 @@ func (co Controller) TrackEditFormHandler(c *gin.Context) {
 		"User":             sessions.Default(c).Get("userEmail"),
 		"TextareaRowCount": 20,
 	}
-	template2.TrackEditPage(c.Writer, viewData, http.StatusOK)
+	_ = template2.TrackEditPage(c.Writer, viewData, http.StatusOK)
 }
 
 func (co Controller) TrackMissingLyricsHandler(c *gin.Context) {
@@ -115,7 +115,7 @@ func (co Controller) TrackMissingLyricsHandler(c *gin.Context) {
 		"Tracks": tracks,
 		"User":   sessions.Default(c).Get("userEmail"),
 	}
-	template2.TracksPage(c.Writer, viewData, http.StatusOK)
+	_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 }
 
 func (co Controller) TrackSearchHandler(c *gin.Context) {
@@ -171,8 +171,7 @@ func (co *Controller) LyricsSyncHandler(c *gin.Context) {
 	if c.Request.Method == "POST" {
 		tracks, err := co.db.Tracks.TracksWithoutLyrics()
 		if err != nil {
-			c.Abort()
-			c.Error(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
