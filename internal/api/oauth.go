@@ -14,7 +14,7 @@ const state = "spolyrCSRF"
 var redirectURI = getEnv("HOSTNAME", "http://localhost:8080") + "/callback"
 var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
 
-func (co Controller) SpotifyAuthCallbackHandler(c *gin.Context) {
+func SpotifyAuthCallbackHandler(c *gin.Context) {
 	tok, err := auth.Token(state, c.Request)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
@@ -46,7 +46,7 @@ func (co Controller) SpotifyAuthCallbackHandler(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
-func (co Controller) LogoutHandler(c *gin.Context) {
+func LogoutHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
 	err := session.Save()
@@ -58,7 +58,7 @@ func (co Controller) LogoutHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
-func (co Controller) LoginHandler(c *gin.Context) {
+func LoginHandler(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, auth.AuthURL(state))
 }
 

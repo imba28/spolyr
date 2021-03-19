@@ -1,4 +1,4 @@
-package api
+package spotify
 
 import (
 	"github.com/imba28/spolyr/internal/db"
