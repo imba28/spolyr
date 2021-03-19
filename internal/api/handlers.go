@@ -90,8 +90,11 @@ func TrackUpdateHandler(db *db.Repositories) gin.HandlerFunc {
 			return
 		}
 
-		view["Success"] = "Lyrics of track updated!"
-		_ = template2.TrackPage(c.Writer, view, http.StatusOK)
+		session := sessions.Default(c)
+		session.AddFlash("Lyrics of track updated!", "Success")
+		_ = session.Save()
+
+		c.Redirect(http.StatusFound, "/tracks/id/"+track.SpotifyID)
 	}
 }
 
