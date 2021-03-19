@@ -9,12 +9,13 @@ import (
 import "html/template"
 
 var (
-	homepage        = parse("pages/index.html")
-	search          = parse("pages/search.html")
-	track           = parse("pages/track.html")
-	trackEdit       = parse("pages/track-edit.html")
-	trackLyricsSync = parse("pages/track-lyrics-sync.html")
-	tracks          = parse("pages/tracks.html")
+	homepageTemplate        = parse("pages/index.html")
+	searchTemplate          = parse("pages/search.html")
+	trackTemplate           = parse("pages/track.html")
+	trackEditTemplate       = parse("pages/track-edit.html")
+	trackLyricsSyncTemplate = parse("pages/track-lyrics-sync.html")
+	tracksTemplate          = parse("pages/tracks.html")
+	errorTemplate           = parse("pages/error.html")
 )
 
 var templateFunctions = template.FuncMap{
@@ -41,20 +42,23 @@ func executeWithStatus(t *template.Template, w http.ResponseWriter, p gin.H, sta
 }
 
 func HomePage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(homepage, w, p, status)
+	return executeWithStatus(homepageTemplate, w, p, status)
 }
 func SearchPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(search, w, p, status)
+	return executeWithStatus(searchTemplate, w, p, status)
 }
 func TrackPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(track, w, p, status)
+	return executeWithStatus(trackTemplate, w, p, status)
 }
 func TrackEditPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(trackEdit, w, p, status)
+	return executeWithStatus(trackEditTemplate, w, p, status)
 }
 func TrackLyricsSyncPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(trackLyricsSync, w, p, status)
+	return executeWithStatus(trackLyricsSyncTemplate, w, p, status)
 }
 func TracksPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(tracks, w, p, status)
+	return executeWithStatus(tracksTemplate, w, p, status)
+}
+func ErrorPage(w http.ResponseWriter, p gin.H, status int) error {
+	return executeWithStatus(errorTemplate, w, p, status)
 }

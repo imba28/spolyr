@@ -51,7 +51,7 @@ func (co Controller) LogoutHandler(c *gin.Context) {
 	session.Clear()
 	err := session.Save()
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.Error(err)
 		return
 	}
 
