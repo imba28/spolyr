@@ -7,9 +7,15 @@
             </a>
         </div>
 
-        {{ if .Success }}
+        {{range .Success}}
             <div class="alert alert-success">
-                {{ .Success }}
+                {{.}}
+            </div>
+        {{end}}
+
+        {{range .Error}}
+            <div class="alert alert-danger">
+                {{ . }}
             </div>
         {{ end }}
 
@@ -40,14 +46,26 @@
             <div class="col-md-8 col-sm-12">
                 <div class="card">
                     <div  class="card-body">
-                        <h3 class="card-title">
-                            Lyrics
-                            {{ if .User }}
-                                <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="d-inline-block">
-                                    <small><i class="fas fa-edit"></i></small>
-                                </a>
-                            {{ end }}
-                        </h3>
+                        <div class="d-flex justify-content-between">
+                            <h3 class="card-title">
+                                Lyrics
+                            </h3>
+                            <form method="post" action="/tracks/id/{{ .Track.SpotifyID }}/sync">
+                                <div class="btn-group" role="group">
+                                    {{ if .User }}
+                                        <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    {{ end }}
+
+                                    {{ if not .Track.Loaded }}{{ if .SyncAvailable }}
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-quote-left"></i> Download Lyrics
+                                        </button>
+                                    {{ end }}{{ end }}
+                                </div>
+                            </form>
+                        </div>
 
                         <div class="card-text">
                             {{ formatHTML .Track.Lyrics }}

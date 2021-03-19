@@ -2,9 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
+	"github.com/imba28/spolyr/internal/model"
 	"github.com/imba28/spolyr/internal/spotify"
 	template2 "github.com/imba28/spolyr/internal/template"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,7 +34,7 @@ func HomePageHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackDetailHandler(db *db.Repositories) gin.HandlerFunc {
+func TrackDetailHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
@@ -43,10 +46,15 @@ func TrackDetailHandler(db *db.Repositories) gin.HandlerFunc {
 			return
 		}
 
+		session := sessions.Default(c)
 		viewData := gin.H{
-			"Track": track,
-			"User":  c.GetString(userEmailKey),
+			"Track":         track,
+			"SyncAvailable": !s.Syncing(),
+			"User":          c.GetString(userEmailKey),
+			"Success":       session.Flashes("Success"),
+			"Error":         session.Flashes("Error"),
 		}
+		_ = session.Save()
 		_ = template2.TrackPage(c.Writer, viewData, http.StatusOK)
 	}
 }
@@ -151,7 +159,7 @@ func TrackSearchHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackSyncHandler(db *db.Repositories) gin.HandlerFunc {
+func TracksSyncHandler(db *db.Repositories) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetString(spotifyTokenKey)
 		var tok oauth2.Token
@@ -170,6 +178,39 @@ func TrackSyncHandler(db *db.Repositories) gin.HandlerFunc {
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }
+
+func LyricsTrackSyncHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
+		if err == mongo.ErrNoDocuments {
+			c.Error(ErrNotFound)
+			return
+		}
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		session := sessions.Default(c)
+		defer func() {
+			_ = session.Save()
+			c.Redirect(http.StatusFound, "/tracks/id/"+track.SpotifyID)
+		}()
+
+		err = s.Start([]*model.Track{track})
+		if err != nil && errors.Is(err, lyrics.ErrBusy) {
+			session.AddFlash("Action not available. Please try again later.", "Error")
+			return
+		}
+		if err != nil {
+			session.AddFlash("An unknown error occurred", "Error")
+			return
+		}
+
+		session.AddFlash("Download of song lyrics started! This might take a few seconds.", "Success")
+	}
+}
+
 func LyricsSyncHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "POST" {
