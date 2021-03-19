@@ -50,6 +50,7 @@ func AuthRequired(c *gin.Context) {
 			"Status":  http.StatusUnauthorized,
 			"Message": "You must be logged in to perform this action.",
 		}
+
 		_ = template2.ErrorPage(c.Writer, viewData, http.StatusUnauthorized)
 
 		c.Abort()
