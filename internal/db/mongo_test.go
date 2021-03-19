@@ -7,11 +7,12 @@ import (
 	"github.com/imba28/spolyr/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"os"
 	"testing"
 )
 
 func setUp() *Repositories {
-	repos, err := New(GetEnv(EnvUsername, ""), GetEnv(EnvPassword, ""), testDatabaseName, GetEnv(EnvHost, ""))
+	repos, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost))
 	if err != nil {
 		panic(err)
 	}

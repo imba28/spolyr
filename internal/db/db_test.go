@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ const (
 )
 
 func TestNew__correct_credentials(t *testing.T) {
-	_, err := New(GetEnv(EnvUsername, ""), GetEnv(EnvPassword, ""), testDatabaseName, GetEnv(EnvHost, ""))
+	_, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost))
 	assert.Nil(t, err)
 }
 

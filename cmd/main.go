@@ -1,16 +1,15 @@
 package main
 
 import (
-	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/pkg/spolyr"
 	"log"
 	"os"
 )
 
 func main() {
-	databaseUsername := db.GetEnv("DATABASE_USER", "root")
-	databasePassword := db.GetEnv("DATABASE_PASSWORD", "example")
-	databaseHost := db.GetEnv("DATABASE_HOST", "127.0.0.1")
+	databaseUsername := GetEnv("DATABASE_USER", "root")
+	databasePassword := GetEnv("DATABASE_PASSWORD", "example")
+	databaseHost := GetEnv("DATABASE_HOST", "127.0.0.1")
 	geniusAPIToken := os.Getenv("GENIUS_API_TOKEN")
 
 	if len(geniusAPIToken) == 0 {
@@ -22,4 +21,12 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Fatal(s.Run(":8080"))
+}
+
+func GetEnv(key, fallback string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	return v
 }
