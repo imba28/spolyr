@@ -14,12 +14,15 @@ var (
 	ErrBusy = errors.New("sync already started")
 )
 
+const workerSize = 5
+
 type Syncer struct {
 	ready                   chan struct{}
 	syncLyricsTracksCurrent int
 	syncLyricsTrackTotal    int
 	syncLog                 []string
 
+	fetchingQueue chan *model.Track
 	lyricsFetcher lyrics.Lyric
 	db            *db.Repositories
 }
@@ -35,6 +38,18 @@ func New(db *db.Repositories, geniusAPIToken string) *Syncer {
 			lyrics.WithSongLyrics(),
 			lyrics.WithMusixMatch(),
 		),
+	}
+}
+
+func (s *Syncer) initWorkers() {
+	s.fetchingQueue = make(chan *model.Track, workerSize)
+
+	for i := 0; i < workerSize; i++ {
+		go func() {
+			for t := range s.fetchingQueue {
+				s.downloadLyrics(t)
+			}
+		}()
 	}
 }
 
@@ -65,6 +80,7 @@ func (s *Syncer) Logs() string {
 }
 
 func (s *Syncer) run(tracks []*model.Track) {
+	s.initWorkers()
 	s.syncLyricsTracksCurrent = 0
 	s.syncLyricsTrackTotal = len(tracks)
 
@@ -73,6 +89,7 @@ func (s *Syncer) run(tracks []*model.Track) {
 			s.syncLyricsTracksCurrent = -1
 			s.syncLog = nil
 			<-s.ready
+			close(s.fetchingQueue)
 		}()
 
 		for i := range tracks {
