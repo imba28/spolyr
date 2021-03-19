@@ -68,7 +68,11 @@
                         </div>
 
                         <div class="card-text">
-                            {{ formatHTML .Track.Lyrics }}
+                            {{ if .Track.Lyrics }}
+                                {{ formatHTML .Track.Lyrics }}
+                            {{ else }}
+                                <small class="text-muted">No lyrics available.</small>
+                            {{ end }}
                         </div>
                     </div>
                 </div>
