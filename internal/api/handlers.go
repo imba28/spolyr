@@ -172,7 +172,7 @@ func TracksSyncHandler(db *db.Repositories) gin.HandlerFunc {
 			return
 		}
 
-		err = spotify.SyncTracks(auth.NewClient(&tok), db)
+		err = spotify.SyncTracks(spotify.NewSpotifyTrackProvider(auth.NewClient(&tok)), db.Tracks)
 		if err != nil {
 			c.Error(err)
 			return
