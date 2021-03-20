@@ -7,14 +7,10 @@ import (
 )
 
 func main() {
-	databaseUsername := GetEnv("DATABASE_USER", "root")
-	databasePassword := GetEnv("DATABASE_PASSWORD", "example")
-	databaseHost := GetEnv("DATABASE_HOST", "127.0.0.1")
-	geniusAPIToken := os.Getenv("GENIUS_API_TOKEN")
-
-	if len(geniusAPIToken) == 0 {
-		log.Fatal("Please specify your genius api token as env var GENIUS_API_TOKEN")
-	}
+	databaseUsername := getEnv("DATABASE_USER", "root")
+	databasePassword := getEnv("DATABASE_PASSWORD", "example")
+	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
+	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
 
 	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken)
 	if err != nil {
@@ -23,10 +19,18 @@ func main() {
 	log.Fatal(s.Run(":8080"))
 }
 
-func GetEnv(key, fallback string) string {
+func getEnv(key, fallback string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		return fallback
 	}
 	return v
+}
+
+func mustGetEnv(key string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		log.Fatalf("Please specify the environment variable %s", key)
+	}
+	return value
 }
