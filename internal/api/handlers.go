@@ -18,11 +18,11 @@ import (
 	"strings"
 )
 
-func HomePageHandler(db *db.Repositories) gin.HandlerFunc {
+func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		trackCount, _ := db.Tracks.Count()
-		tracksWithLyrics, _ := db.Tracks.CountWithLyrics()
-		latestTracks, _ := db.Tracks.LatestTracks(8)
+		trackCount, _ := s.Count()
+		tracksWithLyrics, _ := s.CountWithLyrics()
+		latestTracks, _ := s.LatestTracks(8)
 
 		viewData := gin.H{
 			"TrackCount":            trackCount,
@@ -34,10 +34,11 @@ func HomePageHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackDetailHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
+func TrackDetailHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
+		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
+			c.Status(http.StatusNotFound)
 			c.Error(ErrNotFound)
 			return
 		}
@@ -59,10 +60,11 @@ func TrackDetailHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
 	}
 }
 
-func TrackUpdateHandler(db *db.Repositories) gin.HandlerFunc {
+func TrackUpdateHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
+		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err != nil {
+			c.Status(http.StatusNotFound)
 			c.Error(ErrNotFound)
 			return
 		}
@@ -77,16 +79,16 @@ func TrackUpdateHandler(db *db.Repositories) gin.HandlerFunc {
 
 		if len(lyrics) == 0 {
 			view["Error"] = "Please provide some lyrics!"
-			c.HTML(http.StatusBadRequest, "track-edit.html", view)
+			_ = template2.TrackEditPage(c.Writer, view, http.StatusBadRequest)
 			return
 		}
 
 		track.Lyrics = lyrics
 		track.Loaded = true
-		err = db.Tracks.Save(track)
+		err = db.Save(track)
 		if err != nil {
 			view["Error"] = "Could not update lyrics"
-			c.HTML(http.StatusBadRequest, "track-edit.html", view)
+			_ = template2.TrackEditPage(c.Writer, view, http.StatusInternalServerError)
 			return
 		}
 
@@ -98,10 +100,11 @@ func TrackUpdateHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackEditFormHandler(db *db.Repositories) gin.HandlerFunc {
+func TrackEditFormHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
+		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
+			c.Status(http.StatusNotFound)
 			c.Error(ErrNotFound)
 			return
 		}
@@ -119,9 +122,9 @@ func TrackEditFormHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackMissingLyricsHandler(db *db.Repositories) gin.HandlerFunc {
+func TrackMissingLyricsHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tracks, err := db.Tracks.TracksWithoutLyrics()
+		tracks, err := db.TracksWithoutLyrics()
 		if err != nil {
 			c.Error(err)
 			return
@@ -135,7 +138,7 @@ func TrackMissingLyricsHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TrackSearchHandler(db *db.Repositories) gin.HandlerFunc {
+func TrackSearchHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		query := c.Query("q")
 
@@ -147,7 +150,7 @@ func TrackSearchHandler(db *db.Repositories) gin.HandlerFunc {
 			query = strings.Join(qs, " ")
 		}
 
-		tracks, err := db.Tracks.Search(query)
+		tracks, err := db.Search(query)
 		if err != nil && err != mongo.ErrNoDocuments {
 			c.Error(err)
 			return
@@ -162,7 +165,7 @@ func TrackSearchHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func TracksSyncHandler(db *db.Repositories) gin.HandlerFunc {
+func TracksSyncHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetString(spotifyTokenKey)
 		var tok oauth2.Token
@@ -172,7 +175,7 @@ func TracksSyncHandler(db *db.Repositories) gin.HandlerFunc {
 			return
 		}
 
-		err = spotify.SyncTracks(spotify.NewSpotifyTrackProvider(auth.NewClient(&tok)), db.Tracks)
+		err = spotify.SyncTracks(spotify.NewSpotifyTrackProvider(auth.NewClient(&tok)), db)
 		if err != nil {
 			c.Error(err)
 			return
@@ -182,9 +185,9 @@ func TracksSyncHandler(db *db.Repositories) gin.HandlerFunc {
 	}
 }
 
-func LyricsTrackSyncHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
+func LyricsTrackSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		track, err := db.Tracks.FindTrack(c.Param("spotifyID"))
+		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
 			c.Error(ErrNotFound)
 			return
@@ -214,10 +217,10 @@ func LyricsTrackSyncHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFu
 	}
 }
 
-func LyricsSyncHandler(db *db.Repositories, s *lyrics.Syncer) gin.HandlerFunc {
+func LyricsSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "POST" {
-			tracks, err := db.Tracks.TracksWithoutLyrics()
+			tracks, err := db.TracksWithoutLyrics()
 			if err != nil {
 				c.Error(err)
 				return

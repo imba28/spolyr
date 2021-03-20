@@ -14,6 +14,17 @@ type TrackStore interface {
 	Count(filter interface{}) (int64, error)
 }
 
+type TrackService interface {
+	FindTrack(string) (*model.Track, error)
+	TracksWithoutLyrics() ([]*model.Track, error)
+	CountWithoutLyrics() (int64, error)
+	CountWithLyrics() (int64, error)
+	Count() (int64, error)
+	LatestTracks(limit int64) ([]*model.Track, error)
+	Search(query string) ([]*model.Track, error)
+	Save(track *model.Track) error
+}
+
 type TrackRepository struct {
 	store TrackStore
 }

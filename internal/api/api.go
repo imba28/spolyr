@@ -20,21 +20,21 @@ func New(db *db.Repositories, geniusAPIToken string) *gin.Engine {
 
 	authRequired := r.Group("/").Use(AuthRequired)
 	{
-		authRequired.GET("/sync-tracks", TracksSyncHandler(db))
-		authRequired.GET("/sync-lyrics", LyricsSyncHandler(db, l))
-		authRequired.POST("/sync-lyrics", LyricsSyncHandler(db, l))
-		authRequired.GET("/tracks/id/:spotifyID/edit", TrackEditFormHandler(db))
-		authRequired.POST("/tracks/id/:spotifyID/edit", TrackUpdateHandler(db))
-		authRequired.POST("/tracks/id/:spotifyID/sync", LyricsTrackSyncHandler(db, l))
+		authRequired.GET("/sync-tracks", TracksSyncHandler(db.Tracks))
+		authRequired.GET("/sync-lyrics", LyricsSyncHandler(db.Tracks, l))
+		authRequired.POST("/sync-lyrics", LyricsSyncHandler(db.Tracks, l))
+		authRequired.GET("/tracks/id/:spotifyID/edit", TrackEditFormHandler(db.Tracks))
+		authRequired.POST("/tracks/id/:spotifyID/edit", TrackUpdateHandler(db.Tracks))
+		authRequired.POST("/tracks/id/:spotifyID/sync", LyricsTrackSyncHandler(db.Tracks, l))
 	}
 
-	r.GET("/", HomePageHandler(db))
+	r.GET("/", HomePageHandler(db.Tracks))
 	r.GET("/login", LoginHandler)
 	r.GET("/logout", LogoutHandler)
 	r.GET("/callback", SpotifyAuthCallbackHandler)
-	r.GET("/tracks/id/:spotifyID", TrackDetailHandler(db, l))
-	r.GET("/tracks/missing-lyrics", TrackMissingLyricsHandler(db))
-	r.GET("/search", TrackSearchHandler(db))
+	r.GET("/tracks/id/:spotifyID", TrackDetailHandler(db.Tracks, l))
+	r.GET("/tracks/missing-lyrics", TrackMissingLyricsHandler(db.Tracks))
+	r.GET("/search", TrackSearchHandler(db.Tracks))
 	r.Static("static", "public")
 
 	return r
