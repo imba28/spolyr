@@ -57,7 +57,7 @@ func (s *Syncer) run(tracks []*model.Track) {
 			if err != nil {
 				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.track.Name, result.track.Artist, err.Error()))
 			} else {
-				s.syncLog = append(s.syncLog, fmt.Sprintf("✅\xE2\x9C\x85 %s - %s", result.track.Name, result.track.Artist))
+				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.track.Name, result.track.Artist))
 			}
 		}
 	}
