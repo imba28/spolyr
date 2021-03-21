@@ -9,28 +9,28 @@ trigger:
       - pull_request
 
 steps:
-- name: test
-  image: golang:1.16
-  commands:
-  - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test -coverprofile cover.out ./...
-  - go tool cover -func cover.out
+  - name: test
+    image: golang:1.16
+    commands:
+      - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test -coverprofile cover.out ./...
+      - go tool cover -func cover.out
 
-- name: build
-  image: golang:1.16
-  commands:
-  - make bundle
+  - name: build
+    image: golang:1.16
+    commands:
+      - make bundle
 
-- name: gitea_release
-  image: plugins/gitea-release
-  settings:
-    base_url: https://git.luxs.at
-    title: Spolyr Release
-    api_key:
-      from_secret: gitea_token
-    files:
-      - ./dist/*
-  when:
-    event: tag
+  - name: gitea_release
+    image: plugins/gitea-release
+    settings:
+      base_url: https://git.luxs.at
+      title: Spolyr Release
+      api_key:
+        from_secret: gitea_token
+      files:
+        - ./dist/*
+    when:
+      event: tag
 
 services:
   - name: mongo

@@ -11,23 +11,23 @@
         </thead>
         <tbody>
         {{ range . }}
-        <tr data-preview-url="{{ .PreviewURL }}">
-            <td>{{ .Name }}</td>
-            <td>{{ .Artist }}</td>
-            <td>{{ .AlbumName }}</td>
-            <td>
-                {{ if .Loaded }}
-                    <small><i class="fas fa-quote-right" title="Lyrics available"></i></small>
-                {{ end }}
+            <tr data-preview-url="{{ .PreviewURL }}">
+                <td>{{ .Name }}</td>
+                <td>{{ .Artist }}</td>
+                <td>{{ .AlbumName }}</td>
+                <td>
+                    {{ if .Loaded }}
+                        <small><i class="fas fa-quote-right" title="Lyrics available"></i></small>
+                    {{ end }}
 
-                {{ if .PreviewURL }}
-                    <small><i class="fas fa-music" title="Audio snippet available"></i></small>
-                {{ end }}
-            </td>
-            <td class="text-right">
-                <a href="/tracks/id/{{ .SpotifyID }}" class="btn btn-primary btn-sm">Details</a><br>
-            </td>
-        </tr>
+                    {{ if .PreviewURL }}
+                        <small><i class="fas fa-music" title="Audio snippet available"></i></small>
+                    {{ end }}
+                </td>
+                <td class="text-right">
+                    <a href="/tracks/id/{{ .SpotifyID }}" class="btn btn-primary btn-sm">Details</a><br>
+                </td>
+            </tr>
         {{ end }}
         </tbody>
     </table>
@@ -37,20 +37,20 @@
         const tracks = document.querySelectorAll("#tracks tbody tr")
         const audio = document.getElementById("player");
 
-        tracks.forEach(function(track) {
-            track.addEventListener("mouseenter", function() {
+        tracks.forEach(function (track) {
+            track.addEventListener("mouseenter", function () {
                 clearTimeout(timeout)
                 if (!track.dataset.previewUrl) {
                     return
                 }
 
-                timeout = setTimeout(function() {
+                timeout = setTimeout(function () {
                     console.log("started playing", track.dataset.previewUrl)
                     audio.src = track.dataset.previewUrl
                     audio.play()
                 }, 300)
             })
-            track.addEventListener("mouseleave", function() {
+            track.addEventListener("mouseleave", function () {
                 clearTimeout(timeout)
                 audio.pause();
                 audio.currentTime = 0;

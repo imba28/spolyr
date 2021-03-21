@@ -2,7 +2,8 @@
     <div class="container">
         <form method="get" action="/search" class="mb-4">
             <div class="input-group mb-3">
-                <input type="text" name="q" autocomplete="off" class="form-control form-control-lg" placeholder="Search for titles, artists, album names or lyrics">
+                <input type="text" name="q" autocomplete="off" class="form-control form-control-lg"
+                       placeholder="Search for titles, artists, album names or lyrics">
                 <div class="input-group-append">
                     <button class="btn btn-primary" type="submit">
                         <i class="fas fa-search"></i>
@@ -25,7 +26,8 @@
                     <div class="col-md-3 col-sm-6 mb-4">
                         <div class="card" style="height: 100%">
                             {{ if .ImageURL }}
-                            <img class="card-img-top" src="{{ .ImageURL }}" alt="album cover of {{ .AlbumName }} from {{ .Artist }}">
+                                <img class="card-img-top" src="{{ .ImageURL }}"
+                                     alt="album cover of {{ .AlbumName }} from {{ .Artist }}">
                             {{ end }}
                             <div class="card-body d-flex justify-content-between flex-column">
                                 <div>
@@ -39,7 +41,8 @@
                                     <a href="/tracks/id/{{ .SpotifyID }}" class="d-inline-block btn btn-primary">
                                         Details
                                     </a>
-                                    <a href="https://open.spotify.com/track/{{ .SpotifyID }}" class="d-inline-block btn btn-primary" target="_blank">
+                                    <a href="https://open.spotify.com/track/{{ .SpotifyID }}"
+                                       class="d-inline-block btn btn-primary" target="_blank">
                                         <i class="fab fa-spotify"></i> to Spotify
                                     </a>
                                 </div>

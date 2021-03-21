@@ -7,16 +7,17 @@
         </div>
 
         {{ if .Error }}
-        <div class="alert alert-danger">
-            {{ .Error }}
-        </div>
+            <div class="alert alert-danger">
+                {{ .Error }}
+            </div>
         {{ end }}
 
         <div class="row">
             <div class="col-md-4 col-sm-12">
                 <div class="card position-sticky" style="top: 1em">
                     {{ if .Track.ImageURL }}
-                    <img class="card-img-top" src="{{ .Track.ImageURL }}" alt="album cover of {{ .Track.AlbumName }} from {{ .Track.Artist }}">
+                        <img class="card-img-top" src="{{ .Track.ImageURL }}"
+                             alt="album cover of {{ .Track.AlbumName }} from {{ .Track.Artist }}">
                     {{ end }}
                     <div class="card-body">
                         <h5 class="card-title">{{ .Track.Name }}</h5>
@@ -27,7 +28,8 @@
                             <audio controls preload="none" style="width: 100%">
                                 <source src="{{ .Track.PreviewURL }}" type="audio/mpeg">
                             </audio>
-                            <a href="https://open.spotify.com/track/{{ .Track.SpotifyID }}" class="d-inline-block mt-1 btn btn-primary" target="_blank">
+                            <a href="https://open.spotify.com/track/{{ .Track.SpotifyID }}"
+                               class="d-inline-block mt-1 btn btn-primary" target="_blank">
                                 <i class="fab fa-spotify"></i> to Spotify
                             </a>
                         </div>
@@ -36,7 +38,7 @@
             </div>
             <div class="col-md-8 col-sm-12">
                 <div class="card">
-                    <div  class="card-body">
+                    <div class="card-body">
                         <h3 class="card-title">
                             Lyrics
                         </h3>
@@ -44,7 +46,8 @@
                         <div class="card-text">
                             <form method="POST">
                                 <div class="form-group">
-                                    <textarea class="form-control" rows="{{ .TextareaRowCount }}" name="lyrics">{{ .Track.Lyrics }}</textarea>
+                                    <textarea class="form-control" rows="{{ .TextareaRowCount }}"
+                                              name="lyrics">{{ .Track.Lyrics }}</textarea>
                                 </div>
                                 <button type="submit" class="btn btn-primary">
                                     Save

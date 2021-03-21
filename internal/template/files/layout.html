@@ -10,11 +10,11 @@
     <script src="https://kit.fontawesome.com/b8a4cfefed.js" crossorigin="anonymous"></script>
 </head>
 <body class="d-flex flex-column justify-content-between min-vh-100">
-    <div class="wrapper">
-        {{ template "navbar" . }}
-        {{ block "content" . }}
-        {{ end }}
-    </div>
-    {{ template "footer" . }}
+<div class="wrapper">
+    {{ template "navbar" . }}
+    {{ block "content" . }}
+    {{ end }}
+</div>
+{{ template "footer" . }}
 </body>
 </html>
