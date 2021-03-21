@@ -26,3 +26,6 @@ test:
 
 test-units:
 	go test -short ./internal/...
+
+coverage:
+	go tool cover -func cover.out | tail -n 1 | awk '{print $3}'
