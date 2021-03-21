@@ -1,9 +1,12 @@
 .PHONY: all clean bundle build test
-all: teamspeak3-viewer
 
-build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -o spolyr cmd/main.go
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a  -o spolyr.exe cmd/main.go
+build-linux:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr cmd/main.go
+
+build-windows:
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr.exe cmd/main.go
+
+build: build-linux build-windows
 
 clean:
 	rm -f spolyr 
