@@ -18,6 +18,10 @@ import (
 	"strings"
 )
 
+var (
+	ErrNotFound = errors.New("item not found")
+)
+
 func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		trackCount, _ := s.Count()

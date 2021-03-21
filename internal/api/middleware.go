@@ -30,15 +30,20 @@ func ErrorHandle(c *gin.Context) {
 		"Status":  http.StatusInternalServerError,
 		"Message": "Whoops! Sorry, an error occurred",
 	}
-	statusCode := http.StatusInternalServerError
+	statusFallback := http.StatusInternalServerError
 
 	if errors.Is(err.Err, ErrNotFound) {
 		p["Message"] = "Page not found"
-		p["Status"] = http.StatusNotFound
-		statusCode = http.StatusNotFound
+		statusFallback = http.StatusNotFound
 	}
 
-	_ = template2.ErrorPage(c.Writer, p, statusCode)
+	status := c.Writer.Status()
+	// set error status if no status was explicitly set prior
+	if status == http.StatusOK {
+		status = statusFallback
+	}
+	p["Status"] = status
+	_ = template2.ErrorPage(c.Writer, p, status)
 	c.Abort()
 }
 
