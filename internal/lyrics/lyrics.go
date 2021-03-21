@@ -2,37 +2,72 @@ package lyrics
 
 import (
 	"errors"
-	"fmt"
-	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/model"
 	lyrics "github.com/rhnvrm/lyric-api-go"
-	"log"
 	"strings"
+	"sync"
 )
 
 var (
 	ErrBusy = errors.New("sync already started")
 )
 
-const workerSize = 5
-
-type Syncer struct {
-	ready                   chan struct{}
-	syncLyricsTracksCurrent int
-	syncLyricsTrackTotal    int
-	syncLog                 []string
-
-	fetchingQueue chan *model.Track
-	lyricsFetcher lyrics.Lyric
-	db            *db.Repositories
+type Result struct {
+	track  *model.Track
+	lyrics string
+	err    error
 }
 
-func New(db *db.Repositories, geniusAPIToken string) *Syncer {
-	return &Syncer{
-		syncLyricsTracksCurrent: -1,
-		ready:                   make(chan struct{}, 1),
-		db:                      db,
+type Fetcher interface {
+	Fetch(*model.Track) error
+	FetchAll([]*model.Track) (<-chan Result, error)
+}
 
+func fetchTrackLyrics(t *model.Track, l lyrics.Lyric) error {
+	artist := t.Artist
+	if strings.Index(t.Artist, ", ") > -1 {
+		artist = strings.Split(artist, ", ")[0]
+	}
+	lyric, err := l.Search(artist, t.Name)
+	if err != nil {
+		return err
+	}
+
+	t.Lyrics = lyric
+	t.Loaded = true
+
+	return nil
+}
+
+type AsyncFetcher struct {
+	concurrency   int
+	ready         chan struct{}
+	fetchingQueue chan *model.Track
+	lyricsFetcher lyrics.Lyric
+}
+
+func (s AsyncFetcher) Fetch(t *model.Track) error {
+	err := fetchTrackLyrics(t, s.lyricsFetcher)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s AsyncFetcher) FetchAll(tracks []*model.Track) (<-chan Result, error) {
+	results := make(chan Result)
+	var wg sync.WaitGroup
+
+	queue := s.initWorkers(results, &wg)
+	go s.run(tracks, queue, &wg)
+
+	return results, nil
+}
+
+func New(geniusAPIToken string, concurrencyLevel int) AsyncFetcher {
+	return AsyncFetcher{
+		ready:       make(chan struct{}, 1),
+		concurrency: concurrencyLevel,
 		lyricsFetcher: lyrics.New(
 			lyrics.WithGeniusLyrics(geniusAPIToken),
 			lyrics.WithSongLyrics(),
@@ -41,82 +76,36 @@ func New(db *db.Repositories, geniusAPIToken string) *Syncer {
 	}
 }
 
-func (s *Syncer) initWorkers() {
-	s.fetchingQueue = make(chan *model.Track, workerSize)
+func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) chan *model.Track {
+	c := make(chan *model.Track, s.concurrency)
+	var once sync.Once
 
-	for i := 0; i < workerSize; i++ {
+	for i := 0; i < s.concurrency; i++ {
 		go func() {
-			for t := range s.fetchingQueue {
-				s.downloadLyrics(t)
+			for t := range c {
+				err := fetchTrackLyrics(t, s.lyricsFetcher)
+				results <- Result{track: t, lyrics: t.Lyrics, err: err}
+				wg.Done()
 			}
+
+			once.Do(func() {
+				close(results)
+			})
 		}()
 	}
+
+	return c
 }
 
-func (s *Syncer) Start(tracks []*model.Track) error {
-	select {
-	case s.ready <- struct{}{}:
-		s.run(tracks)
-		return nil
-	default:
-		return ErrBusy
-	}
-}
+func (s *AsyncFetcher) run(tracks []*model.Track, queue chan<- *model.Track, wg *sync.WaitGroup) {
+	defer close(queue)
 
-func (s *Syncer) Syncing() bool {
-	return s.syncLyricsTracksCurrent > -1
-}
-
-func (s *Syncer) SyncedTracks() int {
-	return s.syncLyricsTracksCurrent
-}
-
-func (s *Syncer) TotalTracks() int {
-	return s.syncLyricsTrackTotal
-}
-
-func (s *Syncer) Logs() string {
-	return strings.Join(s.syncLog, "<br>")
-}
-
-func (s *Syncer) run(tracks []*model.Track) {
-	s.initWorkers()
-	s.syncLyricsTracksCurrent = 0
-	s.syncLyricsTrackTotal = len(tracks)
-
-	go func() {
-		defer func() {
-			s.syncLyricsTracksCurrent = -1
-			s.syncLog = nil
-			<-s.ready
-			close(s.fetchingQueue)
-		}()
-
-		for i := range tracks {
-			s.downloadLyrics(tracks[i])
-		}
-	}()
-}
-
-func (s *Syncer) downloadLyrics(t *model.Track) {
-	s.syncLyricsTracksCurrent++
-
-	artist := t.Artist
-	if strings.Index(t.Artist, ", ") > -1 {
-		artist = strings.Split(artist, ", ")[0]
-	}
-	lyric, err := s.lyricsFetcher.Search(artist, t.Name)
-	if err != nil {
-		s.syncLog = append(s.syncLog, fmt.Sprintf("%s - %s: %s", artist, t.Name, err.Error()))
-		log.Println(artist, t.Name, err)
-		return
+	for i := range tracks {
+		wg.Add(1)
+		queue <- tracks[i]
 	}
 
-	t.Lyrics = lyric
-	t.Loaded = true
-	err = s.db.Tracks.Save(t)
-	if err != nil {
-		s.syncLog = append(s.syncLog, fmt.Sprintf("%s - %s: %s", artist, t.Name, err.Error()))
-		log.Println(artist, t.Name, err)
-	}
+	wg.Wait()
 }
+
+var _ Fetcher = AsyncFetcher{}

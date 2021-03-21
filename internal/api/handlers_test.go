@@ -18,6 +18,21 @@ import (
 	"testing"
 )
 
+type lyricsFetcherMock struct {
+	mock.Mock
+}
+
+func (l lyricsFetcherMock) Fetch(t *model.Track) error {
+	return l.Called(t).Error(0)
+}
+func (l lyricsFetcherMock) FetchAll(ts []*model.Track) (<-chan lyrics.Result, error) {
+	args := l.Called(ts)
+	if args.Get(1) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(chan lyrics.Result), args.Error(1)
+}
+
 type trackServiceMock struct {
 	mock.Mock
 }
@@ -121,7 +136,7 @@ func TestTrackDetailHandler(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
 
 	router := setUp()
-	router.Use(TrackDetailHandler(mockTrackService, &lyrics.Syncer{}))
+	router.Use(TrackDetailHandler(mockTrackService))
 	router.ServeHTTP(rr, request)
 
 	assert.Equal(t, 200, rr.Code)
@@ -136,7 +151,7 @@ func TestTrackDetailHandler_returns_404_of_track_does_not_exist(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
 
 	router := setUp()
-	router.Use(TrackDetailHandler(mockTrackService, &lyrics.Syncer{}))
+	router.Use(TrackDetailHandler(mockTrackService))
 	router.ServeHTTP(rr, request)
 
 	assert.Equal(t, http.StatusNotFound, rr.Code)
@@ -152,7 +167,7 @@ func TestTrackDetailHandler_returns_500_if_something_goes_wrong(t *testing.T) {
 
 	router := setUp()
 
-	router.Use(TrackDetailHandler(mockTrackService, &lyrics.Syncer{}))
+	router.Use(TrackDetailHandler(mockTrackService))
 	router.ServeHTTP(rr, request)
 
 	assert.Equal(t, http.StatusNotFound, rr.Code)
@@ -346,4 +361,27 @@ func TestTrackSearchHandler__does_not_modify_query_if_at_least_one_contains_an_e
 	router.ServeHTTP(rr, request)
 
 	mockTrackService.AssertExpectations(t)
+}
+
+func TestLyricsTrackSyncHandler(t *testing.T) {
+	t.Run("calls lyrics fetcher service", func(t *testing.T) {
+		track := model.Track{
+			SpotifyID: "foobar",
+		}
+		mockTrackService := trackServiceMock{}
+		mockTrackService.On("FindTrack", track.SpotifyID).Return(&track, nil)
+		mockFetcher := lyricsFetcherMock{}
+		mockFetcher.On("Fetch", &track).Return(nil)
+
+		rr := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/tracks/id/"+track.SpotifyID, nil)
+
+		router := setUp()
+		router.GET("/tracks/id/:spotifyID", LyricsTrackSyncHandler(mockTrackService, mockFetcher))
+		router.ServeHTTP(rr, request)
+
+		assert.Equal(t, http.StatusFound, rr.Code)
+		assert.Equal(t, "/tracks/id/foobar", rr.Header().Get("Location"))
+		mockTrackService.AssertExpectations(t)
+	})
 }

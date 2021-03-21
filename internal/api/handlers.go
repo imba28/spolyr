@@ -3,11 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
-	"github.com/imba28/spolyr/internal/model"
 	"github.com/imba28/spolyr/internal/spotify"
 	template2 "github.com/imba28/spolyr/internal/template"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,7 +38,7 @@ func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 	}
 }
 
-func TrackDetailHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
+func TrackDetailHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
@@ -53,11 +53,10 @@ func TrackDetailHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
 
 		session := sessions.Default(c)
 		viewData := gin.H{
-			"Track":         track,
-			"SyncAvailable": !s.Syncing(),
-			"User":          c.GetString(userEmailKey),
-			"Success":       session.Flashes("Success"),
-			"Error":         session.Flashes("Error"),
+			"Track":   track,
+			"User":    c.GetString(userEmailKey),
+			"Success": session.Flashes("Success"),
+			"Error":   session.Flashes("Error"),
 		}
 		_ = session.Save()
 		_ = template2.TrackPage(c.Writer, viewData, http.StatusOK)
@@ -189,7 +188,7 @@ func TracksSyncHandler(db db.TrackService) gin.HandlerFunc {
 	}
 }
 
-func LyricsTrackSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
+func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
@@ -207,13 +206,9 @@ func LyricsTrackSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFun
 			c.Redirect(http.StatusFound, "/tracks/id/"+track.SpotifyID)
 		}()
 
-		err = s.Start([]*model.Track{track})
-		if err != nil && errors.Is(err, lyrics.ErrBusy) {
-			session.AddFlash("Action not available. Please try again later.", "Error")
-			return
-		}
+		err = fetcher.Fetch(track)
 		if err != nil {
-			session.AddFlash("An unknown error occurred", "Error")
+			session.AddFlash(fmt.Sprintf("An error occurred while trying to download the lyrics of this song: %s", err.Error()), "Error")
 			return
 		}
 
@@ -221,16 +216,14 @@ func LyricsTrackSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFun
 	}
 }
 
-func LyricsSyncHandler(db db.TrackService, s *lyrics.Syncer) gin.HandlerFunc {
+func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "POST" {
-			tracks, err := db.TracksWithoutLyrics()
+			err := s.Sync()
 			if err != nil {
 				c.Error(err)
 				return
 			}
-
-			s.Start(tracks)
 		}
 
 		viewData := gin.H{
