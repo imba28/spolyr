@@ -1,7 +1,11 @@
 package api
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/zmb3/spotify"
@@ -9,20 +13,21 @@ import (
 	"os"
 )
 
-const state = "spolyrCSRF"
+const csrfSessionKey = "spolyrCSRF"
 
 var redirectURI = getEnv("HOSTNAME", "http://localhost:8080") + "/callback"
 var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
 
 func SpotifyAuthCallbackHandler(c *gin.Context) {
-	tok, err := auth.Token(state, c.Request)
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+	csrfToken, ok := sessions.Default(c).Get(csrfSessionKey).(string)
+	if !ok {
+		c.Error(errors.New("could not decode csrf token"))
 		return
 	}
 
-	if st := c.Request.FormValue("state"); st != state {
-		c.String(http.StatusNotFound, "Invalid csrf token")
+	tok, err := auth.Token(csrfToken, c.Request)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -59,7 +64,32 @@ func LogoutHandler(c *gin.Context) {
 }
 
 func LoginHandler(c *gin.Context) {
-	c.Redirect(http.StatusTemporaryRedirect, auth.AuthURL(state))
+	token, err := csrfToken()
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	session := sessions.Default(c)
+	session.Set(csrfSessionKey, token)
+	err = session.Save()
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.Redirect(http.StatusTemporaryRedirect, auth.AuthURL(token))
+}
+
+func csrfToken() (string, error) {
+	sha := sha256.New()
+	b := make([]byte, 256)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	sha.Write(b)
+
+	return base64.URLEncoding.EncodeToString(sha.Sum(nil)), nil
 }
 
 func getEnv(key, fallback string) string {
