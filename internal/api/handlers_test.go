@@ -370,6 +370,8 @@ func TestLyricsTrackSyncHandler(t *testing.T) {
 		}
 		mockTrackService := trackServiceMock{}
 		mockTrackService.On("FindTrack", track.SpotifyID).Return(&track, nil)
+		mockTrackService.On("Save", &track).Return(nil)
+
 		mockFetcher := lyricsFetcherMock{}
 		mockFetcher.On("Fetch", &track).Return(nil)
 

@@ -43,11 +43,11 @@ func TrackDetailHandler(db db.TrackService) gin.HandlerFunc {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
 			c.Status(http.StatusNotFound)
-			c.Error(ErrNotFound)
+			_ = c.Error(ErrNotFound)
 			return
 		}
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -68,29 +68,29 @@ func TrackUpdateHandler(db db.TrackService) gin.HandlerFunc {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err != nil {
 			c.Status(http.StatusNotFound)
-			c.Error(ErrNotFound)
+			_ = c.Error(ErrNotFound)
 			return
 		}
 
 		userEmail := c.GetString(userEmailKey)
-		lyrics := strings.TrimSpace(c.PostForm("lyrics"))
+		downloadLyrics := strings.TrimSpace(c.PostForm("downloadLyrics"))
 		view := gin.H{
 			"Track":            track,
 			"User":             userEmail,
 			"TextareaRowCount": 20,
 		}
 
-		if len(lyrics) == 0 {
-			view["Error"] = "Please provide some lyrics!"
+		if len(downloadLyrics) == 0 {
+			view["Error"] = "Please provide some downloadLyrics!"
 			_ = template2.TrackEditPage(c.Writer, view, http.StatusBadRequest)
 			return
 		}
 
-		track.Lyrics = lyrics
+		track.Lyrics = downloadLyrics
 		track.Loaded = true
 		err = db.Save(track)
 		if err != nil {
-			view["Error"] = "Could not update lyrics"
+			view["Error"] = "Could not update downloadLyrics"
 			_ = template2.TrackEditPage(c.Writer, view, http.StatusInternalServerError)
 			return
 		}
@@ -108,11 +108,11 @@ func TrackEditFormHandler(db db.TrackService) gin.HandlerFunc {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
 			c.Status(http.StatusNotFound)
-			c.Error(ErrNotFound)
+			_ = c.Error(ErrNotFound)
 			return
 		}
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -129,7 +129,7 @@ func TrackMissingLyricsHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tracks, err := db.TracksWithoutLyrics()
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -155,7 +155,7 @@ func TrackSearchHandler(db db.TrackService) gin.HandlerFunc {
 
 		tracks, err := db.Search(query)
 		if err != nil && err != mongo.ErrNoDocuments {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -180,7 +180,7 @@ func TracksSyncHandler(db db.TrackService) gin.HandlerFunc {
 
 		err = spotify.SyncTracks(spotify.NewSpotifyTrackProvider(auth.NewClient(&tok)), db)
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -192,11 +192,11 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 	return func(c *gin.Context) {
 		track, err := db.FindTrack(c.Param("spotifyID"))
 		if err == mongo.ErrNoDocuments {
-			c.Error(ErrNotFound)
+			_ = c.Error(ErrNotFound)
 			return
 		}
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -212,7 +212,13 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 			return
 		}
 
-		session.AddFlash("Download of song lyrics started! This might take a few seconds.", "Success")
+		err = db.Save(track)
+		if err != nil {
+			session.AddFlash(fmt.Sprintf("An error occurred while trying save the song: %s", err.Error()), "Error")
+			return
+		}
+
+		session.AddFlash("Lyrics have been successfully downloaded!.", "Success")
 	}
 }
 
@@ -221,7 +227,7 @@ func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 		if c.Request.Method == "POST" {
 			err := s.Sync()
 			if err != nil {
-				c.Error(err)
+				_ = c.Error(err)
 				return
 			}
 		}
