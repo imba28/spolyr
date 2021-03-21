@@ -23,7 +23,11 @@ type Fetcher interface {
 	FetchAll([]*model.Track) (<-chan Result, error)
 }
 
-func fetchTrackLyrics(t *model.Track, l lyrics.Lyric) error {
+type Provider interface {
+	Search(string, string) (string, error)
+}
+
+func fetchTrackLyrics(t *model.Track, l Provider) error {
 	artist := t.Artist
 	if strings.Index(t.Artist, ", ") > -1 {
 		artist = strings.Split(artist, ", ")[0]
@@ -43,7 +47,7 @@ type AsyncFetcher struct {
 	concurrency   int
 	ready         chan struct{}
 	fetchingQueue chan *model.Track
-	lyricsFetcher lyrics.Lyric
+	lyricsFetcher Provider
 }
 
 func (s AsyncFetcher) Fetch(t *model.Track) error {
@@ -65,14 +69,15 @@ func (s AsyncFetcher) FetchAll(tracks []*model.Track) (<-chan Result, error) {
 }
 
 func New(geniusAPIToken string, concurrencyLevel int) AsyncFetcher {
+	provider := lyrics.New(
+		lyrics.WithGeniusLyrics(geniusAPIToken),
+		lyrics.WithSongLyrics(),
+		lyrics.WithMusixMatch(),
+	)
 	return AsyncFetcher{
-		ready:       make(chan struct{}, 1),
-		concurrency: concurrencyLevel,
-		lyricsFetcher: lyrics.New(
-			lyrics.WithGeniusLyrics(geniusAPIToken),
-			lyrics.WithSongLyrics(),
-			lyrics.WithMusixMatch(),
-		),
+		ready:         make(chan struct{}, 1),
+		concurrency:   concurrencyLevel,
+		lyricsFetcher: &provider,
 	}
 }
 
