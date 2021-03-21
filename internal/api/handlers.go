@@ -73,24 +73,24 @@ func TrackUpdateHandler(db db.TrackService) gin.HandlerFunc {
 		}
 
 		userEmail := c.GetString(userEmailKey)
-		downloadLyrics := strings.TrimSpace(c.PostForm("downloadLyrics"))
+		updatedLyrics := strings.TrimSpace(c.PostForm("lyrics"))
 		view := gin.H{
 			"Track":            track,
 			"User":             userEmail,
 			"TextareaRowCount": 20,
 		}
 
-		if len(downloadLyrics) == 0 {
-			view["Error"] = "Please provide some downloadLyrics!"
+		if len(updatedLyrics) == 0 {
+			view["Error"] = "Please provide some lyrics!"
 			_ = template2.TrackEditPage(c.Writer, view, http.StatusBadRequest)
 			return
 		}
 
-		track.Lyrics = downloadLyrics
+		track.Lyrics = updatedLyrics
 		track.Loaded = true
 		err = db.Save(track)
 		if err != nil {
-			view["Error"] = "Could not update downloadLyrics"
+			view["Error"] = "Could not update lyrics"
 			_ = template2.TrackEditPage(c.Writer, view, http.StatusInternalServerError)
 			return
 		}
