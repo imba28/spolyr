@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/zmb3/spotify"
@@ -15,8 +16,19 @@ import (
 
 const csrfSessionKey = "spolyrCSRF"
 
-var redirectURI = getEnv("HOSTNAME", "http://localhost:8080") + "/callback"
-var auth = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
+func redirectUrl() string {
+	var protocol = getEnv("PROTOCOL", "http")
+	var domain = getEnv("DOMAIN", "localhost")
+
+	var httpPort = getEnv("HTTP_PORT", "8080")
+	if httpPort != "80" && httpPort != "443" {
+		httpPort = ":" + httpPort
+	}
+
+	return fmt.Sprintf("%s://%s%s/callback", protocol, domain, httpPort)
+}
+
+var auth = spotify.NewAuthenticator(redirectUrl(), spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail)
 
 func SpotifyAuthCallbackHandler(c *gin.Context) {
 	csrfToken, ok := sessions.Default(c).Get(csrfSessionKey).(string)
