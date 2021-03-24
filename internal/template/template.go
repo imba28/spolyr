@@ -15,6 +15,7 @@ var (
 	trackLyricsSyncTemplate = parse("pages/track-lyrics-sync.html")
 	tracksTemplate          = parse("pages/tracks.html")
 	errorTemplate           = parse("pages/error.html")
+	importTemplate = parse("pages/import.html")
 )
 
 var templateFunctions = template.FuncMap{
@@ -57,4 +58,7 @@ func TracksPage(w http.ResponseWriter, p gin.H, status int) error {
 }
 func ErrorPage(w http.ResponseWriter, p gin.H, status int) error {
 	return executeWithStatus(errorTemplate, w, p, status)
+}
+func ImportPage(w http.ResponseWriter, p gin.H, status int) error {
+	return executeWithStatus(importTemplate, w, p, status)
 }

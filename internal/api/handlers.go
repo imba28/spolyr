@@ -37,6 +37,62 @@ func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 	}
 }
 
+func ImportHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+
+		token := c.GetString(spotifyTokenKey)
+		var tok oauth2.Token
+		err := json.Unmarshal([]byte(token), &tok)
+		if err != nil {
+			c.Redirect(http.StatusTemporaryRedirect, "/logout")
+			return
+		}
+		client := auth.NewClient(&tok)
+		p, err := client.CurrentUsersPlaylists()
+
+		pp, _ := client.CurrentUsersTracks()
+
+		viewData := gin.H{
+			"LibraryTrackCount": pp.Total,
+			"Playlists": p.Playlists,
+			"User":    c.GetString(userEmailKey),
+			"Success": session.Flashes("Success"),
+			"Error":   session.Flashes("Error"),
+		}
+
+		_ = session.Save()
+		_ = template2.ImportPage(c.Writer, viewData, http.StatusOK)
+	}
+}
+
+func ImportPlaylistHandler(db db.TrackService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		defer func() {
+			session.Save()
+			c.Redirect(http.StatusFound, "/import")
+		}()
+
+		token := c.GetString(spotifyTokenKey)
+		var tok oauth2.Token
+		err := json.Unmarshal([]byte(token), &tok)
+		if err != nil {
+			c.Redirect(http.StatusTemporaryRedirect, "/logout")
+			return
+		}
+		client := auth.NewClient(&tok)
+
+		err = spotify.NewPlaylistProvider(client, db).Download(c.Param("ID"))
+		if err != nil {
+			session.AddFlash(fmt.Sprintf("Could not import playlist: %s", err), "Error")
+			return
+		}
+
+		session.AddFlash("Successfully imported all tracks of playlist!", "Success")
+	}
+}
+
 func TrackDetailHandler(db db.TrackService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		track, err := db.FindTrack(c.Param("spotifyID"))

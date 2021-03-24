@@ -18,7 +18,7 @@ type Track struct {
 	Loaded     bool               `bson:"loaded"`
 }
 
-func NewTrack(t spotify.SavedTrack) Track {
+func NewTrack(t spotify.FullTrack) Track {
 	artists := make([]string, len(t.Artists))
 	for j := range t.Artists {
 		artists[j] = t.Artists[j].Name

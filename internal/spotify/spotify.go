@@ -31,7 +31,7 @@ func (p *UserTrackProvider) Tracks() ([]*model.Track, error) {
 
 	var tracks []*model.Track
 	for i := range p.lastPage.Tracks {
-		track := model.NewTrack(p.lastPage.Tracks[i])
+		track := model.NewTrack(p.lastPage.Tracks[i].FullTrack)
 		tracks = append(tracks, &track)
 	}
 	return tracks, nil
@@ -72,4 +72,42 @@ func SyncTracks(client userTrackProvider, store trackSaver) error {
 	}
 
 	return nil
+}
+
+
+type PlaylistProvider struct {
+	c spotify.Client
+	saver TrackSaver
+}
+
+func (p PlaylistProvider) Download(ID string) error {
+	playlist, err := p.c.GetPlaylistTracks(spotify.ID(ID))
+	if err != nil {
+		return err
+	}
+
+	for {
+		for i := range playlist.Tracks {
+			track := model.NewTrack(playlist.Tracks[i].Track)
+			err = p.saver.Save(&track)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = p.c.NextPage(playlist)
+		if err != nil {
+			if err == spotify.ErrNoMorePages {
+				return nil
+			}
+			return err
+		}
+	}
+}
+
+func NewPlaylistProvider(c spotify.Client, saver TrackSaver) PlaylistProvider {
+	return PlaylistProvider{
+		c : c,
+		saver: saver,
+	}
 }

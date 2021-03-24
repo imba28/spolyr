@@ -27,7 +27,7 @@ test:
 test-units:
 	go test -short ./internal/...
 
-coverage:
+coverage: test
 	go tool cover -func cover.out | tail -n 1 | awk '{print $3}'
 
 node_modules:

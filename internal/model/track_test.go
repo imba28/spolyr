@@ -7,11 +7,9 @@ import (
 )
 
 func TestTrack_sets_SpotifyID(t *testing.T) {
-	spotifyTrack := spotify.SavedTrack{
-		FullTrack: spotify.FullTrack{
-			SimpleTrack: spotify.SimpleTrack{
-				ID: "some_id",
-			},
+	spotifyTrack := spotify.FullTrack{
+		SimpleTrack: spotify.SimpleTrack{
+			ID: "some_id",
 		},
 	}
 	track := NewTrack(spotifyTrack)
@@ -55,11 +53,9 @@ func TestTrack_aggregates_Artist(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v,%s", len(tt.artists), tt.want), func(t *testing.T) {
-			spotifyTrack := spotify.SavedTrack{
-				FullTrack: spotify.FullTrack{
-					SimpleTrack: spotify.SimpleTrack{
-						Artists: tt.artists,
-					},
+			spotifyTrack := spotify.FullTrack{
+				SimpleTrack: spotify.SimpleTrack{
+					Artists: tt.artists,
 				},
 			}
 			track := NewTrack(spotifyTrack)
@@ -92,10 +88,8 @@ func TestTrack_sets_AlbumName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v,%s", tt.album.Name, tt.want), func(t *testing.T) {
-			spotifyTrack := spotify.SavedTrack{
-				FullTrack: spotify.FullTrack{
-					Album: tt.album,
-				},
+			spotifyTrack := spotify.FullTrack{
+				Album: tt.album,
 			}
 			track := NewTrack(spotifyTrack)
 
@@ -136,11 +130,9 @@ func TestTrack_sets_ImageURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v,%s", tt.images, tt.want), func(t *testing.T) {
-			spotifyTrack := spotify.SavedTrack{
-				FullTrack: spotify.FullTrack{
-					Album: spotify.SimpleAlbum{
-						Images: tt.images,
-					},
+			spotifyTrack := spotify.FullTrack{
+				Album: spotify.SimpleAlbum{
+					Images: tt.images,
 				},
 			}
 			track := NewTrack(spotifyTrack)
@@ -162,10 +154,8 @@ func TestTrack_sets_PreviewURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v,%s", tt.previewURL, tt.want), func(t *testing.T) {
-			spotifyTrack := spotify.SavedTrack{
-				FullTrack: spotify.FullTrack{
-					SimpleTrack: spotify.SimpleTrack{PreviewURL: tt.previewURL},
-				},
+			spotifyTrack := spotify.FullTrack{
+				SimpleTrack: spotify.SimpleTrack{PreviewURL: tt.previewURL},
 			}
 			track := NewTrack(spotifyTrack)
 
@@ -186,10 +176,8 @@ func TestTrack_sets_Name(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%v,%s", tt.name, tt.want), func(t *testing.T) {
-			spotifyTrack := spotify.SavedTrack{
-				FullTrack: spotify.FullTrack{
-					SimpleTrack: spotify.SimpleTrack{Name: tt.name},
-				},
+			spotifyTrack := spotify.FullTrack{
+				SimpleTrack: spotify.SimpleTrack{Name: tt.name},
 			}
 			track := NewTrack(spotifyTrack)
 
@@ -201,7 +189,7 @@ func TestTrack_sets_Name(t *testing.T) {
 }
 
 func TestTrack_does_not_set_ID(t *testing.T) {
-	spotifyTrack := spotify.SavedTrack{}
+	spotifyTrack := spotify.FullTrack{}
 	track := NewTrack(spotifyTrack)
 
 	if !track.ID.IsZero() {
