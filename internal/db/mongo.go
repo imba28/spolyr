@@ -2,13 +2,21 @@ package db
 
 import (
 	"context"
+	"embed"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mongodb"
+	_ "github.com/golang-migrate/migrate/v4/database/mongodb"
+	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	"github.com/imba28/spolyr/internal/model"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"net/http"
 )
 
 const TrackCollection = "tracks"
+
+//go:embed migrations
+var migrationFiles embed.FS
 
 type MongoTrackStore struct {
 	conn *mongo.Database
@@ -60,28 +68,27 @@ func (m MongoTrackStore) decodeTracks(cur *mongo.Cursor) ([]*model.Track, error)
 }
 
 func createIndices(db *mongo.Database) error {
-	_, err := db.Collection(TrackCollection).Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys:    bson.D{{Key: "spotify_id", Value: 1}},
-			Options: options.Index().SetUnique(true).SetName("spotify_id_index"),
-		},
-	)
+	driver, err := mongodb.WithInstance(db.Client(), &mongodb.Config{
+		DatabaseName: db.Name(),
+	})
 	if err != nil {
 		return err
 	}
 
-	fullTextIndex := mongo.IndexModel{
-		Keys: bson.M{"name": "text", "artist": "text", "album_name": "text"},
-		Options: options.Index().SetName("fulltext_index").SetWeights(map[string]int{
-			"name":       9,
-			"artist":     5,
-			"album_name": 4,
-			"lyrics":     2,
-		}),
+	source, err := httpfs.New(http.FS(migrationFiles), "migrations")
+	if err != nil {
+		return err
 	}
-	_, err = db.Collection(TrackCollection).Indexes().CreateOne(context.Background(), fullTextIndex)
-	return err
+
+	m, err := migrate.NewWithInstance("httpfs", source, db.Name(), driver)
+	if err != nil {
+		return err
+	}
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }
 
 func newMongoTrackStore(db *mongo.Database) (TrackStore, error) {

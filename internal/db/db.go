@@ -15,7 +15,7 @@ type Repositories struct {
 func New(username, password, databaseName, host string) (*Repositories, error) {
 	ctx := context.Background()
 
-	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:27017/", host)).SetAuth(options.Credential{
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:27017", host)).SetAuth(options.Credential{
 		Username: username,
 		Password: password,
 	})

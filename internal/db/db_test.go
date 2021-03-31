@@ -15,11 +15,14 @@ const (
 )
 
 func TestNew__correct_credentials(t *testing.T) {
-	_, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost))
+	r, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost))
+	defer tearDown(r)
 	assert.Nil(t, err)
 }
 
 func TestNew__wrong_credentials(t *testing.T) {
-	_, err := New("", "", testDatabaseName, "localhost")
+	r, err := New("", "", testDatabaseName, "localhost")
+	defer tearDown(r)
+
 	assert.Error(t, err, "should return error if database credentials are wrong")
 }

@@ -1,0 +1,29 @@
+[{
+  "createIndexes": "tracks",
+  "indexes": [
+    {
+      "key": {
+        "name": "text",
+        "artist": "text",
+        "album_name": "text",
+        "lyrics": "text"
+      },
+      "weights": {
+        "name": 9,
+        "artist": 5,
+        "album_name": 4,
+        "lyrics": 2
+      },
+      "name": "fulltext_index",
+      "background": true
+    },
+    {
+      "key": {
+        "spotify_id": 1
+      },
+      "name": "spotify_id_index",
+      "unique": true,
+      "background": true
+    }
+  ]
+}]

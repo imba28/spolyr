@@ -1,0 +1,10 @@
+[
+  {
+    "dropIndexes": "tracks",
+    "index": "spotify_id_index"
+  },
+  {
+    "dropIndexes": "tracks",
+    "index": "fulltext_index"
+  }
+]

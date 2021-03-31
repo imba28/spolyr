@@ -20,8 +20,12 @@ func setUp() *Repositories {
 }
 
 func tearDown(repositories *Repositories) {
+	if repositories == nil {
+		return
+	}
+
 	ctx := context.Background()
-	err := repositories.client.Database(testDatabaseName).Collection(TrackCollection).Drop(ctx)
+	err := repositories.client.Database(testDatabaseName).Drop(ctx)
 	if err != nil {
 		panic(err)
 	}
