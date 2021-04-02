@@ -31,7 +31,9 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 
 `DOMAIN`: Domain name of this server. (default: `localhost`)
 
-`HTTP_PORT`: Specifies a the http port (default: `8080`)
+`HTTP_PORT`: Specifies the http port to bind Spolyr to (default: `8080`)
+
+`HTTP_PUBLIC_PORT`: Specifies the public-facing http port. Set this to `443` or `80` if you are running Spolyr with a reverse proxy (default: value of `HTTP_PORT`)
 
 `DATABASE_HOST`: (default: `127.0.0.1`)
 

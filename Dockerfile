@@ -24,6 +24,4 @@ WORKDIR /app
 COPY --from=builder --chown=spolyr:spolyr /build/spolyr .
 COPY --from=builder --chown=spolyr:spolyr /build/public public
 
-EXPOSE 8080
-
 CMD ["/app/spolyr"]

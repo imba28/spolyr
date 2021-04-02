@@ -74,3 +74,49 @@ func TestLogoutHandler(t *testing.T) {
 	assert.False(t, hasSessionKey, "should delete all session keys")
 	assert.Nil(t, flashes, 0, "should delete all flash messages")
 }
+
+func TestRedirectUrl(t *testing.T) {
+	t.Run("reads http protocol from environment variable", func(t *testing.T) {
+		_ = os.Setenv("PROTOCOL", "https")
+		defer os.Unsetenv("PROTOCOL")
+
+		assert.Equal(t, redirectUrl(), "https://localhost:8080/callback")
+	})
+
+	t.Run("reads hostname from DOMAIN environment variable", func(t *testing.T) {
+		_ = os.Setenv("DOMAIN", "spolyr.com")
+		defer os.Unsetenv("DOMAIN")
+
+		assert.Equal(t, redirectUrl(), "http://spolyr.com:8080/callback")
+	})
+
+	t.Run("defaults to http port if no custom port is set", func(t *testing.T) {
+		_ = os.Setenv("HTTP_PORT", "1234")
+		defer os.Unsetenv("HTTP_PORT")
+
+		assert.Equal(t, redirectUrl(), "http://localhost:1234/callback")
+	})
+
+	t.Run("adds http port to url if a non default port is used", func(t *testing.T) {
+		_ = os.Setenv("HTTP_PUBLIC_PORT", "4444")
+		defer os.Unsetenv("HTTP_PUBLIC_PORT")
+
+		assert.Equal(t, redirectUrl(), "http://localhost:4444/callback")
+	})
+
+	t.Run("does not append port to callback url if port is either 443 or 80", func(t *testing.T) {
+		t.Run("port 443", func(t *testing.T) {
+			_ = os.Setenv("HTTP_PUBLIC_PORT", "443")
+			defer os.Unsetenv("HTTP_PUBLIC_PORT")
+
+			assert.Equal(t, redirectUrl(), "http://localhost/callback")
+		})
+
+		t.Run("port 80", func(t *testing.T) {
+			_ = os.Setenv("HTTP_PUBLIC_PORT", "80")
+			defer os.Unsetenv("HTTP_PUBLIC_PORT")
+
+			assert.Equal(t, redirectUrl(), "http://localhost/callback")
+		})
+	})
+}

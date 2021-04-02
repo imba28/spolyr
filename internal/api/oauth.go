@@ -20,9 +20,11 @@ func redirectUrl() string {
 	var protocol = getEnv("PROTOCOL", "http")
 	var domain = getEnv("DOMAIN", "localhost")
 
-	var httpPort = getEnv("HTTP_PORT", "8080")
+	var httpPort = getEnv("HTTP_PUBLIC_PORT", getEnv("HTTP_PORT", "8080"))
 	if httpPort != "80" && httpPort != "443" {
 		httpPort = ":" + httpPort
+	} else {
+		httpPort = ""
 	}
 
 	return fmt.Sprintf("%s://%s%s/callback", protocol, domain, httpPort)

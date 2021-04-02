@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/imba28/spolyr/pkg/spolyr"
 	"log"
 	"os"
@@ -10,13 +11,14 @@ func main() {
 	databaseUsername := getEnv("DATABASE_USER", "root")
 	databasePassword := getEnv("DATABASE_PASSWORD", "example")
 	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
+	httpPort := getEnv("HTTP_PORT", "8080")
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
 
 	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Fatal(s.Run(":8080"))
+	log.Fatal(s.Run(fmt.Sprintf(":%s", httpPort)))
 }
 
 func getEnv(key, fallback string) string {
