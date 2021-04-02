@@ -32,6 +32,33 @@ steps:
     when:
       event: tag
 
+  - name: latest docker image
+    image: plugins/docker
+    privileged: true
+    settings:
+      repo: imba28/spolyr
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      tags: latest
+    when:
+      branch: master
+      event: push
+
+  - name: docker tags
+    image: plugins/docker
+    privileged: true
+    settings:
+      repo: imba28/spolyr
+      auto_tag: true
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event: tag
+
 services:
   - name: mongo
     image: mongo:4
