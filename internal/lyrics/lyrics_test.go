@@ -156,7 +156,7 @@ func withTimeout(f testerFunc, d time.Duration) testerFunc {
 
 		select {
 		case <-timeout:
-			t.Fatalf("operation should complete in less than %v seconds!", d)
+			t.Fatalf("operation should complete in less than %v!", d)
 		case <-r:
 			return
 		}
