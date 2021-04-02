@@ -2,10 +2,14 @@ package lyrics
 
 import (
 	"fmt"
-	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/model"
 	"strings"
 )
+
+type tracksSyncFetcherSaver interface {
+	Save(track *model.Track) error
+	TracksWithoutLyrics() ([]*model.Track, error)
+}
 
 type Syncer struct {
 	ready                   chan struct{}
@@ -14,29 +18,38 @@ type Syncer struct {
 	syncLog                 []string
 
 	fetcher Fetcher
-	db      db.TrackService
+	db      tracksSyncFetcherSaver
 }
 
-func (s *Syncer) Sync() error {
+func (s *Syncer) Sync() (<-chan struct{}, error) {
 	tracks, err := s.db.TracksWithoutLyrics()
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	finished := make(chan struct{})
 
 	select {
 	case s.ready <- struct{}{}:
 		s.syncLyricsTracksCurrent = 0
 		s.syncLyricsTrackTotal = len(tracks)
 
-		go s.run(tracks)
-		return nil
+		go s.run(tracks, finished)
+		return finished, nil
 	default:
-		return ErrBusy
+		return nil, ErrBusy
 	}
 }
 
-func (s *Syncer) run(tracks []*model.Track) {
+func (s *Syncer) run(tracks []*model.Track, finishedSignal chan<- struct{}) {
 	defer func() {
+		// Do not block if no one is waiting for us to end.
+		select {
+		case finishedSignal <- struct{}{}:
+		default:
+		}
+		close(finishedSignal)
+
 		s.syncLyricsTracksCurrent = -1
 		s.syncLog = nil
 		<-s.ready
@@ -79,7 +92,7 @@ func (s *Syncer) Logs() string {
 	return strings.Join(s.syncLog, "<br>")
 }
 
-func NewSyncer(fetcher Fetcher, db db.TrackService) *Syncer {
+func NewSyncer(fetcher Fetcher, db tracksSyncFetcherSaver) *Syncer {
 	return &Syncer{
 		ready:                   make(chan struct{}, 1),
 		syncLyricsTracksCurrent: -1,

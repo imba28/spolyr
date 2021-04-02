@@ -225,7 +225,7 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "POST" {
-			err := s.Sync()
+			_, err := s.Sync()
 			if err != nil {
 				_ = c.Error(err)
 				return
