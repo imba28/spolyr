@@ -6,21 +6,21 @@ import (
 	"log"
 )
 
-type UserTrackProvider interface {
+type userTrackProvider interface {
 	Tracks() ([]*model.Track, error)
 	Next() error
 }
 
-type TrackSaver interface {
+type trackSaver interface {
 	Save(track *model.Track) error
 }
 
-type SpotifyUserTrackProvider struct {
+type UserTrackProvider struct {
 	c        spotify.Client
 	lastPage *spotify.SavedTrackPage
 }
 
-func (p *SpotifyUserTrackProvider) Tracks() ([]*model.Track, error) {
+func (p *UserTrackProvider) Tracks() ([]*model.Track, error) {
 	if p.lastPage == nil {
 		trackPage, err := p.c.CurrentUsersTracks()
 		if err != nil {
@@ -37,17 +37,17 @@ func (p *SpotifyUserTrackProvider) Tracks() ([]*model.Track, error) {
 	return tracks, nil
 }
 
-func (p *SpotifyUserTrackProvider) Next() error {
+func (p *UserTrackProvider) Next() error {
 	return p.c.NextPage(p.lastPage)
 }
 
-func NewSpotifyTrackProvider(client spotify.Client) *SpotifyUserTrackProvider {
-	return &SpotifyUserTrackProvider{
+func NewSpotifyTrackProvider(client spotify.Client) *UserTrackProvider {
+	return &UserTrackProvider{
 		c: client,
 	}
 }
 
-func SyncTracks(client UserTrackProvider, store TrackSaver) error {
+func SyncTracks(client userTrackProvider, store trackSaver) error {
 	for {
 		tracks, err := client.Tracks()
 		if err != nil {

@@ -31,8 +31,8 @@ func (t *trackSaverMock) Save(track *model.Track) error {
 	return args.Error(0)
 }
 
-var _ UserTrackProvider = &userProviderMock{}
-var _ TrackSaver = &trackSaverMock{}
+var _ userTrackProvider = &userProviderMock{}
+var _ trackSaver = &trackSaverMock{}
 
 func TestSyncTracks__saves_tracks_to_store(t *testing.T) {
 	result := []*model.Track{

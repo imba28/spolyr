@@ -13,9 +13,8 @@ var (
 )
 
 type Result struct {
-	track  *model.Track
-	lyrics string
-	err    error
+	Track *model.Track
+	Err   error
 }
 
 type Fetcher interface {
@@ -23,11 +22,11 @@ type Fetcher interface {
 	FetchAll([]*model.Track) (<-chan Result, error)
 }
 
-type Provider interface {
+type provider interface {
 	Search(string, string) (string, error)
 }
 
-func fetchTrackLyrics(t *model.Track, l Provider) error {
+func fetchTrackLyrics(t *model.Track, l provider) error {
 	artist := t.Artist
 	if strings.Index(t.Artist, ", ") > -1 {
 		artist = strings.Split(artist, ", ")[0]
@@ -47,7 +46,7 @@ type AsyncFetcher struct {
 	concurrency   int
 	ready         chan struct{}
 	fetchingQueue chan *model.Track
-	lyricsFetcher Provider
+	lyricsFetcher provider
 }
 
 func (s AsyncFetcher) Fetch(t *model.Track) error {
@@ -89,7 +88,7 @@ func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) ch
 		go func() {
 			for t := range c {
 				err := fetchTrackLyrics(t, s.lyricsFetcher)
-				results <- Result{track: t, lyrics: t.Lyrics, err: err}
+				results <- Result{Track: t, Err: err}
 				wg.Done()
 			}
 

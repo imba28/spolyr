@@ -50,14 +50,14 @@ func (s *Syncer) run(tracks []*model.Track) {
 	for result := range c {
 		s.syncLyricsTracksCurrent++
 
-		if result.err != nil {
-			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.track.Artist, result.track.Name, result.err.Error()))
+		if result.Err != nil {
+			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Artist, result.Track.Name, result.Err.Error()))
 		} else {
-			err = s.db.Save(result.track)
+			err = s.db.Save(result.Track)
 			if err != nil {
-				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.track.Name, result.track.Artist, err.Error()))
+				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, err.Error()))
 			} else {
-				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.track.Name, result.track.Artist))
+				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.Track.Name, result.Track.Artist))
 			}
 		}
 	}

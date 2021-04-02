@@ -19,7 +19,7 @@ func (p providerMock) Search(a string, b string) (string, error) {
 	return args.Get(0).(string), args.Error(1)
 }
 
-var _ Provider = providerMock{}
+var _ provider = providerMock{}
 
 func TestAsyncFetcher_Fetch(t *testing.T) {
 	t.Run("fetches lyrics", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestAsyncFetcher_Fetch(t *testing.T) {
 		providerMock.AssertExpectations(t)
 	})
 
-	t.Run("picks the first artist if track has multiple artists", func(t *testing.T) {
+	t.Run("picks the first artist if Track has multiple artists", func(t *testing.T) {
 		artist, song := "Eminem, Nate Dog", "'Till I Collapse"
 		expectedLyrics := "la la la la"
 		track := model.Track{
@@ -101,9 +101,9 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 				c, err := fetcher.FetchAll(tracks)
 
 				for r := range c {
-					assert.Nil(t, r.err)
-					assert.Equal(t, expectedLyrics, r.track.Lyrics)
-					assert.True(t, r.track.Loaded)
+					assert.Nil(t, r.Err)
+					assert.Equal(t, expectedLyrics, r.Track.Lyrics)
+					assert.True(t, r.Track.Loaded)
 				}
 
 				assert.Nil(t, err)
@@ -131,8 +131,8 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 		assert.Nil(t, err)
 
 		for r := range c {
-			assert.EqualError(t, r.err, expectedError.Error())
-			assert.Equal(t, r.lyrics, expectedLyrics)
+			assert.EqualError(t, r.Err, expectedError.Error())
+			assert.Equal(t, r.Track.Lyrics, expectedLyrics)
 		}
 		for i := range tracks {
 			t.Run(tracks[i].Artist, func(t *testing.T) {
