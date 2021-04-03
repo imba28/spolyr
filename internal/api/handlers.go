@@ -28,12 +28,11 @@ func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 		tracksWithLyrics, _ := s.CountWithLyrics()
 		latestTracks, _ := s.LatestTracks(8)
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"TrackCount":            trackCount,
 			"TracksWithLyricsCount": tracksWithLyrics,
 			"TracksLatest":          latestTracks,
-			"User":                  c.GetString(userEmailKey),
-		}
+		}, viewFromContext(c))
 		_ = template2.HomePage(c.Writer, viewData, http.StatusOK)
 	}
 }
@@ -52,12 +51,11 @@ func TrackDetailHandler(db db.TrackService) gin.HandlerFunc {
 		}
 
 		session := sessions.Default(c)
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"Track":   track,
-			"User":    c.GetString(userEmailKey),
 			"Success": session.Flashes("Success"),
 			"Error":   session.Flashes("Error"),
-		}
+		}, viewFromContext(c))
 		_ = session.Save()
 		_ = template2.TrackPage(c.Writer, viewData, http.StatusOK)
 	}
@@ -72,13 +70,11 @@ func TrackUpdateHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		userEmail := c.GetString(userEmailKey)
 		updatedLyrics := strings.TrimSpace(c.PostForm("lyrics"))
-		view := gin.H{
+		view := mergeView(gin.H{
 			"Track":            track,
-			"User":             userEmail,
 			"TextareaRowCount": 20,
-		}
+		}, viewFromContext(c))
 
 		if len(updatedLyrics) == 0 {
 			view["Error"] = "Please provide some lyrics!"
@@ -116,11 +112,10 @@ func TrackEditFormHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"Track":            track,
-			"User":             c.GetString(userEmailKey),
 			"TextareaRowCount": 20,
-		}
+		}, viewFromContext(c))
 		_ = template2.TrackEditPage(c.Writer, viewData, http.StatusOK)
 	}
 }
@@ -133,10 +128,9 @@ func TrackMissingLyricsHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"Tracks": tracks,
-			"User":   c.GetString(userEmailKey),
-		}
+		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
 }
@@ -159,11 +153,10 @@ func TrackSearchHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"Query":  c.Query("q"),
 			"Tracks": tracks,
-			"User":   c.GetString(userEmailKey),
-		}
+		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
 }
@@ -232,14 +225,13 @@ func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 			}
 		}
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
 			"Syncing":           s.Syncing(),
 			"SyncedTracks":      s.SyncedTracks(),
 			"TotalTracksToSync": s.TotalTracks(),
 			"SyncProgressValue": math.Round(float64(s.SyncedTracks()) / float64(s.TotalTracks()) * 100),
 			"SyncLog":           template.HTML(s.Logs()),
-			"User":              c.GetString(userEmailKey),
-		}
+		}, viewFromContext(c))
 		_ = template2.TrackLyricsSyncPage(c.Writer, viewData, http.StatusOK)
 	}
 }

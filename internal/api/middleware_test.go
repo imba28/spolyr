@@ -46,6 +46,37 @@ func TestAuthRequired(t *testing.T) {
 	})
 }
 
+func TestUserProviderMiddleware(t *testing.T) {
+	t.Run("saves user and avatar in context", func(t *testing.T) {
+		var displayName, avatar string
+
+		expectedDisplayName, expectedAvatar := "test@test.com", "http://foobar.com/avatar.png"
+
+		rr := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+
+		r := gin.Default()
+		r.Use(sessions.Sessions("session", memstore.NewStore([]byte("secret"))))
+		r.Use(func(c *gin.Context) {
+			session := sessions.Default(c)
+			session.Set("userEmail", expectedDisplayName)
+			session.Set("userAvatar", expectedAvatar)
+
+			session.Save()
+		})
+		r.Use(UserProviderMiddleware)
+		r.Use(func(c *gin.Context) {
+			view := viewFromContext(c)
+			displayName = view["User"].(string)
+			avatar = view["UserAvatar"].(string)
+		})
+		r.ServeHTTP(rr, request)
+
+		assert.Equal(t, expectedDisplayName, displayName)
+		assert.Equal(t, expectedAvatar, avatar)
+	})
+}
+
 func TestErrorHandle(t *testing.T) {
 	t.Run("renders custom error template", func(t *testing.T) {
 		rr := httptest.NewRecorder()

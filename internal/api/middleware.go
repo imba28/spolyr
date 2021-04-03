@@ -8,13 +8,43 @@ import (
 	"net/http"
 )
 
-const userEmailKey = "UserEmail"
+const userDisplayNameKey = "UserDisplayName"
+const userAvatarKey = "UserAvatar"
 const spotifyTokenKey = "SpotifyToken"
 
+func setView(c *gin.Context, v gin.H) {
+	c.Set("view", v)
+}
+
+func mergeView(v1, v2 gin.H) gin.H {
+	for k, v := range v1 {
+		v2[k] = v
+	}
+	return v2
+}
+
+func viewFromContext(c *gin.Context) gin.H {
+	v, ok := c.Get("view")
+	var view gin.H
+	if !ok {
+		view = gin.H{}
+	} else {
+		view = v.(gin.H)
+	}
+	return view
+}
+
 func UserProviderMiddleware(c *gin.Context) {
+	view := viewFromContext(c)
+
 	session := sessions.Default(c)
-	c.Set(userEmailKey, session.Get("userEmail"))
+	c.Set(userDisplayNameKey, session.Get("userEmail"))
+	c.Set(userAvatarKey, session.Get("userAvatar"))
 	c.Set(spotifyTokenKey, session.Get("token"))
+
+	view["User"] = session.Get("userEmail")
+	view["UserAvatar"] = session.Get("userAvatar")
+	setView(c, view)
 
 	c.Next()
 }
@@ -26,10 +56,9 @@ func ErrorHandle(c *gin.Context) {
 		return
 	}
 
-	p := gin.H{
-		"Status":  http.StatusInternalServerError,
-		"Message": "Whoops! Sorry, an error occurred",
-	}
+	p := viewFromContext(c)
+	p["Status"] = http.StatusInternalServerError
+	p["Message"] = "Whoops! Sorry, an error occurred"
 	statusFallback := http.StatusInternalServerError
 
 	if errors.Is(err.Err, ErrNotFound) {

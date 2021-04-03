@@ -52,10 +52,16 @@ func SpotifyAuthCallbackHandler(c *gin.Context) {
 		return
 	}
 
+	avatarUrl := ""
+	if len(user.Images) > 0 {
+		avatarUrl = user.Images[0].URL
+	}
+
 	token, _ := json.Marshal(tok)
 	session := sessions.Default(c)
 	session.Set("token", string(token))
-	session.Set("userEmail", user.Email)
+	session.Set("userEmail", user.DisplayName)
+	session.Set("userAvatar", avatarUrl)
 	err = session.Save()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())

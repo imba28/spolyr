@@ -24,9 +24,9 @@
                     </form>
                     <div>
                         {{ if .User }}
-                            <span class="d-none d-md-inline-block">
-                               {{ .User }}
-                            </span>
+                            <img src="{{ .UserAvatar }}" class="mr-2"
+                                 style="width: 45px; height: auto;border-radius: 50%"/>
+                            <span class="d-none d-md-inline-block">{{ .User }}</span>
                             <a href="/logout" class="ml-1 btn btn-dark" title="Sign out">
                                 <i class="fas fa-sign-out-alt"></i>
                             </a>
