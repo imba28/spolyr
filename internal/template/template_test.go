@@ -36,14 +36,6 @@ func TestHomePage(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSearchPage(t *testing.T) {
-	r := httptest.NewRecorder()
-
-	err := SearchPage(r, gin.H{"Tracks": []model.Track{}}, http.StatusOK)
-
-	assert.Nil(t, err)
-}
-
 func TestTrackPage(t *testing.T) {
 	r := httptest.NewRecorder()
 

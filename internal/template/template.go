@@ -10,7 +10,6 @@ import "html/template"
 
 var (
 	homepageTemplate        = parse("pages/index.html")
-	searchTemplate          = parse("pages/search.html")
 	trackTemplate           = parse("pages/track.html")
 	trackEditTemplate       = parse("pages/track-edit.html")
 	trackLyricsSyncTemplate = parse("pages/track-lyrics-sync.html")
@@ -43,9 +42,6 @@ func executeWithStatus(t *template.Template, w http.ResponseWriter, p gin.H, sta
 
 func HomePage(w http.ResponseWriter, p gin.H, status int) error {
 	return executeWithStatus(homepageTemplate, w, p, status)
-}
-func SearchPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(searchTemplate, w, p, status)
 }
 func TrackPage(w http.ResponseWriter, p gin.H, status int) error {
 	return executeWithStatus(trackTemplate, w, p, status)

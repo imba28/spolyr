@@ -164,7 +164,7 @@ func TrackSearchHandler(db db.TrackService) gin.HandlerFunc {
 			"Tracks": tracks,
 			"User":   c.GetString(userEmailKey),
 		}
-		_ = template2.SearchPage(c.Writer, viewData, http.StatusOK)
+		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
 }
 

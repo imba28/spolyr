@@ -1,6 +1,8 @@
 {{ define "content" }}
     <div class="container">
-        <div class="text-muted">{{ len .Tracks }} tracks</div>
+        <div class="text-muted mt-1 mb-3">
+            {{ len .Tracks }} tracks found
+        </div>
 
         {{ template "track-list" .Tracks }}
     </div>

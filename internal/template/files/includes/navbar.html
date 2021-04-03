@@ -1,19 +1,43 @@
 {{ define "navbar" }}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary justify-content-between mb-5">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-music"></i>
-            <strong>Spo</strong>lyr</a>
-        <div>
-            {{ if .User }}
-                {{ .User }}
-                <a href="/logout" class="ml-1 btn btn-dark" title="Sign out">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            {{ else }}
-                <a href="/login" class="btn btn-dark" title="Sign in">
-                    <i class="fas fa-sign-in-alt"></i>
-                </a>
-            {{ end }}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary py-2">
+        <div class="container-fluid">
+            <div class="row flex-grow-1 align-items-center">
+                <div class="col-md-3 col-lg-2 d-none d-md-block">
+                    <a class="navbar-brand" href="/">
+                        <i class="fas fa-music"></i>
+                        <strong>Spo</strong>lyr
+                    </a>
+                </div>
+
+                <div class="col-md-9 ml-sm-auto col-lg-10 d-flex justify-content-between align-items-center">
+                    <form method="get" action="/search" style="min-width: 25vw">
+                        <div class="input-group">
+                            <input type="text" name="q" autocomplete="off" class="form-control"
+                                   placeholder="Search for lyrics, titles, artists, album names ..."
+                                   value="{{ .Query }}">
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <div>
+                        {{ if .User }}
+                            <span class="d-none d-md-inline-block">
+                               {{ .User }}
+                            </span>
+                            <a href="/logout" class="ml-1 btn btn-dark" title="Sign out">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        {{ else }}
+                            <a href="/login" class="btn btn-dark" title="Sign in">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </a>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 {{ end }}

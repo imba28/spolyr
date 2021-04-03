@@ -1,23 +1,12 @@
 {{ define "content" }}
     <div class="container">
-        <form method="get" action="/search" class="mb-4">
-            <div class="input-group mb-3">
-                <input type="text" name="q" autocomplete="off" class="form-control form-control-lg"
-                       placeholder="Search for titles, artists, album names or lyrics">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-            {{ if gt .TrackCount 0 }}
-                <span class="text-muted mt-1">Indexed {{ .TrackCount }} tracks
+        {{ if gt .TrackCount 0 }}
+            <div class="text-muted mt-1 mb-3">Indexed {{ .TrackCount }} tracks
                 {{ if gt .TracksWithLyricsCount 0 }}
                     including {{ .TracksWithLyricsCount }} tracks with known lyrics.
                 {{ end }}
-                </span>
-            {{ end }}
-        </form>
+            </div>
+        {{ end }}
 
         {{ if .TracksLatest }}
             <h3>Latest songs</h3>
