@@ -387,3 +387,17 @@ func TestLyricsTrackSyncHandler(t *testing.T) {
 		mockTrackService.AssertExpectations(t)
 	})
 }
+
+func TestNoRouteHandle(t *testing.T) {
+	t.Run("always returns 404 status", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+
+		router := setUp()
+		router.GET("/", NoRouteHandle)
+		router.ServeHTTP(rr, request)
+
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+		assert.Greater(t, rr.Body.Len(), 25, "should render some kind of html interface")
+	})
+}

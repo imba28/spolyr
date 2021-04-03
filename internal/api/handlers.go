@@ -235,3 +235,10 @@ func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 		_ = template2.TrackLyricsSyncPage(c.Writer, viewData, http.StatusOK)
 	}
 }
+
+func NoRouteHandle(c *gin.Context) {
+	p := viewFromContext(c)
+	p["Status"] = http.StatusNotFound
+	p["Message"] = "Oh no, page not found"
+	_ = template2.ErrorPage(c.Writer, p, http.StatusNotFound)
+}

@@ -6,8 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
-	template2 "github.com/imba28/spolyr/internal/template"
-	"net/http"
 )
 
 func New(db *db.Repositories, geniusAPIToken string) *gin.Engine {
@@ -40,12 +38,7 @@ func New(db *db.Repositories, geniusAPIToken string) *gin.Engine {
 	r.GET("/search", TrackSearchHandler(db.Tracks))
 	r.Static("static", "public")
 
-	r.NoRoute(func(c *gin.Context) {
-		p := viewFromContext(c)
-		p["Status"] = http.StatusNotFound
-		p["Message"] = "Oh no, page not found"
-		_ = template2.ErrorPage(c.Writer, p, http.StatusNotFound)
-	})
+	r.NoRoute(NoRouteHandle)
 
 	return r
 }
