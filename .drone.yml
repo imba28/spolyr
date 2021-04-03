@@ -42,6 +42,9 @@ steps:
       password:
         from_secret: docker_password
       tags: latest
+      build_args:
+        BUILD_NUMBER: ${DRONE_COMMIT:0:6}
+        GIT_COMMIT: ${DRONE_COMMIT}
     when:
       branch: master
       event: push
@@ -56,6 +59,9 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      build_args:
+        BUILD_NUMBER: ${DRONE_TAG##v}
+        GIT_COMMIT: ${DRONE_COMMIT}
     when:
       event: tag
 

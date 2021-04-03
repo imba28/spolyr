@@ -1,5 +1,8 @@
 FROM golang:1.16 as builder
 
+ARG BUILD_NUMBER=dev
+ARG GIT_COMMIT=""
+
 WORKDIR /build
 
 COPY go.mod .
@@ -8,7 +11,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-RUN make build-linux
+RUN sed -i "s/dev-build/${BUILD_NUMBER}/" internal/template/files/includes/footer.html && \
+    make build-linux
 
 # runtime
 FROM alpine:3
