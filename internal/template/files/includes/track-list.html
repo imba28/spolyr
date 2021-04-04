@@ -60,89 +60,10 @@
         }
     </style>
     <script>
-        let timeout = null
-        const tracks = document.querySelectorAll("#tracks tbody tr")
-        const audio = document.getElementById("player");
 
-        const context = new AudioContext();
-        let source;
-        let autoPlayEnabled = false;
-        let nextAudioUrl;
-
-        if (context.state === "suspended") {
-            document.querySelectorAll(".player-button").forEach((button) => {
-                button.classList.remove('player-button--playing');
-            })
-        } else {
-            autoPlayEnabled = true;
-            document.querySelectorAll(".player-button").forEach((button) => {
-                button.classList.add('player-button--playing');
-            })
-        }
-
-        document.querySelectorAll(".player-button").forEach(function (button) {
-            button.addEventListener("click", function () {
-                if (autoPlayEnabled) {
-                    context.suspend().then(_ => {
-                        autoPlayEnabled = false;
-                        document.querySelectorAll(".player-button").forEach((button) => {
-                            button.classList.remove('player-button--playing');
-                        })
-                    })
-                } else {
-                    let url = nextAudioUrl
-                    if (!url) {
-                        url = button.closest("tr").dataset.previewUrl;
-                    }
-                    playPreviewAudio(url)
-                        .then(() => context.resume())
-                        .then(_ => {
-                            autoPlayEnabled = true;
-                            document.querySelectorAll(".player-button").forEach((button) => {
-                                button.classList.add('player-button--playing');
-                            })
-                        })
-                }
-            })
-        })
-
-        function playPreviewAudio(url) {
-            return fetch(url)
-                .then(response => response.arrayBuffer())
-                .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
-                .then(audioBuffer => {
-                    if (source) {
-                        source.stop()
-                    }
-                    source = context.createBufferSource();
-                    source.connect(context.destination);
-                    source.buffer = audioBuffer;
-                    source.start()
-                    nextAudioUrl = null
-                });
-        }
-
-        tracks.forEach(function (track) {
-            track.addEventListener("mouseenter", function () {
-                clearTimeout(timeout)
-                if (!track.dataset.previewUrl) {
-                    return
-                }
-                if (autoPlayEnabled) {
-                    timeout = setTimeout(function () {
-                        playPreviewAudio(track.dataset.previewUrl)
-                    }, 150)
-                } else {
-                    nextAudioUrl = track.dataset.previewUrl
-                }
-            })
-            track.addEventListener("mouseleave", function () {
-                clearTimeout(timeout)
-                if (source) {
-                    source.stop();
-                }
-                audio.currentTime = 0;
-            })
-        })
     </script>
+{{ end }}
+
+{{ define "scripts" }}
+    <script type="text/javascript" src="/static/dist/tracks.js"></script>
 {{ end }}
