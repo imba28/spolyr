@@ -24,7 +24,13 @@
                         <small><i class="fas fa-music" title="Audio snippet available"></i></small>
                     {{ end }}
                 </td>
-                <td class="text-right">
+                <td class="d-flex justify-content-end">
+                    {{ if .PreviewURL }}
+                        <button type="button" class="btn btn-sm btn-primary player-button mr-1">
+                            <i class="fa fa-play"></i>
+                            <i class="fa fa-pause"></i>
+                        </button>
+                    {{ end }}
                     <a href="/tracks/id/{{ .SpotifyID }}" class="btn btn-primary btn-sm">Details</a><br>
                 </td>
             </tr>
@@ -32,10 +38,89 @@
         </tbody>
     </table>
     <audio class="hide" id="player"></audio>
+    <style>
+        .player-button {
+            visibility: hidden;
+        }
+
+        .player-button .fa-pause {
+            display: none;
+        }
+
+        .player-button.player-button--playing .fa-pause {
+            display: block;
+        }
+
+        .player-button.player-button--playing .fa-play {
+            display: none;
+        }
+
+        #tracks tr:hover .player-button {
+            visibility: visible;
+        }
+    </style>
     <script>
         let timeout = null
         const tracks = document.querySelectorAll("#tracks tbody tr")
         const audio = document.getElementById("player");
+
+        const context = new AudioContext();
+        let source;
+        let autoPlayEnabled = false;
+        let nextAudioUrl;
+
+        if (context.state === "suspended") {
+            document.querySelectorAll(".player-button").forEach((button) => {
+                button.classList.remove('player-button--playing');
+            })
+        } else {
+            autoPlayEnabled = true;
+            document.querySelectorAll(".player-button").forEach((button) => {
+                button.classList.add('player-button--playing');
+            })
+        }
+
+        document.querySelectorAll(".player-button").forEach(function (button) {
+            button.addEventListener("click", function () {
+                if (autoPlayEnabled) {
+                    context.suspend().then(_ => {
+                        autoPlayEnabled = false;
+                        document.querySelectorAll(".player-button").forEach((button) => {
+                            button.classList.remove('player-button--playing');
+                        })
+                    })
+                } else {
+                    let url = nextAudioUrl
+                    if (!url) {
+                        url = button.closest("tr").dataset.previewUrl;
+                    }
+                    playPreviewAudio(url)
+                        .then(() => context.resume())
+                        .then(_ => {
+                            autoPlayEnabled = true;
+                            document.querySelectorAll(".player-button").forEach((button) => {
+                                button.classList.add('player-button--playing');
+                            })
+                        })
+                }
+            })
+        })
+
+        function playPreviewAudio(url) {
+            return fetch(url)
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => {
+                    if (source) {
+                        source.stop()
+                    }
+                    source = context.createBufferSource();
+                    source.connect(context.destination);
+                    source.buffer = audioBuffer;
+                    source.start()
+                    nextAudioUrl = null
+                });
+        }
 
         tracks.forEach(function (track) {
             track.addEventListener("mouseenter", function () {
@@ -43,16 +128,19 @@
                 if (!track.dataset.previewUrl) {
                     return
                 }
-
-                timeout = setTimeout(function () {
-                    console.log("started playing", track.dataset.previewUrl)
-                    audio.src = track.dataset.previewUrl
-                    audio.play()
-                }, 300)
+                if (autoPlayEnabled) {
+                    timeout = setTimeout(function () {
+                        playPreviewAudio(track.dataset.previewUrl)
+                    }, 150)
+                } else {
+                    nextAudioUrl = track.dataset.previewUrl
+                }
             })
             track.addEventListener("mouseleave", function () {
                 clearTimeout(timeout)
-                audio.pause();
+                if (source) {
+                    source.stop();
+                }
                 audio.currentTime = 0;
             })
         })
