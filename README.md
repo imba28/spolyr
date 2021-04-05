@@ -6,6 +6,7 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 
 ## Features
 - Sign in using your Spotify account and download all tracks in your library
+- Import Spotify playlists
 - Automatically fetch lyrics from different providers
 - Find a specific song by querying a full-text search index
 
@@ -46,10 +47,10 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 
 ## Screenshots
 
-![home page](doc/preview-1.png "Import and query your Spotify library.")
+![home page](doc/preview-1.jpg "Import and query your Spotify library.")
 
-![track details page](doc/preview-2.png "View lyrics of your tracks.")
+![track details page](doc/preview-3.jpg "View lyrics of your tracks.")
 
-![full-text search](doc/preview-3.png "Search songs by lyrics, title, album name and artists")
+![full-text search](doc/preview-2.jpg "Search songs by lyrics, title, album name and artists")
 
-![import of lyrics](doc/preview-4.png "Import lyrics from different providers")
+![import of lyrics](doc/preview-4.jpg "Import lyrics from different providers")
