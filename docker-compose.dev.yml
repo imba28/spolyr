@@ -11,4 +11,4 @@ services:
     ports:
       - 127.0.0.1:27017:27017
     volumes:
-      - ./mongo-volume:/data/db
+      - ./_mongo-volume:/data/db

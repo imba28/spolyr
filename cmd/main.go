@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/securecookie"
 	"github.com/imba28/spolyr/pkg/spolyr"
 	"log"
 	"os"
@@ -12,9 +13,18 @@ func main() {
 	databasePassword := getEnv("DATABASE_PASSWORD", "example")
 	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
 	httpPort := getEnv("HTTP_PORT", "8080")
+	sessionKey := getEnv("SESSION_KEY", "")
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
 
-	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken)
+	if len(sessionKey) == 0 {
+		randomKey := securecookie.GenerateRandomKey(32)
+		if randomKey == nil {
+			panic("Could not generate random session key!")
+		}
+		sessionKey = string(randomKey)
+	}
+
+	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken, sessionKey)
 	if err != nil {
 		log.Fatal(err)
 	}

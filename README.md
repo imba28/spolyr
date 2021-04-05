@@ -19,13 +19,13 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 
 ## Configuration options
 
-> bold variables are required
+`SPOTIFY_ID`: unique identifier of your Spotify application - **required**
 
-**`SPOTIFY_ID`**: unique identifier of your Spotify application
+`SPOTIFY_SECRET`: secret Spotify key - **required**
 
-**`SPOTIFY_SECRET`**: secret Spotify key
+`GENIUS_API_TOKEN`: API token to use when communicating with genius.com - **required**
 
-**`GENIUS_API_TOKEN`**: API token to use when communicating with genius.com
+`SESSION_KEY`: key used for signing cookies. (default: a random key)
 
 `PROTOCOL`: Http protocol (default: `http`)
 

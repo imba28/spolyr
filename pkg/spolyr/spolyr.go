@@ -6,11 +6,11 @@ import (
 	"github.com/imba28/spolyr/internal/db"
 )
 
-func New(dbHost, dbUser, dbPassword, geniusAPIToken string) (*gin.Engine, error) {
+func New(dbHost, dbUser, dbPassword, geniusAPIToken, sessionKey string) (*gin.Engine, error) {
 	dbConn, err := db.New(dbUser, dbPassword, "spolyr", dbHost)
 	if err != nil {
 		return nil, err
 	}
 
-	return api.New(dbConn, geniusAPIToken), nil
+	return api.New(dbConn, geniusAPIToken, sessionKey), nil
 }
