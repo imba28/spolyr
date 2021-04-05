@@ -58,12 +58,11 @@
                                         <a href="/tracks/id/{{ .Track.SpotifyID }}/edit" class="btn btn-sm btn-primary">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
-                                    {{ end }}
-
-                                    {{ if not .Track.Loaded }}
-                                        <button type="submit" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-quote-right"></i> Download Lyrics
-                                        </button>
+                                        {{ if not .Track.Loaded }}
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-quote-right"></i> Download Lyrics
+                                            </button>
+                                        {{ end }}
                                     {{ end }}
                                 </div>
                             </form>

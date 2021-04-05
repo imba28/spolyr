@@ -92,7 +92,7 @@ func ImportPlaylistHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		session.AddFlash("Successfully imported all tracks of playlist!", "Success")
+		session.AddFlash("Successfully imported all tracks of playlist! Next, you can download the lyrics.", "Success")
 	}
 }
 
@@ -270,7 +270,7 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 			return
 		}
 
-		session.AddFlash("Lyrics have been successfully downloaded!.", "Success")
+		session.AddFlash("Lyrics have been successfully downloaded! When you are finished download the lyrics.", "Success")
 	}
 }
 
