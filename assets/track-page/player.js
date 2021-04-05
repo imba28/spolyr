@@ -1,95 +1,120 @@
-import EventEmitter from 'events'
+import EventEmitter from 'events';
 
+/**
+ * A wrapper class for the AudioContext API
+ */
 export default class Player extends EventEmitter {
-    constructor(replayTimeout = 300) {
-        super();
+  /**
+   * @constructor
+   * @param {number} replayTimeout - wait time in ms until a new song is started
+   */
+  constructor(replayTimeout = 150) {
+    super();
 
-        this.replayTimeout = replayTimeout
-        this.timeout = null;
+    this.replayTimeout = replayTimeout;
+    this.timeout = null;
 
-        this.context = new AudioContext();
-        this.autoPlayEnabled = this.context.state !== "suspended";
-        this.playing = false;
-        this.source = null;
-    }
+    this.context = new AudioContext();
+    this.enabled = this.context.state !== 'suspended';
+    this.playing = false;
+    this.source = null;
+  }
 
-    playPreviewAudio(url) {
-        return fetch(url)
-            .then((response) => response.arrayBuffer())
-            .then((arrayBuffer) => this.context.decodeAudioData(arrayBuffer))
-            .then((audioBuffer) => {
-                this.stop()
+  /**
+   * Fetches an audio file and injects it into the AudioContext
+   * @param {string} url
+   * @return {Promise<AudioBuffer>}
+   * @private
+   */
+  _playPreviewAudio(url) {
+    return fetch(url)
+        .then((response) => response.arrayBuffer())
+        .then((arrayBuffer) => this.context.decodeAudioData(arrayBuffer))
+        .then((audioBuffer) => {
+          this.stop();
 
-                this.source = this.context.createBufferSource();
-                this.source.connect(this.context.destination);
-                this.source.buffer = audioBuffer;
-                this.source.start();
-            });
-    }
-
-    async play(url) {
-        if (this.timeout) {
-            clearTimeout(this.timeout)
-        }
-
-        if (!this.isEnabled()) {
-            return
-        }
-
-        await this.tryToGetAutoplay();
-
-        await this.playPreviewAudio(url)
-        await new Promise((resolve) => {
-            this.timeout = setTimeout(() => {
-                resolve()
-            }, this.replayTimeout)
+          this.source = this.context.createBufferSource();
+          this.source.connect(this.context.destination);
+          this.source.buffer = audioBuffer;
+          this.source.start();
         });
+  }
 
-        await this.context.resume()
-        this.playing = true;
-        this.autoPlayEnabled = true;
+  /**
+   * Starts playing an audio file
+   * @param {string} url
+   * @return {Promise<void>}
+   */
+  async play(url) {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
     }
 
-    stop() {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
-        if (this.source) {
-            this.source.stop();
-            this.source.currentTime = 0;
-        }
-
-        return this.context.suspend()
-            .then((_) => {
-                this.playing = false;
-            })
+    if (!this.isEnabled()) {
+      return;
     }
 
-    isPlaying() {
-        return this.playing
+    await new Promise((resolve) => {
+      this.timeout = setTimeout(() => {
+        resolve();
+      }, this.replayTimeout);
+    });
+
+    await this._playPreviewAudio(url);
+    this.playing = true;
+  }
+
+  /**
+   * Stops playing audio
+   */
+  stop() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    if (this.source) {
+      this.source.stop();
+      this.source.currentTime = 0;
     }
 
-    async tryToGetAutoplay() {
-        try {
-            const p = await this.context.resume()
-            this.autoPlayEnabled = true
-        } catch (e) {
-            this.autoPlayEnabled = false
-        }
-    }
+    this.playing = false;
+  }
 
-    isEnabled() {
-        return this.autoPlayEnabled
-    }
+  /**
+   * @return {boolean}
+   */
+  isPlaying() {
+    return this.playing;
+  }
 
-    enable() {
-        this.autoPlayEnabled = true;
-        this.emit('change', true)
-    }
+  /**
+   * @return {boolean}
+   */
+  isEnabled() {
+    return this.enabled;
+  }
 
-    disable() {
-        this.autoPlayEnabled = false;
-        this.stop()
-        this.emit('change', false)
-    }
+  /**
+   * Enables audio playback
+   * @return {Promise<void>}
+   */
+  async enable() {
+    await this.context.resume();
+
+    this.enabled = true;
+    this.emit('change', true);
+  }
+
+  /**
+   * Disables audio playback
+   * @return {Promise<void>}
+   */
+  async disable() {
+    this.stop();
+
+    await this.context.suspend();
+
+    this.enabled = false;
+    this.playing = false;
+    this.emit('change', false);
+  }
 }

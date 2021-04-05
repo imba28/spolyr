@@ -1,5 +1,5 @@
-import trackInit from './track-page'
+import trackInit from './track-page';
 
-window.addEventListener('load', function () {
-    trackInit()
+window.addEventListener('load', function() {
+  trackInit();
 });

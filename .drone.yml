@@ -15,10 +15,25 @@ steps:
       - DATABASE_USER=root DATABASE_PASSWORD=test DATABASE_HOST=mongo go test -coverprofile cover.out ./...
       - go tool cover -func cover.out
 
-  - name: build
+  - name: frontend
+    image: node:14-alpine
+    commands:
+      - npm ci
+      - npm run lint
+      - npm run build
+    when:
+      event: tag
+    depends_on:
+      - test
+
+  - name: bundle
     image: golang:1.16
     commands:
       - make bundle
+    when:
+      event: tag
+    depends_on:
+      - frontend
 
   - name: gitea_release
     image: plugins/gitea-release
@@ -31,6 +46,8 @@ steps:
         - ./dist/*
     when:
       event: tag
+    depends_on:
+      - bundle
 
   - name: latest docker image
     image: plugins/docker
@@ -48,6 +65,8 @@ steps:
     when:
       branch: master
       event: push
+    depends_on:
+      - test
 
   - name: docker tags
     image: plugins/docker
@@ -64,6 +83,8 @@ steps:
         GIT_COMMIT: ${DRONE_COMMIT}
     when:
       event: tag
+    depends_on:
+      - test
 
 services:
   - name: mongo

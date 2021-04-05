@@ -1,4 +1,4 @@
-.PHONY: all clean bundle build test
+.PHONY: all clean bundle build test frontend
 
 build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr cmd/main.go
@@ -29,3 +29,9 @@ test-units:
 
 coverage:
 	go tool cover -func cover.out | tail -n 1 | awk '{print $3}'
+
+node_modules:
+	npm ci
+
+frontend: node_modules
+	npm run build
