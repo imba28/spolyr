@@ -1,7 +1,8 @@
 {{ define "content" }}
     <div class="container">
         {{ if gt .TrackCount 0 }}
-            <div class="text-muted mt-1 mb-3">Indexed {{ .TrackCount }} tracks
+            <div class="text-muted mt-1 mb-3">
+                Indexed {{ .TrackCount }} tracks
                 {{ if gt .TracksWithLyricsCount 0 }}
                     including {{ .TracksWithLyricsCount }} tracks with known lyrics.
                 {{ end }}
@@ -38,6 +39,15 @@
                             </div>
                         </div>
                     </div>
+                {{ end }}
+            </div>
+        {{ else }}
+            <div class="mt-1">
+                <h3>Oh no, it seems your library is currently empty.</h3>
+                {{ if .User }}
+                    You might want to <a href="/import">import</a> your Spotify library first.
+                {{ else }}
+                    Maybe you want to <a href="/login">sign in</a> and change that?
                 {{ end }}
             </div>
         {{ end }}

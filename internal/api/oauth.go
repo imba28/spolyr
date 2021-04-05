@@ -69,7 +69,7 @@ func SpotifyAuthCallbackHandler(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusTemporaryRedirect, "/")
+	c.Redirect(http.StatusTemporaryRedirect, "/import")
 }
 
 func LogoutHandler(c *gin.Context) {
