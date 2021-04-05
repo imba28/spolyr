@@ -16,15 +16,11 @@ steps:
       - go tool cover -func cover.out
 
   - name: frontend
-    image: node:14-alpine
+    image: node:15-alpine
     commands:
       - npm ci
       - npm run lint
       - npm run build
-    when:
-      event: tag
-    depends_on:
-      - test
 
   - name: bundle
     image: golang:1.16
@@ -33,6 +29,7 @@ steps:
     when:
       event: tag
     depends_on:
+      - test
       - frontend
 
   - name: gitea_release

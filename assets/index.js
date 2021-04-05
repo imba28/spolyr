@@ -1,1 +1,3 @@
-alert('hello world');
+import './scss/main.scss';
+
+import './icons';

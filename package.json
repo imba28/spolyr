@@ -29,15 +29,22 @@
   "devDependencies": {
     "@babel/core": "^7.13.10",
     "@babel/preset-env": "^7.13.8",
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-brands-svg-icons": "^5.15.3",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@webpack-cli/generators": "^2.0.0",
     "babel-loader": "^8.2.2",
     "css-loader": "^5.1.0",
     "eslint": "^7.23.0",
     "eslint-config-google": "^0.14.0",
+    "mini-css-extract-plugin": "^1.4.0",
     "sass": "^1.32.8",
     "sass-loader": "^11.0.1",
-    "style-loader": "^2.0.0",
     "webpack": "^5.30.0",
     "webpack-cli": "^4.6.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.6.0",
+    "bootswatch": "^4.6.0"
   }
 }
