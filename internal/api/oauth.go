@@ -30,7 +30,8 @@ func redirectUrl() string {
 	return fmt.Sprintf("%s://%s%s/callback", protocol, domain, httpPort)
 }
 
-var auth = spotify.NewAuthenticator(redirectUrl(), spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail, spotify.ScopePlaylistReadCollaborative)
+var permissions = []string{spotify.ScopeUserLibraryRead, spotify.ScopeUserReadEmail, spotify.ScopePlaylistReadCollaborative, spotify.ScopePlaylistReadPrivate}
+var auth = spotify.NewAuthenticator(redirectUrl(), permissions...)
 
 func SpotifyAuthCallbackHandler(c *gin.Context) {
 	csrfToken, ok := sessions.Default(c).Get(csrfSessionKey).(string)

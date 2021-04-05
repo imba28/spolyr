@@ -28,11 +28,11 @@ func New(db *db.Repositories, geniusAPIToken, sessionKey string) *gin.Engine {
 
 	authRequired := r.Group("/").Use(AuthRequired)
 	{
-		authRequired.GET("/import", ImportHandler())
+		authRequired.GET("/import", ImportHandler(syncer))
 		authRequired.POST("/import/playlist/:ID", ImportPlaylistHandler(db.Tracks))
 		authRequired.GET("/sync-tracks", TracksSyncHandler(db.Tracks))
-		authRequired.GET("/sync-lyrics", LyricsSyncHandler(syncer))
-		authRequired.POST("/sync-lyrics", LyricsSyncHandler(syncer))
+		authRequired.GET("/sync-lyrics", LyricsSyncLogHandler(syncer))
+		authRequired.POST("/sync-lyrics", LyricsSyncLogHandler(syncer))
 		authRequired.GET("/tracks/id/:spotifyID/edit", TrackEditFormHandler(db.Tracks))
 		authRequired.POST("/tracks/id/:spotifyID/edit", TrackUpdateHandler(db.Tracks))
 		authRequired.POST("/tracks/id/:spotifyID/sync", LyricsTrackSyncHandler(db.Tracks, fetcher))

@@ -37,7 +37,7 @@ func HomePageHandler(s db.TrackService) gin.HandlerFunc {
 	}
 }
 
-func ImportHandler() gin.HandlerFunc {
+func ImportHandler(s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 
@@ -53,13 +53,16 @@ func ImportHandler() gin.HandlerFunc {
 
 		pp, _ := client.CurrentUsersTracks()
 
-		viewData := gin.H{
+		viewData := mergeView(gin.H{
+			"Syncing":           s.Syncing(),
+			"SyncedTracks":      s.SyncedTracks(),
+			"TotalTracksToSync": s.TotalTracks(),
+			"SyncProgressValue": math.Round(float64(s.SyncedTracks()) / float64(s.TotalTracks()) * 100),
 			"LibraryTrackCount": pp.Total,
 			"Playlists": p.Playlists,
-			"User":    c.GetString(userEmailKey),
 			"Success": session.Flashes("Success"),
 			"Error":   session.Flashes("Error"),
-		}
+		}, viewFromContext(c))
 
 		_ = session.Save()
 		_ = template2.ImportPage(c.Writer, viewData, http.StatusOK)
@@ -271,7 +274,7 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 	}
 }
 
-func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
+func LyricsSyncLogHandler(s *lyrics.Syncer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "POST" {
 			_, err := s.Sync()
@@ -288,7 +291,7 @@ func LyricsSyncHandler(s *lyrics.Syncer) gin.HandlerFunc {
 			"SyncProgressValue": math.Round(float64(s.SyncedTracks()) / float64(s.TotalTracks()) * 100),
 			"SyncLog":           template.HTML(s.Logs()),
 		}, viewFromContext(c))
-		_ = template2.TrackLyricsSyncPage(c.Writer, viewData, http.StatusOK)
+		_ = template2.LyricsSyncLogPage(c.Writer, viewData, http.StatusOK)
 	}
 }
 

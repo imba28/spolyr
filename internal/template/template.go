@@ -9,13 +9,13 @@ import (
 import "html/template"
 
 var (
-	homepageTemplate        = parse("pages/index.html")
-	trackTemplate           = parse("pages/track.html")
-	trackEditTemplate       = parse("pages/track-edit.html")
-	trackLyricsSyncTemplate = parse("pages/track-lyrics-sync.html")
-	tracksTemplate          = parse("pages/tracks.html")
-	errorTemplate           = parse("pages/error.html")
-	importTemplate = parse("pages/import.html")
+	homepageTemplate      = parse("pages/index.html")
+	trackTemplate         = parse("pages/track.html")
+	trackEditTemplate     = parse("pages/track-edit.html")
+	lyricsSyncLogTemplate = parse("pages/track-lyrics-sync-log.html")
+	tracksTemplate        = parse("pages/tracks.html")
+	errorTemplate         = parse("pages/error.html")
+	importTemplate        = parse("pages/import.html")
 )
 
 var templateFunctions = template.FuncMap{
@@ -50,8 +50,8 @@ func TrackPage(w http.ResponseWriter, p gin.H, status int) error {
 func TrackEditPage(w http.ResponseWriter, p gin.H, status int) error {
 	return executeWithStatus(trackEditTemplate, w, p, status)
 }
-func TrackLyricsSyncPage(w http.ResponseWriter, p gin.H, status int) error {
-	return executeWithStatus(trackLyricsSyncTemplate, w, p, status)
+func LyricsSyncLogPage(w http.ResponseWriter, p gin.H, status int) error {
+	return executeWithStatus(lyricsSyncLogTemplate, w, p, status)
 }
 func TracksPage(w http.ResponseWriter, p gin.H, status int) error {
 	return executeWithStatus(tracksTemplate, w, p, status)

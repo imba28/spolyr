@@ -55,7 +55,7 @@ func TestTrackEditPage(t *testing.T) {
 func TestTrackLyricsSyncPage(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TrackLyricsSyncPage(r, gin.H{"Syncing": true, "SyncLog": "foobar"}, http.StatusOK)
+	err := LyricsSyncLogPage(r, gin.H{"Syncing": true, "SyncLog": "foobar"}, http.StatusOK)
 
 	assert.Nil(t, err)
 }
@@ -63,7 +63,7 @@ func TestTrackLyricsSyncPage(t *testing.T) {
 func TestTrackLyricsSyncPage__not_syncing(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TrackLyricsSyncPage(r, gin.H{"Syncing": false}, http.StatusOK)
+	err := LyricsSyncLogPage(r, gin.H{"Syncing": false}, http.StatusOK)
 
 	assert.Nil(t, err)
 }
