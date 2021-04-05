@@ -10,6 +10,7 @@ import (
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/spotify"
 	template2 "github.com/imba28/spolyr/internal/template"
+	spotify2 "github.com/zmb3/spotify"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
 	"html/template"
@@ -49,17 +50,31 @@ func ImportHandler(s *lyrics.Syncer) gin.HandlerFunc {
 			return
 		}
 		client := auth.NewClient(&tok)
-		p, err := client.CurrentUsersPlaylists()
 
-		pp, _ := client.CurrentUsersTracks()
+		var playlists []spotify2.SimplePlaylist
+		var savedTracksCount int
+
+		p, err := client.CurrentUsersPlaylists()
+		if err == nil {
+			playlists = p.Playlists
+		} else {
+			session.AddFlash("An error occurred while connecting with the Spotify API.", "Error")
+		}
+
+		pp, err := client.CurrentUsersTracks()
+		if err == nil {
+			savedTracksCount = pp.Total
+		} else {
+			session.AddFlash("An error occurred while connecting with the Spotify API.", "Error")
+		}
 
 		viewData := mergeView(gin.H{
 			"Syncing":           s.Syncing(),
 			"SyncedTracks":      s.SyncedTracks(),
 			"TotalTracksToSync": s.TotalTracks(),
 			"SyncProgressValue": math.Round(float64(s.SyncedTracks()) / float64(s.TotalTracks()) * 100),
-			"LibraryTrackCount": pp.Total,
-			"Playlists": p.Playlists,
+			"LibraryTrackCount": savedTracksCount,
+			"Playlists": playlists,
 			"Success": session.Flashes("Success"),
 			"Error":   session.Flashes("Error"),
 		}, viewFromContext(c))

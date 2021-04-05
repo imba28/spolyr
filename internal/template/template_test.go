@@ -75,3 +75,19 @@ func TestTracksPage(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func TestErrorPage(t *testing.T) {
+	r := httptest.NewRecorder()
+
+	err := ErrorPage(r, gin.H{"Message": "error!", "Status": http.StatusNotFound}, http.StatusNotFound)
+
+	assert.Nil(t, err)
+}
+
+func TestImportPage(t *testing.T) {
+	r := httptest.NewRecorder()
+
+	err := ImportPage(r, gin.H{}, http.StatusOK)
+
+	assert.Nil(t, err)
+}
