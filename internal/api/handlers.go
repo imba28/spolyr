@@ -236,7 +236,11 @@ func TracksSyncHandler(db db.TrackService) gin.HandlerFunc {
 			return
 		}
 
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		session := sessions.Default(c)
+		session.AddFlash("Your library has been successfully downloaded.", "Success")
+		_ = session.Save()
+
+		c.Redirect(http.StatusTemporaryRedirect, "/import")
 	}
 }
 
