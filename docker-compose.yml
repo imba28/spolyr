@@ -1,0 +1,30 @@
+version: '3.1'
+services:
+  web:
+    image: imba28/spolyr
+    restart: always
+    environment:
+      GIN_MODE: release
+      DATABASE_HOST: mongo
+      DATABASE_USER: root
+      DATABASE_PASSWORD: example
+      SPOTIFY_ID:
+      SPOTIFY_SECRET:
+      GENIUS_API_TOKEN:
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:4
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: spolyr
+    volumes:
+      - mongodb:/data/db
+
+volumes:
+  mongodb:
