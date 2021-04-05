@@ -274,7 +274,7 @@ func LyricsTrackSyncHandler(db db.TrackService, fetcher lyrics.Fetcher) gin.Hand
 			return
 		}
 
-		session.AddFlash("Lyrics have been successfully downloaded! When you are finished download the lyrics.", "Success")
+		session.AddFlash("Lyrics have been successfully downloaded!", "Success")
 	}
 }
 
