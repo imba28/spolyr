@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
+	"net/http"
 )
 
 func New(db *db.Repositories, geniusAPIToken string) *gin.Engine {
@@ -15,6 +16,12 @@ func New(db *db.Repositories, geniusAPIToken string) *gin.Engine {
 	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
 
 	store := cookie.NewStore([]byte("spolyr-cookie-secret"))
+	store.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: 86400 * 7,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 	r.Use(sessions.Sessions("session", store))
 	r.Use(UserProviderMiddleware)
 	r.Use(ErrorHandle)
