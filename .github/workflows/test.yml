@@ -1,0 +1,54 @@
+name: Test and build
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ 'master' ]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '15'
+      - run: make lint-frontend
+      - run: make frontend
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: example
+        image: mongo:4
+        ports:
+          - 27017:27017
+
+    env:
+      DATABASE_USER: root
+      DATABASE_PASSWORD: example
+      DATABASE_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Test
+        run: make test
+
+      - name: Test
+        run: make build-linux
+
+      - name: Print coverage
+        run: go tool cover -func cover.out | tail -n 1 | awk '{print $3}'

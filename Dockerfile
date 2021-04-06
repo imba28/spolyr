@@ -2,7 +2,6 @@
 FROM golang:1.16 as builder
 
 ARG BUILD_NUMBER=dev
-ARG GIT_COMMIT=""
 
 WORKDIR /build
 

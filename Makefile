@@ -17,8 +17,8 @@ clean:
 
 bundle: build
 	mkdir -p ./dist
-	tar -czvf dist/spolyr-linux-amd64.tar.gz public spolyr docker-compose.yml
-	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe docker-compose.yml
+	tar -czvf dist/spolyr-linux-amd64.tar.gz public spolyr
+	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe
 
 test:
 	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 go test -coverprofile cover.out ./internal/...
@@ -35,3 +35,6 @@ node_modules:
 
 frontend: node_modules
 	npm run build
+
+lint-frontend: node_modules
+	npm run lint
