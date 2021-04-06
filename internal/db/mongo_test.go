@@ -224,10 +224,10 @@ func TestTrackRepository_FindTrack__track_not_found(t *testing.T) {
 }
 
 func TestMongoTrackStore_FindTrack__database_error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("FindOne", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return(&model.Track{}, errors.New("db error"))
-	repo := NewTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore)
 	_, err := repo.FindTrack("foobar")
 	assert.Error(t, err)
 }
@@ -312,10 +312,10 @@ func TestTrackRepository_Search__by_album_name(t *testing.T) {
 }
 
 func TestMongoTrackStore_Search__database_error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
 		Return([]*model.Track{}, errors.New("db error"))
-	repo := NewTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore)
 
 	_, err := repo.Search("car")
 
@@ -438,10 +438,10 @@ func TestTrackRepository_LatestTracks(t *testing.T) {
 }
 
 func TestTrackRepository_LatestTracks__database_error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
 		Return([]*model.Track{}, errors.New("db error"))
-	repo := NewTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore)
 
 	_, err := repo.LatestTracks(10)
 

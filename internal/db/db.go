@@ -36,7 +36,7 @@ func New(username, password, databaseName, host string) (*Repositories, error) {
 	}
 
 	return &Repositories{
-		NewTrackRepository(trackStore),
+		NewMongoTrackRepository(trackStore),
 		client,
 	}, nil
 }

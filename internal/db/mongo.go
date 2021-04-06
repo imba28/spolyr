@@ -91,11 +91,11 @@ func createIndices(db *mongo.Database) error {
 	return nil
 }
 
-func newMongoTrackStore(db *mongo.Database) (TrackStore, error) {
+func newMongoTrackStore(db *mongo.Database) (mongoTrackStore, error) {
 	err := createIndices(db)
 	return MongoTrackStore{
 		conn: db,
 	}, err
 }
 
-var _ TrackStore = MongoTrackStore{}
+var _ mongoTrackStore = MongoTrackStore{}

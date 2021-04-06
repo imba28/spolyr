@@ -82,7 +82,7 @@ func (t trackServiceMock) Save(track *model.Track) error {
 	return t.Called(track).Error(0)
 }
 
-var _ db.TrackService = trackServiceMock{}
+var _ db.TrackRepository = trackServiceMock{}
 
 func testReturnValues(args mock.Arguments) ([]*model.Track, error) {
 	var r0 []*model.Track

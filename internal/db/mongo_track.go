@@ -7,14 +7,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TrackStore interface {
+type mongoTrackStore interface {
 	Save(filter interface{}, data interface{}) error
 	FindOne(filter interface{}) (*model.Track, error)
 	Find(filter interface{}, opts ...*options.FindOptions) ([]*model.Track, error)
 	Count(filter interface{}) (int64, error)
 }
 
-type TrackService interface {
+type TrackRepository interface {
 	FindTrack(string) (*model.Track, error)
 	TracksWithoutLyrics() ([]*model.Track, error)
 	CountWithoutLyrics() (int64, error)
@@ -25,41 +25,41 @@ type TrackService interface {
 	Save(track *model.Track) error
 }
 
-type TrackRepository struct {
-	store TrackStore
+type MongoTrackRepository struct {
+	store mongoTrackStore
 }
 
-func (t TrackRepository) FindTrack(spotifyID string) (*model.Track, error) {
+func (t MongoTrackRepository) FindTrack(spotifyID string) (*model.Track, error) {
 	filter := bson.D{primitive.E{Key: "spotify_id", Value: spotifyID}}
 	return t.store.FindOne(filter)
 }
 
-func (t TrackRepository) TracksWithoutLyrics() ([]*model.Track, error) {
+func (t MongoTrackRepository) TracksWithoutLyrics() ([]*model.Track, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}}
 	return t.store.Find(filter)
 }
 
-func (t TrackRepository) CountWithoutLyrics() (int64, error) {
+func (t MongoTrackRepository) CountWithoutLyrics() (int64, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}}
 	return t.store.Count(filter)
 }
 
-func (t TrackRepository) CountWithLyrics() (int64, error) {
+func (t MongoTrackRepository) CountWithLyrics() (int64, error) {
 	filter := bson.M{"loaded": bson.M{"$eq": true}}
 	return t.store.Count(filter)
 }
 
-func (t TrackRepository) Count() (int64, error) {
+func (t MongoTrackRepository) Count() (int64, error) {
 	return t.store.Count(bson.M{})
 }
 
-func (t TrackRepository) LatestTracks(limit int64) ([]*model.Track, error) {
+func (t MongoTrackRepository) LatestTracks(limit int64) ([]*model.Track, error) {
 	opts := options.Find().SetLimit(limit).
 		SetSort(bson.D{{"_id", -1}})
 	return t.store.Find(bson.D{{}}, opts)
 }
 
-func (t TrackRepository) Search(query string) ([]*model.Track, error) {
+func (t MongoTrackRepository) Search(query string) ([]*model.Track, error) {
 	return t.store.Find(bson.M{
 		"$text": bson.M{
 			"$search": query,
@@ -67,7 +67,7 @@ func (t TrackRepository) Search(query string) ([]*model.Track, error) {
 	})
 }
 
-func (t TrackRepository) Save(track *model.Track) error {
+func (t MongoTrackRepository) Save(track *model.Track) error {
 	filter := bson.D{{"spotify_id", track.SpotifyID}}
 	fieldsToUpdate := bson.D{
 		{"spotify_id", track.SpotifyID},
@@ -87,8 +87,8 @@ func (t TrackRepository) Save(track *model.Track) error {
 	})
 }
 
-func NewTrackRepository(s TrackStore) TrackRepository {
-	return TrackRepository{
+func NewMongoTrackRepository(s mongoTrackStore) MongoTrackRepository {
+	return MongoTrackRepository{
 		store: s,
 	}
 }

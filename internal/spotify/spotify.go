@@ -74,9 +74,8 @@ func SyncTracks(client userTrackProvider, store trackSaver) error {
 	return nil
 }
 
-
 type PlaylistProvider struct {
-	c spotify.Client
+	c     spotify.Client
 	saver trackSaver
 }
 
@@ -107,7 +106,7 @@ func (p PlaylistProvider) Download(ID string) error {
 
 func NewPlaylistProvider(c spotify.Client, saver trackSaver) PlaylistProvider {
 	return PlaylistProvider{
-		c : c,
+		c:     c,
 		saver: saver,
 	}
 }

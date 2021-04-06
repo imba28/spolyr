@@ -10,37 +10,37 @@ import (
 	"testing"
 )
 
-type TrackStoreMock struct {
+type MongoTrackStoreMock struct {
 	mock.Mock
 }
 
-func (t *TrackStoreMock) Save(filter interface{}, data interface{}) error {
+func (t *MongoTrackStoreMock) Save(filter interface{}, data interface{}) error {
 	args := t.Called(filter, data)
 	return args.Error(0)
 }
 
-func (t *TrackStoreMock) FindOne(filter interface{}) (*model.Track, error) {
+func (t *MongoTrackStoreMock) FindOne(filter interface{}) (*model.Track, error) {
 	args := t.Called(filter)
 	return args.Get(0).(*model.Track), args.Error(1)
 }
 
-func (t *TrackStoreMock) Find(filter interface{}, opts ...*options.FindOptions) ([]*model.Track, error) {
+func (t *MongoTrackStoreMock) Find(filter interface{}, opts ...*options.FindOptions) ([]*model.Track, error) {
 	args := t.Called(filter, opts)
 	return args.Get(0).([]*model.Track), args.Error(1)
 }
 
-func (t *TrackStoreMock) Count(filter interface{}) (int64, error) {
+func (t *MongoTrackStoreMock) Count(filter interface{}) (int64, error) {
 	args := t.Called(filter)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-var _ TrackStore = &TrackStoreMock{}
+var _ mongoTrackStore = &MongoTrackStoreMock{}
 
 func TestSomething_Count__successful(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(42), nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.Count()
 
 	mocksStore.AssertExpectations(t)
@@ -49,10 +49,10 @@ func TestSomething_Count__successful(t *testing.T) {
 }
 
 func TestSomething_Count__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(-1), errors.New("some error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.Count()
 
 	mocksStore.AssertExpectations(t)
@@ -61,11 +61,11 @@ func TestSomething_Count__error(t *testing.T) {
 }
 
 func TestSomething_FindOne__successful(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("FindOne", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return(&model.Track{Name: "a track", SpotifyID: "id-123"}, nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	track, err := r.FindTrack("id-123")
 
 	mocksStore.AssertExpectations(t)
@@ -74,11 +74,11 @@ func TestSomething_FindOne__successful(t *testing.T) {
 }
 
 func TestSomething_FindOne__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("FindOne", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return(&model.Track{}, errors.New("db error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	track, err := r.FindTrack("id-123")
 
 	mocksStore.AssertExpectations(t)
@@ -87,11 +87,11 @@ func TestSomething_FindOne__error(t *testing.T) {
 }
 
 func TestSomething_TracksWithoutLyrics(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.M"), mock.Anything).
 		Return([]*model.Track{{Name: "track 1"}, {Name: "track 2"}}, nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	tracks, err := r.TracksWithoutLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -101,11 +101,11 @@ func TestSomething_TracksWithoutLyrics(t *testing.T) {
 }
 
 func TestSomething_TracksWithoutLyrics__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.M"), mock.Anything).
 		Return([]*model.Track{}, errors.New("db error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	tracks, err := r.TracksWithoutLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -114,10 +114,10 @@ func TestSomething_TracksWithoutLyrics__error(t *testing.T) {
 }
 
 func TestSomething_CountWithoutLyrics__successful(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(10), nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.CountWithoutLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -126,10 +126,10 @@ func TestSomething_CountWithoutLyrics__successful(t *testing.T) {
 }
 
 func TestSomething_CountWithoutLyrics__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(-1), errors.New("database error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_, err := r.CountWithoutLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -137,10 +137,10 @@ func TestSomething_CountWithoutLyrics__error(t *testing.T) {
 }
 
 func TestSomething_CountWithLyrics__successful(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(10), nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.CountWithLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -149,10 +149,10 @@ func TestSomething_CountWithLyrics__successful(t *testing.T) {
 }
 
 func TestSomething_CountWithLyrics__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Count", mock.AnythingOfType("primitive.M")).Return(int64(-1), errors.New("database error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_, err := r.CountWithLyrics()
 
 	mocksStore.AssertExpectations(t)
@@ -160,11 +160,11 @@ func TestSomething_CountWithLyrics__error(t *testing.T) {
 }
 
 func TestSomething_LatestTracks__successful__no_results(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return([]*model.Track{}, nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.LatestTracks(10)
 
 	mocksStore.AssertExpectations(t)
@@ -173,11 +173,11 @@ func TestSomething_LatestTracks__successful__no_results(t *testing.T) {
 }
 
 func TestSomething_LatestTracks__successful__two_results(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return([]*model.Track{{}, {}}, nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	res, err := r.LatestTracks(10)
 
 	mocksStore.AssertExpectations(t)
@@ -186,11 +186,11 @@ func TestSomething_LatestTracks__successful__two_results(t *testing.T) {
 }
 
 func TestSomething_LatestTracks__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return([]*model.Track{}, errors.New("database error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_, err := r.LatestTracks(10)
 
 	mocksStore.AssertExpectations(t)
@@ -198,12 +198,12 @@ func TestSomething_LatestTracks__error(t *testing.T) {
 }
 
 func TestSomething_Search__successful(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	res := []*model.Track{{}, {}}
 	mocksStore.On("Find", mock.AnythingOfType("primitive.M"), mock.Anything).
 		Return(res, nil)
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	resActual, err := r.Search("foobar")
 
 	mocksStore.AssertExpectations(t)
@@ -212,11 +212,11 @@ func TestSomething_Search__successful(t *testing.T) {
 }
 
 func TestSomething_Search__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.AnythingOfType("primitive.M"), mock.Anything).
 		Return([]*model.Track{}, errors.New("database error"))
 
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_, err := r.Search("foobar")
 
 	mocksStore.AssertExpectations(t)
@@ -224,11 +224,11 @@ func TestSomething_Search__error(t *testing.T) {
 }
 
 func TestSomething_Save__calls_store_save(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Save", mock.AnythingOfType("primitive.D"), mock.AnythingOfType("primitive.D")).Return(nil)
 
 	track := model.Track{}
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	err := r.Save(&track)
 
 	mocksStore.AssertExpectations(t)
@@ -236,14 +236,14 @@ func TestSomething_Save__calls_store_save(t *testing.T) {
 }
 
 func TestSomething_Save__does_not_override_with_empty_lyrics(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Save", mock.AnythingOfType("primitive.D"), mock.AnythingOfType("primitive.D")).Return(nil)
 
 	track := model.Track{
 		Loaded: false,
 		Lyrics: "",
 	}
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_ = r.Save(&track)
 
 	mocksStore.AssertExpectations(t)
@@ -254,14 +254,14 @@ func TestSomething_Save__does_not_override_with_empty_lyrics(t *testing.T) {
 }
 
 func TestSomething_Save__saves_lyrics_if_loaded_flag_is_set(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Save", mock.AnythingOfType("primitive.D"), mock.AnythingOfType("primitive.D")).Return(nil)
 
 	track := model.Track{
 		Loaded: true,
 		Lyrics: "new lyrics",
 	}
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_ = r.Save(&track)
 
 	mocksStore.AssertExpectations(t)
@@ -272,13 +272,13 @@ func TestSomething_Save__saves_lyrics_if_loaded_flag_is_set(t *testing.T) {
 }
 
 func TestSomething_Save__limits_the_update_to_one_specific_tracks(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Save", mock.AnythingOfType("primitive.D"), mock.AnythingOfType("primitive.D")).Return(nil)
 
 	track := model.Track{
 		SpotifyID: "spotify-123-id",
 	}
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	_ = r.Save(&track)
 
 	mocksStore.AssertExpectations(t)
@@ -289,11 +289,11 @@ func TestSomething_Save__limits_the_update_to_one_specific_tracks(t *testing.T) 
 }
 
 func TestSomething_Save__error(t *testing.T) {
-	mocksStore := new(TrackStoreMock)
+	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Save", mock.AnythingOfType("primitive.D"), mock.AnythingOfType("primitive.D")).Return(errors.New("database error"))
 
 	track := model.Track{}
-	r := NewTrackRepository(mocksStore)
+	r := NewMongoTrackRepository(mocksStore)
 	err := r.Save(&track)
 
 	mocksStore.AssertExpectations(t)
