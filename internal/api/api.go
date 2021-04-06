@@ -9,16 +9,16 @@ import (
 	"net/http"
 )
 
-func New(db *db.Repositories, geniusAPIToken, sessionKey string) *gin.Engine {
+func New(db *db.Repositories, geniusAPIToken string, sessionKey []byte) *gin.Engine {
 	r := gin.Default()
 
 	fetcher := lyrics.New(geniusAPIToken, 3)
 	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
 
-	store := cookie.NewStore([]byte(sessionKey))
+	store := cookie.NewStore(sessionKey)
 	store.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: 86400 * 7,
+		Path:     "/",
+		MaxAge:   86400 * 7,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})

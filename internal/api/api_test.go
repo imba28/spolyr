@@ -30,10 +30,10 @@ func init() {
 	}
 
 	tracks := []*model.Track{
-		{Name:"test1", SpotifyID:"1", Lyrics: "Lorem ipsum dolor sit amet", Loaded: true},
-		{Name:"test2", SpotifyID:"2", Lyrics: "You know the rules and so do I.", Loaded: true},
-		{Name:"test3", SpotifyID:"3", Lyrics: "His palms are sweaty, knees weak, arms are heavy", Loaded: true},
-		{Name:"test4", SpotifyID:"4", Lyrics:"Fed to the rules and I hit the ground running", Loaded: true},
+		{Name: "test1", SpotifyID: "1", Lyrics: "Lorem ipsum dolor sit amet", Loaded: true},
+		{Name: "test2", SpotifyID: "2", Lyrics: "You know the rules and so do I.", Loaded: true},
+		{Name: "test3", SpotifyID: "3", Lyrics: "His palms are sweaty, knees weak, arms are heavy", Loaded: true},
+		{Name: "test4", SpotifyID: "4", Lyrics: "Fed to the rules and I hit the ground running", Loaded: true},
 	}
 
 	for i := range tracks {
@@ -45,11 +45,9 @@ func init() {
 	testDb = db
 }
 
-
 func newTestApp() *gin.Engine {
-	return New(testDb, "", "test")
+	return New(testDb, "", []byte("test"))
 }
-
 
 func TestApp(t *testing.T) {
 	t.Run("test if homepage returns 200", func(t *testing.T) {
@@ -95,14 +93,14 @@ func TestApp(t *testing.T) {
 
 		for _, test := range tests {
 			rr := httptest.NewRecorder()
-			request, _ := http.NewRequest(http.MethodGet, "/search?q=" + test.query, nil)
+			request, _ := http.NewRequest(http.MethodGet, "/search?q="+test.query, nil)
 			app := newTestApp()
 
 			app.ServeHTTP(rr, request)
 
 			assert.Equal(t, http.StatusOK, rr.Code)
 			for _, title := range test.wants {
-				assert.Contains(t, rr.Body.String(), title, "should find "+ title +" because its lyrics contain the word '"+ test.query +"'")
+				assert.Contains(t, rr.Body.String(), title, "should find "+title+" because its lyrics contain the word '"+test.query+"'")
 			}
 		}
 	})

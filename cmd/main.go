@@ -13,22 +13,28 @@ func main() {
 	databasePassword := getEnv("DATABASE_PASSWORD", "example")
 	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
 	httpPort := getEnv("HTTP_PORT", "8080")
-	sessionKey := getEnv("SESSION_KEY", "")
+	sessionKey := getSessionKey()
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
-
-	if len(sessionKey) == 0 {
-		randomKey := securecookie.GenerateRandomKey(32)
-		if randomKey == nil {
-			panic("Could not generate random session key!")
-		}
-		sessionKey = string(randomKey)
-	}
 
 	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken, sessionKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Fatal(s.Run(fmt.Sprintf(":%s", httpPort)))
+}
+
+func getSessionKey() []byte {
+	key := getEnv("SESSION_KEY", "")
+
+	if len(key) == 0 {
+		randomKey := securecookie.GenerateRandomKey(32)
+		if randomKey == nil {
+			panic("Could not generate random session key!")
+		}
+		return randomKey
+	}
+
+	return []byte(key)
 }
 
 func getEnv(key, fallback string) string {
