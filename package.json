@@ -45,6 +45,6 @@
   },
   "dependencies": {
     "bootstrap": "^4.6.0",
-    "bootswatch": "^4.6.0"
+    "bootswatch": "^5.0.0"
   }
 }
