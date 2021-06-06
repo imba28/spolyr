@@ -59,10 +59,14 @@
         {{ range .Playlists }}
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card" style="height: 100%">
-                    {{ if index .Images 0 }}
+                    {{ if gt (len .Images) 0 }}
                         <img class="card-img-top"
                              src="{{ (index .Images 0).URL }}"
                              alt="album cover of {{ .Name }}">
+                    {{ else }}
+                        <img class="card-img-top"
+                             src="/static/images/playlist-cover.png"
+                             alt="default playlist cover">
                     {{ end }}
                     <div class="card-body d-flex justify-content-between flex-column">
                         <div>
