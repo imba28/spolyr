@@ -12,11 +12,14 @@ import {faPause} from '@fortawesome/free-solid-svg-icons/faPause';
 import {faHome} from '@fortawesome/free-solid-svg-icons/faHome';
 import {faQuestion} from '@fortawesome/free-solid-svg-icons/faQuestion';
 import {faEdit} from '@fortawesome/free-solid-svg-icons/faEdit';
+import {
+  faExclamationTriangle,
+} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 
 const icons = [
   faArrowLeft, faSearch, faMusic, faSignOutAlt, faSignInAlt,
   faQuoteRight, faPlay, faPause, faHome, faQuestion, faEdit,
-  faSpotify,
+  faSpotify, faExclamationTriangle,
 ];
 
 library.add(...icons);

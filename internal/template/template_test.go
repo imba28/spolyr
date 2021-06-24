@@ -39,7 +39,7 @@ func TestHomePage(t *testing.T) {
 func TestTrackPage(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TrackPage(r, gin.H{"Track": model.Track{}}, http.StatusOK)
+	err := TrackPage(r, gin.H{"Track": model.Track{}, "MaxLyricsImportErrorCount": 3}, http.StatusOK)
 
 	assert.Nil(t, err)
 }

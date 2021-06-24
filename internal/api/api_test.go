@@ -5,6 +5,7 @@ import (
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/model"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -24,7 +25,7 @@ const (
 var testDb *db.Repositories
 
 func init() {
-	db, err := db.New(os.Getenv(envUsername), os.Getenv(envPassword), testDatabaseName, os.Getenv(envHost))
+	db, err := db.New(os.Getenv(envUsername), os.Getenv(envPassword), testDatabaseName, os.Getenv(envHost), 3)
 	if err != nil {
 		panic(err)
 	}
@@ -34,6 +35,7 @@ func init() {
 		{Name: "test2", SpotifyID: "2", Lyrics: "You know the rules and so do I.", Loaded: true},
 		{Name: "test3", SpotifyID: "3", Lyrics: "His palms are sweaty, knees weak, arms are heavy", Loaded: true},
 		{Name: "test4", SpotifyID: "4", Lyrics: "Fed to the rules and I hit the ground running", Loaded: true},
+		{Name: "test5", SpotifyID: "5", Lyrics: "Annie are you ok?", Loaded: false, LyricsImportErrorCount: 3},
 	}
 
 	for i := range tracks {
@@ -46,6 +48,8 @@ func init() {
 }
 
 func newTestApp() *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
 	return New(testDb, "", []byte("test"))
 }
 
@@ -125,5 +129,16 @@ func TestApp(t *testing.T) {
 		app.ServeHTTP(rr, request)
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	})
+
+	t.Run("Lists all tracks where the import error has surpassed the threshold", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodGet, "/tracks/no-lyrics-found", nil)
+		app := newTestApp()
+
+		app.ServeHTTP(rr, request)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "test5", "should find 'test5' because the lyrics import error count is greater than the threshold")
 	})
 }

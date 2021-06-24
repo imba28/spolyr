@@ -17,7 +17,7 @@ func (t *trackStoreMock) Save(track *model.Track) error {
 	args := t.Called(track)
 	return args.Error(0)
 }
-func (t *trackStoreMock) TracksWithoutLyrics() ([]*model.Track, error) {
+func (t *trackStoreMock) TracksWithoutLyricsError() ([]*model.Track, error) {
 	args := t.Called()
 	return args.Get(0).([]*model.Track), args.Error(1)
 }
@@ -63,7 +63,7 @@ func TestSyncer_Sync(t *testing.T) {
 
 			dbMock := trackStoreMock{}
 			dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
-			dbMock.On("TracksWithoutLyrics").Times(1).Return(tracks, nil)
+			dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, nil)
 
 			results := make(chan Result)
 
@@ -89,7 +89,7 @@ func TestSyncer_Sync(t *testing.T) {
 	t.Run("prevents clients from starting multiple syncs", func(t *testing.T) {
 		withTimeout(func(t *testing.T) {
 			dbMock := trackStoreMock{}
-			dbMock.On("TracksWithoutLyrics").Return([]*model.Track{{}}, nil)
+			dbMock.On("TracksWithoutLyricsError").Return([]*model.Track{{}}, nil)
 
 			results := make(chan Result)
 
@@ -129,7 +129,7 @@ func TestSyncer_Syncing(t *testing.T) {
 
 		dbMock := trackStoreMock{}
 		dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
-		dbMock.On("TracksWithoutLyrics").Times(1).Return(tracks, nil)
+		dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, nil)
 
 		results := make(chan Result)
 
@@ -151,7 +151,7 @@ func TestSyncer_Syncing(t *testing.T) {
 		tracks := []*model.Track{}
 
 		dbMock := trackStoreMock{}
-		dbMock.On("TracksWithoutLyrics").Times(1).Return(tracks, expectedError)
+		dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, expectedError)
 
 		fetcherMock := lyricsFetcherMock{}
 
@@ -175,7 +175,7 @@ func TestSyncer_TotalTracks(t *testing.T) {
 	}
 
 	dbMock := trackStoreMock{}
-	dbMock.On("TracksWithoutLyrics").Return(tracks, nil)
+	dbMock.On("TracksWithoutLyricsError").Return(tracks, nil)
 
 	results := make(chan Result)
 	defer close(results)
@@ -201,7 +201,7 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 		}
 
 		dbMock := trackStoreMock{}
-		dbMock.On("TracksWithoutLyrics").Return(tracks, nil)
+		dbMock.On("TracksWithoutLyricsError").Return(tracks, nil)
 
 		results := make(chan Result)
 		defer close(results)
@@ -232,7 +232,7 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 			}
 
 			dbMock := trackStoreMock{}
-			dbMock.On("TracksWithoutLyrics").Return(tracks, nil)
+			dbMock.On("TracksWithoutLyricsError").Return(tracks, nil)
 
 			results := make(chan Result)
 
@@ -248,5 +248,34 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 			<-finished
 			assert.Equal(t, syncer.SyncedTracks(), -1)
 		}, time.Second)
+	})
+
+	t.Run("marks tracks as failed if an error occurs while importing lyrics", func(t *testing.T) {
+		tracks := []*model.Track{
+			{
+				Name: "track A",
+			},
+		}
+
+		dbMock := trackStoreMock{}
+		dbMock.On("TracksWithoutLyricsError").Return(tracks, nil)
+
+		results := make(chan Result)
+		defer close(results)
+
+		fetcherMock := lyricsFetcherMock{}
+		dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
+		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+
+		syncer := NewSyncer(&fetcherMock, &dbMock)
+		_, _ = syncer.Sync()
+
+		results <- Result{
+			Track: tracks[0],
+			Err:   errors.New("something went wrong during the lyrics import"),
+		}
+
+		assert.Equal(t, tracks[0].LyricsImportErrorCount, 1, "should increase error counter if import fails")
+		dbMock.AssertExpectations(t)
 	})
 }

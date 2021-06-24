@@ -1,0 +1,16 @@
+[
+  {
+    "update": "tracks",
+    "updates": [
+      {
+        "q": {},
+        "u": {
+          "$unset": {
+            "lyrics_import_error_count": ""
+          }
+        },
+        "multi": true
+      }
+    ]
+  }
+]

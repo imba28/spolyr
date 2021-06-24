@@ -12,7 +12,7 @@ import (
 )
 
 func setUp() *Repositories {
-	repos, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost))
+	repos, err := New(os.Getenv(EnvUsername), os.Getenv(EnvPassword), testDatabaseName, os.Getenv(EnvHost), 3)
 	if err != nil {
 		panic(err)
 	}
@@ -37,14 +37,15 @@ func TestMongoTrackStore_Save__inserts_new_document_into_database(t *testing.T) 
 	}
 
 	track := model.Track{
-		SpotifyID:  "1",
-		Artist:     "Frank Sinatra",
-		AlbumName:  "an album",
-		ImageURL:   "http://spolyr.app/album.png",
-		PreviewURL: "http://spolyr.app/preview.mp3",
-		Name:       "Let It Snow",
-		Lyrics:     "Oh the weather outside is frightful.",
-		Loaded:     true,
+		SpotifyID:              "1",
+		Artist:                 "Frank Sinatra",
+		AlbumName:              "an album",
+		ImageURL:               "http://spolyr.app/album.png",
+		PreviewURL:             "http://spolyr.app/preview.mp3",
+		Name:                   "Let It Snow",
+		Lyrics:                 "Oh the weather outside is frightful.",
+		LyricsImportErrorCount: 1,
+		Loaded:                 true,
 	}
 	repos := setUp()
 	defer tearDown(repos)
@@ -56,7 +57,7 @@ func TestMongoTrackStore_Save__inserts_new_document_into_database(t *testing.T) 
 	assert.Nil(t, err)
 
 	testCases := []struct {
-		is, want, field string
+		is, want, field interface{}
 	}{
 		{trackFromDatabase.SpotifyID, track.SpotifyID, "spotifyID"},
 		{trackFromDatabase.Artist, track.Artist, "artist"},
@@ -65,6 +66,7 @@ func TestMongoTrackStore_Save__inserts_new_document_into_database(t *testing.T) 
 		{trackFromDatabase.PreviewURL, track.PreviewURL, "previewURL"},
 		{trackFromDatabase.Name, track.Name, "name"},
 		{trackFromDatabase.Lyrics, track.Lyrics, "lyrics"},
+		{trackFromDatabase.LyricsImportErrorCount, track.LyricsImportErrorCount, "lyrics_import_error_count"},
 	}
 
 	for _, tc := range testCases {
@@ -178,6 +180,24 @@ func TestTrackRepository_TracksWithoutLyrics(t *testing.T) {
 	assert.Equal(t, tracks[0].SpotifyID, "2", "it should return the track spotifyID = '2' that is missing its lyrics")
 }
 
+func TestTrackRepository_TracksWithoutLyricsError(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	repos := setUp()
+	defer tearDown(repos)
+
+	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&model.Track{SpotifyID: "2", LyricsImportErrorCount: 42})
+	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+
+	tracks, err := repos.Tracks.TracksWithoutLyricsError()
+	assert.Nil(t, err)
+	assert.Len(t, tracks, 1, "it should return the tracks where lyrics are missing and no import error occurred")
+	assert.Equal(t, tracks[0].SpotifyID, "3", "it should return the track spotifyID = '2' that is missing its lyrics")
+}
+
 func TestTrackRepository_FindTrack(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -227,7 +247,7 @@ func TestMongoTrackStore_FindTrack__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("FindOne", mock.AnythingOfType("primitive.D"), mock.Anything).
 		Return(&model.Track{}, errors.New("db error"))
-	repo := NewMongoTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore, 3)
 	_, err := repo.FindTrack("foobar")
 	assert.Error(t, err)
 }
@@ -315,7 +335,7 @@ func TestMongoTrackStore_Search__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
 		Return([]*model.Track{}, errors.New("db error"))
-	repo := NewMongoTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore, 3)
 
 	_, err := repo.Search("car")
 
@@ -441,7 +461,7 @@ func TestTrackRepository_LatestTracks__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
 		Return([]*model.Track{}, errors.New("db error"))
-	repo := NewMongoTrackRepository(mocksStore)
+	repo := NewMongoTrackRepository(mocksStore, 3)
 
 	_, err := repo.LatestTracks(10)
 

@@ -37,6 +37,10 @@ type trackServiceMock struct {
 	mock.Mock
 }
 
+func (t trackServiceMock) TracksWithLyricsError() ([]*model.Track, error) {
+	panic("implement me")
+}
+
 func (t trackServiceMock) FindTrack(id string) (*model.Track, error) {
 	args := t.Called(id)
 
@@ -53,6 +57,10 @@ func (t trackServiceMock) FindTrack(id string) (*model.Track, error) {
 
 func (t trackServiceMock) TracksWithoutLyrics() ([]*model.Track, error) {
 	return testReturnValues(t.Called())
+}
+
+func (t trackServiceMock) TracksWithoutLyricsError() ([]*model.Track, error) {
+	panic("not implemented")
 }
 
 func (t trackServiceMock) CountWithoutLyrics() (int64, error) {
@@ -250,6 +258,27 @@ func TestTrackUpdateHandler_returns_500_if_track_cannot_be_saved(t *testing.T) {
 	router.ServeHTTP(rr, request)
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	mockTrackService.AssertExpectations(t)
+}
+
+func TestTrackUpdateHandler_sets_lyrics_error_counter_to_0(t *testing.T) {
+	track := model.Track{LyricsImportErrorCount: 5}
+
+	mockTrackService := trackServiceMock{}
+	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&track, nil)
+	mockTrackService.On("Save", mock.AnythingOfType("*model.Track")).Return(nil)
+
+	rr := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodPost, "/", nil)
+	form := url.Values{}
+	form.Set("lyrics", "It's my life...")
+	request.PostForm = form
+
+	router := setUp()
+	router.POST("/", TrackUpdateHandler(mockTrackService))
+	router.ServeHTTP(rr, request)
+
+	assert.Equal(t, track.LyricsImportErrorCount, 0)
 	mockTrackService.AssertExpectations(t)
 }
 

@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("item not found")
+	ErrNotFound               = errors.New("item not found")
+	MaxLyricsImportErrorCount = 3
 )
 
 func HomePageHandler(s db.TrackRepository) gin.HandlerFunc {
@@ -126,9 +127,10 @@ func TrackDetailHandler(db db.TrackRepository) gin.HandlerFunc {
 
 		session := sessions.Default(c)
 		viewData := mergeView(gin.H{
-			"Track":   track,
-			"Success": session.Flashes("Success"),
-			"Error":   session.Flashes("Error"),
+			"Track":                     track,
+			"Success":                   session.Flashes("Success"),
+			"Error":                     session.Flashes("Error"),
+			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
 		}, viewFromContext(c))
 		_ = session.Save()
 		_ = template2.TrackPage(c.Writer, viewData, http.StatusOK)
@@ -158,6 +160,7 @@ func TrackUpdateHandler(db db.TrackRepository) gin.HandlerFunc {
 
 		track.Lyrics = updatedLyrics
 		track.Loaded = true
+		track.LyricsImportErrorCount = 0
 		err = db.Save(track)
 		if err != nil {
 			view["Error"] = "Could not update lyrics"
@@ -203,7 +206,24 @@ func TrackMissingLyricsHandler(db db.TrackRepository) gin.HandlerFunc {
 		}
 
 		viewData := mergeView(gin.H{
-			"Tracks": tracks,
+			"Tracks":                    tracks,
+			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
+		}, viewFromContext(c))
+		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
+	}
+}
+
+func TrackNoLyricsFoundHandler(db db.TrackRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tracks, err := db.TracksWithLyricsError()
+		if err != nil {
+			_ = c.Error(err)
+			return
+		}
+
+		viewData := mergeView(gin.H{
+			"Tracks":                    tracks,
+			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
 		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
@@ -228,8 +248,9 @@ func TrackSearchHandler(db db.TrackRepository) gin.HandlerFunc {
 		}
 
 		viewData := mergeView(gin.H{
-			"Query":  c.Query("q"),
-			"Tracks": tracks,
+			"Query":                     c.Query("q"),
+			"Tracks":                    tracks,
+			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
 		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}

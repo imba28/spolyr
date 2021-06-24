@@ -44,6 +44,7 @@ func New(db *db.Repositories, geniusAPIToken string, sessionKey []byte) *gin.Eng
 	r.GET("/callback", SpotifyAuthCallbackHandler)
 	r.GET("/tracks/id/:spotifyID", TrackDetailHandler(db.Tracks))
 	r.GET("/tracks/missing-lyrics", TrackMissingLyricsHandler(db.Tracks))
+	r.GET("/tracks/no-lyrics-found", TrackNoLyricsFoundHandler(db.Tracks))
 	r.GET("/search", TrackSearchHandler(db.Tracks))
 	r.Static("static", "public")
 

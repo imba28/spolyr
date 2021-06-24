@@ -8,7 +8,7 @@ import (
 
 type tracksSyncFetcherSaver interface {
 	Save(track *model.Track) error
-	TracksWithoutLyrics() ([]*model.Track, error)
+	TracksWithoutLyricsError() ([]*model.Track, error)
 }
 
 type Syncer struct {
@@ -22,7 +22,7 @@ type Syncer struct {
 }
 
 func (s *Syncer) Sync() (<-chan struct{}, error) {
-	tracks, err := s.db.TracksWithoutLyrics()
+	tracks, err := s.db.TracksWithoutLyricsError()
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +65,16 @@ func (s *Syncer) run(tracks []*model.Track, finishedSignal chan<- struct{}) {
 
 		if result.Err != nil {
 			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Artist, result.Track.Name, result.Err.Error()))
+			result.Track.LyricsImportErrorCount++
 		} else {
-			err = s.db.Save(result.Track)
-			if err != nil {
-				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, err.Error()))
-			} else {
-				s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.Track.Name, result.Track.Artist))
-			}
+			result.Track.LyricsImportErrorCount = 0
+		}
+
+		err = s.db.Save(result.Track)
+		if err != nil {
+			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, err.Error()))
+		} else {
+			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.Track.Name, result.Track.Artist))
 		}
 	}
 }

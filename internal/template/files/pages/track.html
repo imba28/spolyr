@@ -71,8 +71,13 @@
                         <div class="card-text">
                             {{ if .Track.Lyrics }}
                                 {{ formatHTML .Track.Lyrics }}
+                            {{ else if ge .Track.LyricsImportErrorCount $.MaxLyricsImportErrorCount }}
+                                <small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Lyrics not found.</small>
+                            {{ else if gt .Track.LyricsImportErrorCount 0 }}
+                                <small class="text-warning">Lyrics not found. Import
+                                    failed {{ .Track.LyricsImportErrorCount }} times.</small>
                             {{ else }}
-                                <small class="text-muted">No lyrics available.</small>
+                                <small class="text-muted">Lyrics not imported yet.</small>
                             {{ end }}
                         </div>
                     </div>
