@@ -71,8 +71,12 @@ func (s *Syncer) run(tracks []*model.Track, finishedSignal chan<- struct{}) {
 		}
 
 		err = s.db.Save(result.Track)
-		if err != nil {
-			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, err.Error()))
+		if result.Err != nil || err != nil {
+			message := result.Err
+			if err != nil {
+				message = err
+			}
+			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, message.Error()))
 		} else {
 			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.Track.Name, result.Track.Artist))
 		}
