@@ -7,15 +7,16 @@ import (
 )
 
 type Track struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	SpotifyID  string             `bson:"spotify_id"`
-	Artist     string             `bson:"artist"`
-	AlbumName  string             `bson:"album_name"`
-	ImageURL   string             `bson:"image_url"`
-	PreviewURL string             `bson:"preview_url"`
-	Name       string             `bson:"name"`
-	Lyrics     string             `bson:"lyrics"`
-	Loaded     bool               `bson:"loaded"`
+	ID                     primitive.ObjectID `bson:"_id"`
+	SpotifyID              string             `bson:"spotify_id"`
+	Artist                 string             `bson:"artist"`
+	AlbumName              string             `bson:"album_name"`
+	ImageURL               string             `bson:"image_url"`
+	PreviewURL             string             `bson:"preview_url"`
+	Name                   string             `bson:"name"`
+	Lyrics                 string             `bson:"lyrics"`
+	LyricsImportErrorCount int                `bson:"lyrics_import_error_count"`
+	Loaded                 bool               `bson:"loaded"`
 }
 
 func NewTrack(t spotify.FullTrack) Track {

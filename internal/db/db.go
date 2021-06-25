@@ -12,7 +12,7 @@ type Repositories struct {
 	client *mongo.Client
 }
 
-func New(username, password, databaseName, host string) (*Repositories, error) {
+func New(username, password, databaseName, host string, maxLyricsImportErrorCount int) (*Repositories, error) {
 	ctx := context.Background()
 
 	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:27017", host)).SetAuth(options.Credential{
@@ -36,7 +36,7 @@ func New(username, password, databaseName, host string) (*Repositories, error) {
 	}
 
 	return &Repositories{
-		NewMongoTrackRepository(trackStore),
+		NewMongoTrackRepository(trackStore, maxLyricsImportErrorCount),
 		client,
 	}, nil
 }

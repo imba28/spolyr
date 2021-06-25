@@ -1,0 +1,20 @@
+[
+  {
+    "update": "tracks",
+    "updates": [
+      {
+        "q": {
+          "lyrics_import_error_count": {
+            "$exists": false
+          }
+        },
+        "u": {
+          "$set": {
+            "lyrics_import_error_count": 0
+          }
+        },
+        "multi": true
+      }
+    ]
+  }
+]

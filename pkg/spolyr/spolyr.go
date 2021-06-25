@@ -7,7 +7,7 @@ import (
 )
 
 func New(dbHost, dbUser, dbPassword, geniusAPIToken string, sessionKey []byte) (*gin.Engine, error) {
-	dbConn, err := db.New(dbUser, dbPassword, "spolyr", dbHost)
+	dbConn, err := db.New(dbUser, dbPassword, "spolyr", dbHost, api.MaxLyricsImportErrorCount)
 	if err != nil {
 		return nil, err
 	}

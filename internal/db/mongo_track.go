@@ -17,6 +17,8 @@ type mongoTrackStore interface {
 type TrackRepository interface {
 	FindTrack(string) (*model.Track, error)
 	TracksWithoutLyrics() ([]*model.Track, error)
+	TracksWithoutLyricsError() ([]*model.Track, error)
+	TracksWithLyricsError() ([]*model.Track, error)
 	CountWithoutLyrics() (int64, error)
 	CountWithLyrics() (int64, error)
 	Count() (int64, error)
@@ -26,7 +28,8 @@ type TrackRepository interface {
 }
 
 type MongoTrackRepository struct {
-	store mongoTrackStore
+	store                mongoTrackStore
+	maxLyricsImportError int
 }
 
 func (t MongoTrackRepository) FindTrack(spotifyID string) (*model.Track, error) {
@@ -36,6 +39,16 @@ func (t MongoTrackRepository) FindTrack(spotifyID string) (*model.Track, error) 
 
 func (t MongoTrackRepository) TracksWithoutLyrics() ([]*model.Track, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}}
+	return t.store.Find(filter)
+}
+
+func (t MongoTrackRepository) TracksWithoutLyricsError() ([]*model.Track, error) {
+	filter := bson.M{"loaded": bson.M{"$ne": true}, "lyrics_import_error_count": bson.M{"$lt": t.maxLyricsImportError}}
+	return t.store.Find(filter)
+}
+
+func (t MongoTrackRepository) TracksWithLyricsError() ([]*model.Track, error) {
+	filter := bson.M{"lyrics_import_error_count": bson.M{"$gte": t.maxLyricsImportError}}
 	return t.store.Find(filter)
 }
 
@@ -76,6 +89,7 @@ func (t MongoTrackRepository) Save(track *model.Track) error {
 		{"album_name", track.AlbumName},
 		{"preview_url", track.PreviewURL},
 		{"image_url", track.ImageURL},
+		{"lyrics_import_error_count", track.LyricsImportErrorCount},
 	}
 
 	if track.Loaded {
@@ -87,8 +101,9 @@ func (t MongoTrackRepository) Save(track *model.Track) error {
 	})
 }
 
-func NewMongoTrackRepository(s mongoTrackStore) MongoTrackRepository {
+func NewMongoTrackRepository(s mongoTrackStore, maxLyricsImportError int) MongoTrackRepository {
 	return MongoTrackRepository{
-		store: s,
+		store:                s,
+		maxLyricsImportError: maxLyricsImportError,
 	}
 }
