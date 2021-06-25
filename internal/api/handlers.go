@@ -208,6 +208,7 @@ func TrackMissingLyricsHandler(db db.TrackRepository) gin.HandlerFunc {
 		viewData := mergeView(gin.H{
 			"Tracks":                    tracks,
 			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
+			"Title":                     "Tracks with missing lyrics",
 		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
@@ -224,6 +225,7 @@ func TrackNoLyricsFoundHandler(db db.TrackRepository) gin.HandlerFunc {
 		viewData := mergeView(gin.H{
 			"Tracks":                    tracks,
 			"MaxLyricsImportErrorCount": MaxLyricsImportErrorCount,
+			"Title":                     "Tracks where no lyrics could be imported",
 		}, viewFromContext(c))
 		_ = template2.TracksPage(c.Writer, viewData, http.StatusOK)
 	}
