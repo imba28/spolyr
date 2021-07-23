@@ -2,7 +2,7 @@ name: Test and build
 
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'master', 'feat/*' ]
   pull_request:
     branches: [ 'master' ]
 
@@ -21,19 +21,24 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: example
-        image: mongo:4
-        ports:
-          - 27017:27017
+    strategy:
+      fail-fast: false
+      matrix:
+        mongodb_image: ['mongo:4', 'mongo:5']
 
     env:
       DATABASE_USER: root
       DATABASE_PASSWORD: example
       DATABASE_HOST: 127.0.0.1
+
+    services:
+      mongodb:
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ env.DATABASE_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ env.DATABASE_PASSWORD }}
+        image: ${{ matrix.mongodb_image }}
+        ports:
+          - 27017:27017
 
     steps:
       - uses: actions/checkout@v2
