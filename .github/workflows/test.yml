@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mongodb_image: [mongo:4, mongo:5]
+        mongodb_image: ['mongo:4', 'mongo:5']
 
     env:
       DATABASE_USER: root
