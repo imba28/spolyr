@@ -11,6 +11,6 @@ require (
 	github.com/rhnvrm/lyric-api-go v0.1.3
 	github.com/stretchr/testify v1.7.0
 	github.com/zmb3/spotify v1.3.0
-	go.mongodb.org/mongo-driver v1.7.0
+	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 )
