@@ -1,5 +1,5 @@
 # api build
-FROM golang:1.16 as builder
+FROM golang:1.17 as builder
 
 ARG BUILD_NUMBER=dev
 
