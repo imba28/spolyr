@@ -44,7 +44,7 @@
     "webpack-cli": "^4.6.0"
   },
   "dependencies": {
-    "bootstrap": "^4.6.0",
+    "bootstrap": "^5.0.0",
     "bootswatch": "^4.6.0"
   }
 }
