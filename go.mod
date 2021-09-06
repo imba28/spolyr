@@ -12,5 +12,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/zmb3/spotify v1.3.0
 	go.mongodb.org/mongo-driver v1.7.2
-	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 )
