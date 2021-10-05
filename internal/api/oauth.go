@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
 	"net/http"
 	"os"
 )

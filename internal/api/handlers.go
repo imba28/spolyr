@@ -10,7 +10,7 @@ import (
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/spotify"
 	template2 "github.com/imba28/spolyr/internal/template"
-	spotify2 "github.com/zmb3/spotify"
+	spotify2 "github.com/zmb3/spotify/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
 	"html/template"

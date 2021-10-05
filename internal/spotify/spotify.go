@@ -2,7 +2,7 @@ package spotify
 
 import (
 	"github.com/imba28/spolyr/internal/model"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
 	"log"
 )
 

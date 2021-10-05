@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/rhnvrm/lyric-api-go v0.1.3
 	github.com/stretchr/testify v1.7.0
-	github.com/zmb3/spotify v1.3.0
+	github.com/zmb3/spotify/v2 v2.0.0
 	go.mongodb.org/mongo-driver v1.7.3
-	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a
+	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5
 )
