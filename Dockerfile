@@ -15,7 +15,7 @@ RUN sed -i "s/dev-build/${BUILD_NUMBER}/" internal/template/files/includes/foote
     make build-linux
 
 # frontend build
-FROM node:16-alpine as frontend_builder
+FROM node:17-alpine as frontend_builder
 
 WORKDIR /build
 
