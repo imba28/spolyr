@@ -27,7 +27,7 @@ COPY . .
 RUN npm run lint && npm run build
 
 # runtime
-FROM alpine:3
+FROM alpine:20220316
 
 LABEL maintainer="lukas.gruber1@gmail.com"
 
