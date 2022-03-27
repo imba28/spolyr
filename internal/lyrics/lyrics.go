@@ -2,8 +2,8 @@ package lyrics
 
 import (
 	"errors"
+	lyrics "github.com/imba28/lyric-api-go"
 	"github.com/imba28/spolyr/internal/db"
-	lyrics "github.com/rhnvrm/lyric-api-go"
 	"strings"
 	"sync"
 )
@@ -71,7 +71,6 @@ func New(geniusAPIToken string, concurrencyLevel int) AsyncFetcher {
 	provider := lyrics.New(
 		lyrics.WithGeniusLyrics(geniusAPIToken),
 		lyrics.WithSongLyrics(),
-		lyrics.WithMusixMatch(),
 	)
 	return AsyncFetcher{
 		ready:         make(chan struct{}, 1),
