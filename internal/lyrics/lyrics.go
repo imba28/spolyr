@@ -2,7 +2,7 @@ package lyrics
 
 import (
 	"errors"
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	lyrics "github.com/rhnvrm/lyric-api-go"
 	"strings"
 	"sync"
@@ -13,20 +13,20 @@ var (
 )
 
 type Result struct {
-	Track *model.Track
+	Track *db.Track
 	Err   error
 }
 
 type Fetcher interface {
-	Fetch(*model.Track) error
-	FetchAll([]*model.Track) (<-chan Result, error)
+	Fetch(*db.Track) error
+	FetchAll([]*db.Track) (<-chan Result, error)
 }
 
 type provider interface {
 	Search(string, string) (string, error)
 }
 
-func fetchTrackLyrics(t *model.Track, l provider) error {
+func fetchTrackLyrics(t *db.Track, l provider) error {
 	artist := t.Artist
 	if strings.Index(t.Artist, ", ") > -1 {
 		artist = strings.Split(artist, ", ")[0]
@@ -45,11 +45,11 @@ func fetchTrackLyrics(t *model.Track, l provider) error {
 type AsyncFetcher struct {
 	concurrency   int
 	ready         chan struct{}
-	fetchingQueue chan *model.Track
+	fetchingQueue chan *db.Track
 	lyricsFetcher provider
 }
 
-func (s AsyncFetcher) Fetch(t *model.Track) error {
+func (s AsyncFetcher) Fetch(t *db.Track) error {
 	err := fetchTrackLyrics(t, s.lyricsFetcher)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (s AsyncFetcher) Fetch(t *model.Track) error {
 	return nil
 }
 
-func (s AsyncFetcher) FetchAll(tracks []*model.Track) (<-chan Result, error) {
+func (s AsyncFetcher) FetchAll(tracks []*db.Track) (<-chan Result, error) {
 	results := make(chan Result)
 	var wg sync.WaitGroup
 
@@ -80,8 +80,8 @@ func New(geniusAPIToken string, concurrencyLevel int) AsyncFetcher {
 	}
 }
 
-func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) chan *model.Track {
-	c := make(chan *model.Track, s.concurrency)
+func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) chan *db.Track {
+	c := make(chan *db.Track, s.concurrency)
 	var once sync.Once
 
 	for i := 0; i < s.concurrency; i++ {
@@ -101,7 +101,7 @@ func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) ch
 	return c
 }
 
-func (s *AsyncFetcher) run(tracks []*model.Track, queue chan<- *model.Track, wg *sync.WaitGroup) {
+func (s *AsyncFetcher) run(tracks []*db.Track, queue chan<- *db.Track, wg *sync.WaitGroup) {
 	defer close(queue)
 
 	for i := range tracks {

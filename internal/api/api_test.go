@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
-	"github.com/imba28/spolyr/internal/model"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -25,12 +24,12 @@ const (
 var testDb *db.Repositories
 
 func init() {
-	db, err := db.New(os.Getenv(envUsername), os.Getenv(envPassword), testDatabaseName, os.Getenv(envHost), 3)
+	dbConn, err := db.New(os.Getenv(envUsername), os.Getenv(envPassword), testDatabaseName, os.Getenv(envHost), 3)
 	if err != nil {
 		panic(err)
 	}
 
-	tracks := []*model.Track{
+	tracks := []*db.Track{
 		{Name: "test1", SpotifyID: "1", Lyrics: "Lorem ipsum dolor sit amet", Loaded: true},
 		{Name: "test2", SpotifyID: "2", Lyrics: "You know the rules and so do I.", Loaded: true},
 		{Name: "test3", SpotifyID: "3", Lyrics: "His palms are sweaty, knees weak, arms are heavy", Loaded: true},
@@ -39,12 +38,12 @@ func init() {
 	}
 
 	for i := range tracks {
-		if err := db.Tracks.Save(tracks[i]); err != nil {
+		if err := dbConn.Tracks.Save(tracks[i]); err != nil {
 			panic(err)
 		}
 	}
 
-	testDb = db
+	testDb = dbConn
 }
 
 func newTestApp() *gin.Engine {

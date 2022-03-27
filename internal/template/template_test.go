@@ -3,7 +3,7 @@ package template
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +30,7 @@ func TestHomePage(t *testing.T) {
 	err := HomePage(r, gin.H{
 		"TrackCount":            0,
 		"TracksWithLyricsCount": 5,
-		"TracksLatest":          []model.Track{},
+		"TracksLatest":          []db.Track{},
 	}, http.StatusOK)
 
 	assert.Nil(t, err)
@@ -39,7 +39,7 @@ func TestHomePage(t *testing.T) {
 func TestTrackPage(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TrackPage(r, gin.H{"Track": model.Track{}, "MaxLyricsImportErrorCount": 3}, http.StatusOK)
+	err := TrackPage(r, gin.H{"Track": db.Track{}, "MaxLyricsImportErrorCount": 3}, http.StatusOK)
 
 	assert.Nil(t, err)
 }
@@ -47,7 +47,7 @@ func TestTrackPage(t *testing.T) {
 func TestTrackEditPage(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TrackEditPage(r, gin.H{"Track": model.Track{}}, http.StatusOK)
+	err := TrackEditPage(r, gin.H{"Track": db.Track{}}, http.StatusOK)
 
 	assert.Nil(t, err)
 }
@@ -71,7 +71,7 @@ func TestTrackLyricsSyncPage__not_syncing(t *testing.T) {
 func TestTracksPage(t *testing.T) {
 	r := httptest.NewRecorder()
 
-	err := TracksPage(r, gin.H{"Tracks": []model.Track{}}, http.StatusOK)
+	err := TracksPage(r, gin.H{"Tracks": []db.Track{}}, http.StatusOK)
 
 	assert.Nil(t, err)
 }

@@ -3,7 +3,7 @@ package lyrics
 import (
 	"errors"
 	"fmt"
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -25,7 +25,7 @@ func TestAsyncFetcher_Fetch(t *testing.T) {
 	t.Run("fetches lyrics", func(t *testing.T) {
 		artist, song := "artist", "a song"
 		expectedLyrics := "la la la la"
-		track := model.Track{
+		track := db.Track{
 			Artist: artist,
 			Name:   song,
 		}
@@ -45,7 +45,7 @@ func TestAsyncFetcher_Fetch(t *testing.T) {
 	t.Run("picks the first artist if Track has multiple artists", func(t *testing.T) {
 		artist, song := "Eminem, Nate Dog", "'Till I Collapse"
 		expectedLyrics := "la la la la"
-		track := model.Track{
+		track := db.Track{
 			Artist: artist,
 			Name:   song,
 		}
@@ -61,7 +61,7 @@ func TestAsyncFetcher_Fetch(t *testing.T) {
 	})
 
 	t.Run("returns error if provider return error", func(t *testing.T) {
-		track := model.Track{}
+		track := db.Track{}
 		expectedErr := errors.New("something went wrong")
 
 		providerMock := providerMock{}
@@ -79,7 +79,7 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 	t.Run("it works with different concurrency levels", withTimeout(func(t *testing.T) {
 		tests := []int{1, 2, 5, 10}
 
-		tracks := []*model.Track{
+		tracks := []*db.Track{
 			{Artist: "a", Name: "a"},
 			{Artist: "b", Name: "b"},
 			{Artist: "c", Name: "c"},
@@ -113,7 +113,7 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 	}, 2*time.Second))
 
 	t.Run("it writes errors to the result struct", withTimeout(func(t *testing.T) {
-		tracks := []*model.Track{
+		tracks := []*db.Track{
 			{Artist: "a", Name: "a"},
 			{Artist: "b", Name: "b"},
 		}

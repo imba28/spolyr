@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
-	"github.com/imba28/spolyr/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,10 +21,10 @@ type lyricsFetcherMock struct {
 	mock.Mock
 }
 
-func (l lyricsFetcherMock) Fetch(t *model.Track) error {
+func (l lyricsFetcherMock) Fetch(t *db.Track) error {
 	return l.Called(t).Error(0)
 }
-func (l lyricsFetcherMock) FetchAll(ts []*model.Track) (<-chan lyrics.Result, error) {
+func (l lyricsFetcherMock) FetchAll(ts []*db.Track) (<-chan lyrics.Result, error) {
 	args := l.Called(ts)
 	if args.Get(1) == nil {
 		return nil, args.Error(1)
@@ -37,17 +36,17 @@ type trackServiceMock struct {
 	mock.Mock
 }
 
-func (t trackServiceMock) TracksWithLyricsError() ([]*model.Track, error) {
+func (t trackServiceMock) TracksWithLyricsError() ([]*db.Track, error) {
 	panic("implement me")
 }
 
-func (t trackServiceMock) FindTrack(id string) (*model.Track, error) {
+func (t trackServiceMock) FindTrack(id string) (*db.Track, error) {
 	args := t.Called(id)
 
-	var r0 *model.Track
+	var r0 *db.Track
 	var r1 error
 	if args.Get(1) == nil {
-		r0 = args.Get(0).(*model.Track)
+		r0 = args.Get(0).(*db.Track)
 	} else {
 		r1 = args.Error(1)
 	}
@@ -55,11 +54,11 @@ func (t trackServiceMock) FindTrack(id string) (*model.Track, error) {
 	return r0, r1
 }
 
-func (t trackServiceMock) TracksWithoutLyrics() ([]*model.Track, error) {
+func (t trackServiceMock) TracksWithoutLyrics() ([]*db.Track, error) {
 	return testReturnValues(t.Called())
 }
 
-func (t trackServiceMock) TracksWithoutLyricsError() ([]*model.Track, error) {
+func (t trackServiceMock) TracksWithoutLyricsError() ([]*db.Track, error) {
 	panic("not implemented")
 }
 
@@ -78,25 +77,25 @@ func (t trackServiceMock) Count() (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (t trackServiceMock) LatestTracks(limit int64) ([]*model.Track, error) {
+func (t trackServiceMock) LatestTracks(limit int64) ([]*db.Track, error) {
 	return testReturnValues(t.Called(limit))
 }
 
-func (t trackServiceMock) Search(query string) ([]*model.Track, error) {
+func (t trackServiceMock) Search(query string) ([]*db.Track, error) {
 	return testReturnValues(t.Called(query))
 }
 
-func (t trackServiceMock) Save(track *model.Track) error {
+func (t trackServiceMock) Save(track *db.Track) error {
 	return t.Called(track).Error(0)
 }
 
 var _ db.TrackRepository = trackServiceMock{}
 
-func testReturnValues(args mock.Arguments) ([]*model.Track, error) {
-	var r0 []*model.Track
+func testReturnValues(args mock.Arguments) ([]*db.Track, error) {
+	var r0 []*db.Track
 	var r1 error
 	if args.Get(1) == nil {
-		r0 = args.Get(0).([]*model.Track)
+		r0 = args.Get(0).([]*db.Track)
 	} else {
 		r1 = args.Error(1)
 	}
@@ -117,7 +116,7 @@ func TestHomePageHandler(t *testing.T) {
 	mockTrackService := trackServiceMock{}
 	mockTrackService.On("Count").Return(int64(10), nil)
 	mockTrackService.On("CountWithLyrics").Return(int64(10), nil)
-	mockTrackService.On("LatestTracks", mock.AnythingOfType("int64")).Return([]*model.Track{}, nil)
+	mockTrackService.On("LatestTracks", mock.AnythingOfType("int64")).Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/test", nil)
@@ -134,7 +133,7 @@ func TestTrackDetailHandler(t *testing.T) {
 	trackId := "foobar"
 
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&model.Track{
+	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&db.Track{
 		SpotifyID: trackId,
 		Artist:    "artist",
 		Name:      "test track",
@@ -184,7 +183,7 @@ func TestTrackDetailHandler_returns_500_if_something_goes_wrong(t *testing.T) {
 
 func TestTrackUpdateHandler(t *testing.T) {
 	trackId := "foobar"
-	track := model.Track{
+	track := db.Track{
 		SpotifyID: trackId,
 		Artist:    "artist",
 		Name:      "test track",
@@ -193,7 +192,7 @@ func TestTrackUpdateHandler(t *testing.T) {
 
 	mockTrackService := trackServiceMock{}
 	mockTrackService.On("FindTrack", trackId).Return(&track, nil)
-	mockTrackService.On("Save", mock.AnythingOfType("*model.Track")).Return(nil)
+	mockTrackService.On("Save", mock.AnythingOfType("*db.Track")).Return(nil)
 
 	rr := httptest.NewRecorder()
 	form := url.Values{}
@@ -214,7 +213,7 @@ func TestTrackUpdateHandler(t *testing.T) {
 
 func TestTrackUpdateHandler_returns_401_if_lyrics_are_missing(t *testing.T) {
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&model.Track{}, nil)
+	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodPost, "/", nil)
@@ -244,8 +243,8 @@ func TestTrackUpdateHandler_returns_404_if_tracks_does_not_exist(t *testing.T) {
 
 func TestTrackUpdateHandler_returns_500_if_track_cannot_be_saved(t *testing.T) {
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&model.Track{}, nil)
-	mockTrackService.On("Save", mock.AnythingOfType("*model.Track")).Return(errors.New("something went wrong"))
+	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&db.Track{}, nil)
+	mockTrackService.On("Save", mock.AnythingOfType("*db.Track")).Return(errors.New("something went wrong"))
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodPost, "/", nil)
@@ -262,11 +261,11 @@ func TestTrackUpdateHandler_returns_500_if_track_cannot_be_saved(t *testing.T) {
 }
 
 func TestTrackUpdateHandler_sets_lyrics_error_counter_to_0(t *testing.T) {
-	track := model.Track{LyricsImportErrorCount: 5}
+	track := db.Track{LyricsImportErrorCount: 5}
 
 	mockTrackService := trackServiceMock{}
 	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&track, nil)
-	mockTrackService.On("Save", mock.AnythingOfType("*model.Track")).Return(nil)
+	mockTrackService.On("Save", mock.AnythingOfType("*db.Track")).Return(nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodPost, "/", nil)
@@ -284,7 +283,7 @@ func TestTrackUpdateHandler_sets_lyrics_error_counter_to_0(t *testing.T) {
 
 func TestTrackEditFormHandler(t *testing.T) {
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&model.Track{}, nil)
+	mockTrackService.On("FindTrack", mock.AnythingOfType("string")).Return(&db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -314,7 +313,7 @@ func TestTrackEditFormHandler_returns_404_if_track_does_not_exist(t *testing.T) 
 
 func TestTrackMissingLyricsHandler(t *testing.T) {
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("TracksWithoutLyrics").Return([]*model.Track{}, nil)
+	mockTrackService.On("TracksWithoutLyrics").Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -330,7 +329,7 @@ func TestTrackMissingLyricsHandler(t *testing.T) {
 func TestTrackSearchHandler(t *testing.T) {
 	query := "test"
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("Search", query).Return([]*model.Track{}, nil)
+	mockTrackService.On("Search", query).Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/?q="+query, nil)
@@ -348,7 +347,7 @@ func TestTrackSearchHandler__transforms_multiple_keywords_to_AND_query_string(t 
 	resultingQuery := "\"it's\" \"my\" \"life\""
 
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("Search", resultingQuery).Return([]*model.Track{}, nil)
+	mockTrackService.On("Search", resultingQuery).Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/?q="+query, nil)
@@ -364,7 +363,7 @@ func TestTrackSearchHandler__does_not_modify_query_if_at_least_one_contains_an_e
 	query := "house snow -summer"
 
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("Search", query).Return([]*model.Track{}, nil)
+	mockTrackService.On("Search", query).Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/?q="+query, nil)
@@ -380,7 +379,7 @@ func TestTrackSearchHandler__does_not_modify_query_if_at_least_one_contains_an_e
 	query := "it's my \"life\""
 
 	mockTrackService := trackServiceMock{}
-	mockTrackService.On("Search", query).Return([]*model.Track{}, nil)
+	mockTrackService.On("Search", query).Return([]*db.Track{}, nil)
 
 	rr := httptest.NewRecorder()
 	request, _ := http.NewRequest(http.MethodGet, "/?q="+query, nil)
@@ -394,7 +393,7 @@ func TestTrackSearchHandler__does_not_modify_query_if_at_least_one_contains_an_e
 
 func TestLyricsTrackSyncHandler(t *testing.T) {
 	t.Run("calls lyrics fetcher service", func(t *testing.T) {
-		track := model.Track{
+		track := db.Track{
 			SpotifyID: "foobar",
 		}
 		mockTrackService := trackServiceMock{}

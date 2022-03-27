@@ -1,18 +1,18 @@
 package spotify
 
 import (
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	"github.com/zmb3/spotify"
 	"log"
 )
 
 type userTrackProvider interface {
-	Tracks() ([]*model.Track, error)
+	Tracks() ([]*db.Track, error)
 	Next() error
 }
 
 type trackSaver interface {
-	Save(track *model.Track) error
+	Save(track *db.Track) error
 }
 
 type UserTrackProvider struct {
@@ -20,7 +20,7 @@ type UserTrackProvider struct {
 	lastPage *spotify.SavedTrackPage
 }
 
-func (p *UserTrackProvider) Tracks() ([]*model.Track, error) {
+func (p *UserTrackProvider) Tracks() ([]*db.Track, error) {
 	if p.lastPage == nil {
 		trackPage, err := p.c.CurrentUsersTracks()
 		if err != nil {
@@ -29,9 +29,9 @@ func (p *UserTrackProvider) Tracks() ([]*model.Track, error) {
 		p.lastPage = trackPage
 	}
 
-	var tracks []*model.Track
+	var tracks []*db.Track
 	for i := range p.lastPage.Tracks {
-		track := model.NewTrack(p.lastPage.Tracks[i].FullTrack)
+		track := db.NewTrack(p.lastPage.Tracks[i].FullTrack)
 		tracks = append(tracks, &track)
 	}
 	return tracks, nil
@@ -87,7 +87,7 @@ func (p PlaylistProvider) Download(ID string) error {
 
 	for {
 		for i := range playlist.Tracks {
-			track := model.NewTrack(playlist.Tracks[i].Track)
+			track := db.NewTrack(playlist.Tracks[i].Track)
 			err = p.saver.Save(&track)
 			if err != nil {
 				return err

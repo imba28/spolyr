@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"errors"
+
 	"fmt"
-	"github.com/imba28/spolyr/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"os"
@@ -36,7 +36,7 @@ func TestMongoTrackStore_Save__inserts_new_document_into_database(t *testing.T) 
 		t.Skip("skipping integration test")
 	}
 
-	track := model.Track{
+	track := Track{
 		SpotifyID:              "1",
 		Artist:                 "Frank Sinatra",
 		AlbumName:              "an album",
@@ -95,8 +95,8 @@ func TestTrackRepository_Count__count_is_equal_to_number_of_documents_in_databas
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "1"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
 
 	count, err := repos.Tracks.Count()
 	assert.Equal(t, count, int64(2))
@@ -111,9 +111,9 @@ func TestTrackRepository_CountWithLyrics(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	count, err := repos.Tracks.CountWithLyrics()
 	assert.Equal(t, count, int64(1), "it should only count tracks where lyrics are set")
@@ -141,9 +141,9 @@ func TestTrackRepository_CountWithoutLyrics(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	count, err := repos.Tracks.CountWithoutLyrics()
 	assert.Equal(t, count, int64(2), "it should only count tracks where lyrics are missing")
@@ -171,8 +171,8 @@ func TestTrackRepository_TracksWithoutLyrics(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
 
 	tracks, err := repos.Tracks.TracksWithoutLyrics()
 	assert.Nil(t, err)
@@ -188,9 +188,9 @@ func TestTrackRepository_TracksWithoutLyricsError(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", LyricsImportErrorCount: 42})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", LyricsImportErrorCount: 42})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	tracks, err := repos.Tracks.TracksWithoutLyricsError()
 	assert.Nil(t, err)
@@ -206,8 +206,8 @@ func TestTrackRepository_FindTrack(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Loaded: true, Lyrics: "foobar"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
 
 	track, err := repos.Tracks.FindTrack("1")
 	assert.Nil(t, err)
@@ -235,8 +235,8 @@ func TestTrackRepository_FindTrack__track_not_found(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	track, err := repos.Tracks.FindTrack("1")
 	assert.Error(t, err)
@@ -246,7 +246,7 @@ func TestTrackRepository_FindTrack__track_not_found(t *testing.T) {
 func TestMongoTrackStore_FindTrack__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("FindOne", mock.AnythingOfType("primitive.D"), mock.Anything).
-		Return(&model.Track{}, errors.New("db error"))
+		Return(&Track{}, errors.New("db error"))
 	repo := NewMongoTrackRepository(mocksStore, 3)
 	_, err := repo.FindTrack("foobar")
 	assert.Error(t, err)
@@ -260,9 +260,9 @@ func TestTrackRepository_Search__by_artist_name__partly(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Artist: "Frank Sinatra"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Artist: "Dean Martin"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Artist: "Frank Sinatra"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Dean Martin"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	tracks, err := repos.Tracks.Search("Frank")
 
@@ -279,9 +279,9 @@ func TestTrackRepository_Search__by_artist_name__full(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Artist: "Frank Sinatra"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Artist: "Dean Martin"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Artist: "Frank Sinatra"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Dean Martin"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
 	tracks, err := repos.Tracks.Search("Frank Sinatra")
 
@@ -298,10 +298,10 @@ func TestTrackRepository_Search__by_album_name__partly(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Artist: "Eminem", AlbumName: "The Eminem Show"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Artist: "Eminem", AlbumName: "Encore"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Artist: "Eminem", AlbumName: "The Eminem Show"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Eminem", AlbumName: "Encore"})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
+	repos.Tracks.Save(&Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
 
 	tracks, err := repos.Tracks.Search("Show")
 
@@ -319,10 +319,10 @@ func TestTrackRepository_Search__by_album_name(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Artist: "Eminem", AlbumName: "The Eminem Show"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Artist: "Eminem", AlbumName: "Encore"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Artist: "Eminem", AlbumName: "The Eminem Show"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Eminem", AlbumName: "Encore"})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
+	repos.Tracks.Save(&Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
 
 	tracks, err := repos.Tracks.Search("Encore")
 
@@ -334,7 +334,7 @@ func TestTrackRepository_Search__by_album_name(t *testing.T) {
 func TestMongoTrackStore_Search__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
-		Return([]*model.Track{}, errors.New("db error"))
+		Return([]*Track{}, errors.New("db error"))
 	repo := NewMongoTrackRepository(mocksStore, 3)
 
 	_, err := repo.Search("car")
@@ -350,9 +350,9 @@ func TestTrackRepository_Search__by_lyrics(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
 	tracks, err := repos.Tracks.Search("car")
 
@@ -369,9 +369,9 @@ func TestTrackRepository_Search__by_lyrics__multiple_results(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
 	tracks, err := repos.Tracks.Search("house")
 
@@ -387,9 +387,9 @@ func TestTrackRepository_Search__by_lyrics__multiple_query_term(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
 	tracks, err := repos.Tracks.Search("house money")
 
@@ -407,9 +407,9 @@ func TestTrackRepository_Search__by_lyrics__multiple_query_term__inclusive_searc
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Name: "A", Lyrics: "house mouse money car", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
 	tracks, err := repos.Tracks.Search("house \"money\"")
 
@@ -426,9 +426,9 @@ func TestTrackRepository_Search__by_name(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1", Name: "Without Me"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2", Name: "Stan"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3", Name: "'Till I Collapse'"})
+	repos.Tracks.Save(&Track{SpotifyID: "1", Name: "Without Me"})
+	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "Stan"})
+	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "'Till I Collapse'"})
 
 	tracks, err := repos.Tracks.Search("collapse")
 
@@ -445,10 +445,10 @@ func TestTrackRepository_LatestTracks(t *testing.T) {
 	repos := setUp()
 	defer tearDown(repos)
 
-	repos.Tracks.Save(&model.Track{SpotifyID: "1"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "2"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "3"})
-	repos.Tracks.Save(&model.Track{SpotifyID: "4"})
+	repos.Tracks.Save(&Track{SpotifyID: "1"})
+	repos.Tracks.Save(&Track{SpotifyID: "2"})
+	repos.Tracks.Save(&Track{SpotifyID: "3"})
+	repos.Tracks.Save(&Track{SpotifyID: "4"})
 
 	tracks, err := repos.Tracks.LatestTracks(1)
 
@@ -460,7 +460,7 @@ func TestTrackRepository_LatestTracks(t *testing.T) {
 func TestTrackRepository_LatestTracks__database_error(t *testing.T) {
 	mocksStore := new(MongoTrackStoreMock)
 	mocksStore.On("Find", mock.Anything, mock.Anything).
-		Return([]*model.Track{}, errors.New("db error"))
+		Return([]*Track{}, errors.New("db error"))
 	repo := NewMongoTrackRepository(mocksStore, 3)
 
 	_, err := repo.LatestTracks(10)

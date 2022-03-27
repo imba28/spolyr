@@ -7,7 +7,6 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/mongodb"
 	_ "github.com/golang-migrate/migrate/v4/database/mongodb"
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
-	"github.com/imba28/spolyr/internal/model"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
@@ -28,13 +27,13 @@ func (m MongoTrackStore) Save(filter interface{}, update interface{}) error {
 	return err
 }
 
-func (m MongoTrackStore) FindOne(filter interface{}) (*model.Track, error) {
-	var t model.Track
+func (m MongoTrackStore) FindOne(filter interface{}) (*Track, error) {
+	var t Track
 	err := m.conn.Collection(TrackCollection).FindOne(context.Background(), filter).Decode(&t)
 	return &t, err
 }
 
-func (m MongoTrackStore) Find(filter interface{}, opts ...*options.FindOptions) ([]*model.Track, error) {
+func (m MongoTrackStore) Find(filter interface{}, opts ...*options.FindOptions) ([]*Track, error) {
 	cur, err := m.conn.Collection(TrackCollection).Find(context.Background(), filter, opts...)
 	if err != nil {
 		return nil, err
@@ -46,11 +45,11 @@ func (m MongoTrackStore) Count(filter interface{}) (int64, error) {
 	return m.conn.Collection(TrackCollection).CountDocuments(context.Background(), filter)
 }
 
-func (m MongoTrackStore) decodeTracks(cur *mongo.Cursor) ([]*model.Track, error) {
-	var tracks []*model.Track
+func (m MongoTrackStore) decodeTracks(cur *mongo.Cursor) ([]*Track, error) {
+	var tracks []*Track
 	ctx := context.Background()
 	for cur.Next(ctx) {
-		var t model.Track
+		var t Track
 		err := cur.Decode(&t)
 		if err != nil {
 			return tracks, err

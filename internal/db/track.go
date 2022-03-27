@@ -1,4 +1,4 @@
-package model
+package db
 
 import (
 	"github.com/zmb3/spotify"

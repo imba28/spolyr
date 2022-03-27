@@ -2,7 +2,7 @@ package lyrics
 
 import (
 	"errors"
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -13,27 +13,27 @@ type trackStoreMock struct {
 	mock.Mock
 }
 
-func (t *trackStoreMock) Save(track *model.Track) error {
+func (t *trackStoreMock) Save(track *db.Track) error {
 	args := t.Called(track)
 	return args.Error(0)
 }
-func (t *trackStoreMock) TracksWithoutLyricsError() ([]*model.Track, error) {
+func (t *trackStoreMock) TracksWithoutLyricsError() ([]*db.Track, error) {
 	args := t.Called()
-	return args.Get(0).([]*model.Track), args.Error(1)
+	return args.Get(0).([]*db.Track), args.Error(1)
 }
 
 type lyricsFetcherMock struct {
 	mock.Mock
 }
 
-func (l *lyricsFetcherMock) Fetch(ts *model.Track) error {
+func (l *lyricsFetcherMock) Fetch(ts *db.Track) error {
 	panic("not implemented")
 }
-func (l *lyricsFetcherMock) FetchAll(ts []*model.Track) (<-chan Result, error) {
+func (l *lyricsFetcherMock) FetchAll(ts []*db.Track) (<-chan Result, error) {
 	args := l.Called(ts)
 	return args.Get(0).(chan Result), args.Error(1)
 }
-func (l *lyricsFetcherMock) writeFakeResults(tracks []*model.Track, results chan<- Result) {
+func (l *lyricsFetcherMock) writeFakeResults(tracks []*db.Track, results chan<- Result) {
 	for i := range tracks {
 		time.Sleep(100 * time.Millisecond)
 
@@ -49,7 +49,7 @@ func (l *lyricsFetcherMock) writeFakeResults(tracks []*model.Track, results chan
 func TestSyncer_Sync(t *testing.T) {
 	t.Run("downloads and saves lyrics of tracks", func(t *testing.T) {
 		withTimeout(func(t *testing.T) {
-			tracks := []*model.Track{
+			tracks := []*db.Track{
 				{
 					Name: "track A",
 				},
@@ -62,13 +62,13 @@ func TestSyncer_Sync(t *testing.T) {
 			}
 
 			dbMock := trackStoreMock{}
-			dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
+			dbMock.On("Save", mock.AnythingOfType("*db.Track")).Times(len(tracks)).Return(nil)
 			dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, nil)
 
 			results := make(chan Result)
 
 			fetcherMock := lyricsFetcherMock{}
-			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 			syncer := NewSyncer(&fetcherMock, &dbMock)
 			finished, err := syncer.Sync()
@@ -89,12 +89,12 @@ func TestSyncer_Sync(t *testing.T) {
 	t.Run("prevents clients from starting multiple syncs", func(t *testing.T) {
 		withTimeout(func(t *testing.T) {
 			dbMock := trackStoreMock{}
-			dbMock.On("TracksWithoutLyricsError").Return([]*model.Track{{}}, nil)
+			dbMock.On("TracksWithoutLyricsError").Return([]*db.Track{{}}, nil)
 
 			results := make(chan Result)
 
 			fetcherMock := lyricsFetcherMock{}
-			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 			syncer := NewSyncer(&fetcherMock, &dbMock)
 			finished, err := syncer.Sync()
@@ -115,7 +115,7 @@ func TestSyncer_Sync(t *testing.T) {
 
 func TestSyncer_Syncing(t *testing.T) {
 	t.Run("returns correct syncing state", func(t *testing.T) {
-		tracks := []*model.Track{
+		tracks := []*db.Track{
 			{
 				Name: "track A",
 			},
@@ -128,13 +128,13 @@ func TestSyncer_Syncing(t *testing.T) {
 		}
 
 		dbMock := trackStoreMock{}
-		dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
+		dbMock.On("Save", mock.AnythingOfType("*db.Track")).Times(len(tracks)).Return(nil)
 		dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, nil)
 
 		results := make(chan Result)
 
 		fetcherMock := lyricsFetcherMock{}
-		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 		syncer := NewSyncer(&fetcherMock, &dbMock)
 		finished, _ := syncer.Sync()
@@ -148,7 +148,7 @@ func TestSyncer_Syncing(t *testing.T) {
 
 	t.Run("returns error if tracks cannot be loaded from database", func(t *testing.T) {
 		expectedError := errors.New("something went wrong")
-		tracks := []*model.Track{}
+		tracks := []*db.Track{}
 
 		dbMock := trackStoreMock{}
 		dbMock.On("TracksWithoutLyricsError").Times(1).Return(tracks, expectedError)
@@ -165,7 +165,7 @@ func TestSyncer_Syncing(t *testing.T) {
 }
 
 func TestSyncer_TotalTracks(t *testing.T) {
-	tracks := []*model.Track{
+	tracks := []*db.Track{
 		{
 			Name: "track A",
 		},
@@ -181,7 +181,7 @@ func TestSyncer_TotalTracks(t *testing.T) {
 	defer close(results)
 
 	fetcherMock := lyricsFetcherMock{}
-	fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+	fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 	syncer := NewSyncer(&fetcherMock, &dbMock)
 	_, _ = syncer.Sync()
@@ -191,7 +191,7 @@ func TestSyncer_TotalTracks(t *testing.T) {
 
 func TestSyncer_SyncedTracks(t *testing.T) {
 	t.Run("increases counter with every fetched track", func(t *testing.T) {
-		tracks := []*model.Track{
+		tracks := []*db.Track{
 			{
 				Name: "track A",
 			},
@@ -207,8 +207,8 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 		defer close(results)
 
 		fetcherMock := lyricsFetcherMock{}
-		dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
-		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+		dbMock.On("Save", mock.AnythingOfType("*db.Track")).Times(len(tracks)).Return(nil)
+		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 		syncer := NewSyncer(&fetcherMock, &dbMock)
 		_, _ = syncer.Sync()
@@ -222,7 +222,7 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 
 	t.Run("resets counter after sync process has finished", func(t *testing.T) {
 		withTimeout(func(t *testing.T) {
-			tracks := []*model.Track{
+			tracks := []*db.Track{
 				{
 					Name: "track A",
 				},
@@ -237,8 +237,8 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 			results := make(chan Result)
 
 			fetcherMock := lyricsFetcherMock{}
-			dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
-			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+			dbMock.On("Save", mock.AnythingOfType("*db.Track")).Times(len(tracks)).Return(nil)
+			fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 			syncer := NewSyncer(&fetcherMock, &dbMock)
 			finished, _ := syncer.Sync()
@@ -251,7 +251,7 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 	})
 
 	t.Run("marks tracks as failed if an error occurs while importing lyrics", func(t *testing.T) {
-		tracks := []*model.Track{
+		tracks := []*db.Track{
 			{
 				Name: "track A",
 			},
@@ -264,8 +264,8 @@ func TestSyncer_SyncedTracks(t *testing.T) {
 		defer close(results)
 
 		fetcherMock := lyricsFetcherMock{}
-		dbMock.On("Save", mock.AnythingOfType("*model.Track")).Times(len(tracks)).Return(nil)
-		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*model.Track")).Times(1).Return(results, nil)
+		dbMock.On("Save", mock.AnythingOfType("*db.Track")).Times(len(tracks)).Return(nil)
+		fetcherMock.On("FetchAll", mock.AnythingOfType("[]*db.Track")).Times(1).Return(results, nil)
 
 		syncer := NewSyncer(&fetcherMock, &dbMock)
 		_, _ = syncer.Sync()

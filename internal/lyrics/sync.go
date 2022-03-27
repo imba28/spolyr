@@ -2,13 +2,13 @@ package lyrics
 
 import (
 	"fmt"
-	"github.com/imba28/spolyr/internal/model"
+	"github.com/imba28/spolyr/internal/db"
 	"strings"
 )
 
 type tracksSyncFetcherSaver interface {
-	Save(track *model.Track) error
-	TracksWithoutLyricsError() ([]*model.Track, error)
+	Save(track *db.Track) error
+	TracksWithoutLyricsError() ([]*db.Track, error)
 }
 
 type Syncer struct {
@@ -41,7 +41,7 @@ func (s *Syncer) Sync() (<-chan struct{}, error) {
 	}
 }
 
-func (s *Syncer) run(tracks []*model.Track, finishedSignal chan<- struct{}) {
+func (s *Syncer) run(tracks []*db.Track, finishedSignal chan<- struct{}) {
 	defer func() {
 		// Do not block if no one is waiting for us to end.
 		select {
