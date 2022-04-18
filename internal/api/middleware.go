@@ -12,10 +12,6 @@ const userDisplayNameKey = "UserDisplayName"
 const userAvatarKey = "UserAvatar"
 const spotifyTokenKey = "SpotifyToken"
 
-func setView(c *gin.Context, v gin.H) {
-	c.Set("view", v)
-}
-
 func mergeView(v1, v2 gin.H) gin.H {
 	for k, v := range v1 {
 		v2[k] = v
@@ -44,7 +40,7 @@ func UserProviderMiddleware(c *gin.Context) {
 
 	view["User"] = session.Get("userEmail")
 	view["UserAvatar"] = session.Get("userAvatar")
-	setView(c, view)
+	c.Set("view", view)
 
 	c.Next()
 }

@@ -96,7 +96,12 @@ func (s *Syncer) TotalTracks() int {
 }
 
 func (s *Syncer) Logs() string {
-	return strings.Join(s.syncLog, "<br>")
+	b := strings.Builder{}
+	for i := len(s.syncLog) - 1; i >= 0; i-- {
+		b.WriteString(s.syncLog[i] + "<br>")
+	}
+
+	return b.String()
 }
 
 func NewSyncer(fetcher Fetcher, db tracksSyncFetcherSaver) *Syncer {
