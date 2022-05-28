@@ -4,7 +4,9 @@ module.exports = {
     'es2021': true,
   },
   'extends': [
+    'eslint:recommended',
     'google',
+    'plugin:vue/recommended',
   ],
   'parserOptions': {
     'ecmaVersion': 12,
