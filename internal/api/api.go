@@ -6,8 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
+	openapi "github.com/imba28/spolyr/internal/openapi/go"
+	"log"
 	"net/http"
 )
+
+func NewOAPI() http.Handler {
+	// todo: implement services
+	AuthApiService := NewAuthApiService()
+	AuthApiController := openapi.NewAuthApiController(AuthApiService)
+
+	TracksApiService := NewTracksApiService()
+	TracksApiController := openapi.NewTracksApiController(TracksApiService)
+
+	return openapi.NewRouter(AuthApiController, TracksApiController)
+}
 
 func New(db *db.Repositories, geniusAPIToken string, sessionKey []byte) *gin.Engine {
 	r := gin.Default()

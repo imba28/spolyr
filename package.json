@@ -1,6 +1,5 @@
 {
-  "name": "my-webpack-project",
-  "version": "1.0.0",
+  "name": "spolyr",
   "private": true,
   "description": "a private Spotify lyrics index",
   "author": "Lukas Gruber",
@@ -9,12 +8,17 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
-  "main": "index.js",
   "dependencies": {
+    "@babel/polyfill": "^7.11.5",
     "bootstrap": "^4.6.0",
+    "bootstrap-vue": "^2.17.3",
     "bootswatch": "^4.6.0",
     "core-js": "^3.8.3",
-    "vue": "^2.6.14"
+    "mutationobserver-shim": "^0.3.7",
+    "popper.js": "^1.16.1",
+    "portal-vue": "^2.1.7",
+    "vue": "^2.6.14",
+    "vue-router": "^3.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -25,11 +29,15 @@
     "@vue/cli": "^5.0.4",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "@webpack-cli/generators": "^2.0.0",
     "eslint": "^7.32.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-vue": "^8.0.3",
+    "sass": "^1.26.11",
+    "sass-loader": "^10.0.2",
+    "vue-cli-plugin-bootstrap-vue": "~0.8.2",
     "vue-template-compiler": "^2.6.14"
   },
   "eslintConfig": {

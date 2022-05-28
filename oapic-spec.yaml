@@ -1,0 +1,231 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Spolyr
+servers:
+  - url: http://127.0.0.1:8080/api
+
+paths:
+  /auth/login:
+    get:
+      tags:
+        - auth
+      summary: Redirect to Spotify OAuth2 provider
+      responses:
+        302:
+          description: Redirect to Spotify
+
+  /auth/callback:
+    get:
+      tags:
+        - auth
+      summary: Spotify OAuth2 callback
+      responses:
+        200:
+          description: OK
+        400:
+          description: Invalid token
+
+  /auth/refresh:
+    get:
+      tags:
+        - auth
+      summary: Refresh JWT access token
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: OK
+        401:
+          description: No refresh token provided
+
+  /tracks:
+    get:
+      tags:
+        - tracks
+      summary: Returns a list of tracks
+      parameters:
+        - name: page
+          in: query
+          description: Current page number
+          schema:
+            type: integer
+            format: int32
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Limits the size of the result size
+          schema:
+            type: integer
+            format: int32
+            default: 25
+            minimum: 5
+            maximum: 100
+      responses:
+        200:
+          description: Paginated list of tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/PaginationMetadata'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrackInfo'
+
+  /tracks/{id}:
+    post:
+      tags:
+        - tracks
+      summary: Updates lyrics of a track
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to update
+      requestBody:
+        $ref: '#/components/requestBodies/TrackLyricsBody'
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        401:
+          $ref: '#/components/schemas/401Unauthorized'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+    get:
+      tags:
+        - tracks
+      summary: Returns a track
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to get
+
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+
+components:
+  requestBodies:
+    TrackLyricsBody:
+      description: Contains new lyrics of track
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Lyrics'
+  schemas:
+    Lyrics:
+      type: object
+      properties:
+        lyrics:
+          type: string
+
+    TrackDetail:
+      allOf:
+        - $ref: '#/components/schemas/TrackInfo'
+        - type: object
+          properties:
+            lyrics:
+              type: string
+            lyricsImportErrorCount:
+              type: integer
+              format: int32
+            hasLyrics:
+              type: boolean
+
+    TrackInfo:
+      type: object
+      required:
+        - id
+        - title
+        - spotifyId
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        spotifyId:
+          type: string
+        title:
+          type: string
+        album:
+          type: string
+        coverImage:
+          type: string
+        previewURL:
+          type: string
+        artists:
+          type: array
+          items:
+            type: string
+
+    Message:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+
+    PaginationMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        limit:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+
+    401Unauthorized:
+      allOf:
+        - description: Authentication required
+        - $ref: '#/components/schemas/Message'
+
+    404NotFound:
+      allOf:
+        - description: The URI of the required resource does not exist.
+        - $ref: '#/components/schemas/Message'
+
+    500InternalError:
+      allOf:
+        - description: Internal server error.
+        - $ref: '#/components/schemas/Message'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

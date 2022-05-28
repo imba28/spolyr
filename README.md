@@ -54,3 +54,10 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 ![full-text search](doc/preview-2.jpg "Search songs by lyrics, title, album name and artists")
 
 ![import of lyrics](doc/preview-4.jpg "Import lyrics from different providers")
+
+```
+docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate \
+    -i /local/index/oapi-spec.yaml \
+    -g javascript \
+    -o /local/internal/spec
+```

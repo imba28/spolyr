@@ -38,3 +38,6 @@ frontend: node_modules
 
 lint-frontend: node_modules
 	npm run lint
+
+openapi-spec:
+	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapic-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true
