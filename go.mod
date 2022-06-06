@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/gin-contrib/sessions v0.0.5
-	github.com/gin-gonic/gin v1.7.7
+	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/securecookie v1.1.1
