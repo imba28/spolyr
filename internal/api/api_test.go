@@ -49,7 +49,7 @@ func init() {
 func newTestApp() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
-	return New(testDb, "", []byte("test"))
+	return New(testDb, "")
 }
 
 func TestApp(t *testing.T) {

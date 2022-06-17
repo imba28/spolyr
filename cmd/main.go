@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/securecookie"
 	"github.com/imba28/spolyr/pkg/spolyr"
 	"log"
+	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -13,28 +14,22 @@ func main() {
 	databasePassword := getEnv("DATABASE_PASSWORD", "example")
 	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
 	httpPort := getEnv("HTTP_PORT", "8080")
-	sessionKey := getSessionKey()
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
 
-	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken, sessionKey)
+	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Fatal(s.Run(fmt.Sprintf(":%s", httpPort)))
-}
 
-func getSessionKey() []byte {
-	key := getEnv("SESSION_KEY", "")
-
-	if len(key) == 0 {
-		randomKey := securecookie.GenerateRandomKey(32)
-		if randomKey == nil {
-			panic("Could not generate random session key!")
-		}
-		return randomKey
+	srv := &http.Server{
+		Handler: s,
+		Addr:    fmt.Sprintf(":%s", httpPort),
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
 	}
 
-	return []byte(key)
+	log.Fatal(srv.ListenAndServe())
 }
 
 func getEnv(key, fallback string) string {

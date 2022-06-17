@@ -1,16 +1,16 @@
 package spolyr
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/imba28/spolyr/internal/api"
 	"github.com/imba28/spolyr/internal/db"
+	"net/http"
 )
 
-func New(dbHost, dbUser, dbPassword, geniusAPIToken string, sessionKey []byte) (*gin.Engine, error) {
+func New(dbHost, dbUser, dbPassword, geniusAPIToken string) (http.Handler, error) {
 	dbConn, err := db.New(dbUser, dbPassword, "spolyr", dbHost, api.MaxLyricsImportErrorCount)
 	if err != nil {
 		return nil, err
 	}
 
-	return api.New(dbConn, geniusAPIToken, sessionKey), nil
+	return api.New(dbConn, geniusAPIToken), nil
 }

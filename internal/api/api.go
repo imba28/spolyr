@@ -1,67 +1,32 @@
 package api
 
 import (
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
-	openapi "github.com/imba28/spolyr/internal/openapi/go"
-	"log"
+	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"net/http"
 )
 
-func NewOAPI() http.Handler {
-	// todo: implement services
-	AuthApiService := NewAuthApiService()
-	AuthApiController := openapi.NewAuthApiController(AuthApiService)
-
-	TracksApiService := NewTracksApiService()
-	TracksApiController := openapi.NewTracksApiController(TracksApiService)
-
-	return openapi.NewRouter(AuthApiController, TracksApiController)
-}
-
-func New(db *db.Repositories, geniusAPIToken string, sessionKey []byte) *gin.Engine {
-	r := gin.Default()
-
+func NewOAPI(db *db.Repositories, geniusAPIToken string) http.Handler {
 	fetcher := lyrics.New(geniusAPIToken, 3)
 	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
 
-	store := cookie.NewStore(sessionKey)
-	store.Options(sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-	r.Use(sessions.Sessions("session", store))
-	r.Use(UserProviderMiddleware)
-	r.Use(ErrorHandle)
+	AuthApiController := openapi.NewAuthApiController(NewAuthApiService())
+	ImportController := openapi.NewImportApiController(NewImportApiService(db.Tracks, syncer, fetcher))
+	TracksApiController := openapi.NewTracksApiController(NewTracksApiService(db.Tracks))
 
-	authRequired := r.Group("/").Use(AuthRequired)
-	{
-		authRequired.GET("/import", ImportHandler(syncer))
-		authRequired.POST("/import/playlist/:ID", ImportPlaylistHandler(db.Tracks))
-		authRequired.GET("/sync-tracks", TracksSyncHandler(db.Tracks))
-		authRequired.GET("/sync-lyrics", LyricsSyncLogHandler(syncer))
-		authRequired.POST("/sync-lyrics", LyricsSyncLogHandler(syncer))
-		authRequired.GET("/tracks/id/:spotifyID/edit", TrackEditFormHandler(db.Tracks))
-		authRequired.POST("/tracks/id/:spotifyID/edit", TrackUpdateHandler(db.Tracks))
-		authRequired.POST("/tracks/id/:spotifyID/sync", LyricsTrackSyncHandler(db.Tracks, fetcher))
-	}
+	return openapi.NewRouter(AuthApiController, TracksApiController, ImportController)
+}
 
-	r.GET("/", HomePageHandler(db.Tracks))
-	r.GET("/login", LoginHandler)
-	r.GET("/logout", LogoutHandler)
-	r.GET("/callback", SpotifyAuthCallbackHandler)
-	r.GET("/tracks/id/:spotifyID", TrackDetailHandler(db.Tracks))
-	r.GET("/tracks/missing-lyrics", TrackMissingLyricsHandler(db.Tracks))
-	r.GET("/tracks/no-lyrics-found", TrackNoLyricsFoundHandler(db.Tracks))
-	r.GET("/search", TrackSearchHandler(db.Tracks))
-	r.Static("static", "public")
+func New(db *db.Repositories, geniusAPIToken string) http.Handler {
+	r := mux.NewRouter()
 
-	r.NoRoute(NoRouteHandle)
+	// fetcher := lyrics.New(geniusAPIToken, 3)
+	// syncer := lyrics.NewSyncer(fetcher, db.Tracks)
+
+	r.PathPrefix("/api").Handler(NewOAPI(db, geniusAPIToken))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("public")))
 
 	return r
 }
