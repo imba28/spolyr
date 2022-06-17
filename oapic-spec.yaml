@@ -23,6 +23,10 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
         400:
           description: Invalid token
 
@@ -62,6 +66,11 @@ paths:
             default: 25
             minimum: 5
             maximum: 100
+        - name: query
+          in: query
+          description: Keywords or query to filter results
+          schema:
+            type: string
       responses:
         200:
           description: Paginated list of tracks
@@ -77,8 +86,55 @@ paths:
                     items:
                       $ref: '#/components/schemas/TrackInfo'
 
-  /tracks/{id}:
+  /import/lyrics:
     post:
+      tags:
+        - import
+      summary: Start import of lyrics
+      responses:
+        200:
+          description: Successfully imported lyrics
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+  /import/library:
+    post:
+      tags:
+        - import
+      summary: Start import of tracks from spotify library
+      responses:
+        200:
+          description: Successfully imported library
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+  /import/playlist/{id}:
+    post:
+      tags:
+        - import
+      summary: Start import of tracks from playlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Spotify id of playlist
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Successfully imported playlist
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+  /tracks/{id}:
+    patch:
       tags:
         - tracks
       summary: Updates lyrics of a track
@@ -208,6 +264,14 @@ components:
         total:
           type: integer
           format: int32
+
+    UserResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        avatar:
+          type: string
 
     401Unauthorized:
       allOf:

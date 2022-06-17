@@ -15,14 +15,8 @@
       id="nav-collapse"
       is-nav
     >
-      <b-navbar-nav>
-        <b-nav-item href="#">
-          Tracks
-        </b-nav-item>
-      </b-navbar-nav>
-
-      <b-navbar-nav>
-        <search-form />
+      <b-navbar-nav class="ml-auto">
+        <search-form @search="search" />
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto">
@@ -49,6 +43,11 @@ import SearchForm from './SearchForm.vue';
 export default {
   components: {
     SearchForm,
+  },
+  methods: {
+    search(query) {
+      this.$router.push({name: 'search', params: {q: query}}).catch(() => {});
+    },
   },
 };
 </script>

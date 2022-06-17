@@ -1,6 +1,6 @@
 <template>
   <b-nav-form
-    style="min-width: 25vw"
+    class="search-form"
     @submit.prevent="$emit('search', query)"
   >
     <b-input-group>
@@ -11,7 +11,11 @@
       />
 
       <template #append>
-        <b-button variant="secondary">
+        <b-button
+          variant="secondary"
+          type="submit"
+          aria-label="Search"
+        >
           <i class="fas fa-search" />
         </b-button>
       </template>
@@ -28,3 +32,22 @@ export default {
   },
 };
 </script>
+
+<style lang="scss">
+.search-form {
+  input[type='text'] {
+    min-width: 25vw;
+  }
+}
+
+@media (max-width: 992px) {
+  .search-form {
+    margin: 1em 0;
+
+    .form-inline {
+      display: block;
+      width: 100%;
+    }
+  }
+}
+</style>

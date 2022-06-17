@@ -14,6 +14,7 @@ clean:
 	rm -f spolyr-linux-amd64.tar.gz
 	rm -f spolyr-windows-amd64.tar.gz
 	rm -rf dist
+	rm -rf internal/openapi
 
 bundle: build
 	mkdir -p ./dist
@@ -40,4 +41,4 @@ lint-frontend: node_modules
 	npm run lint
 
 openapi-spec:
-	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapic-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true
+	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapic-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi

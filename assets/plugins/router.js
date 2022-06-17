@@ -11,9 +11,14 @@ const routes = [
     component: HomeView,
   },
   {
-    path: '/search',
+    path: '/search/:q',
     name: 'search',
     component: () => import('../views/SearchView.vue'),
+  },
+  {
+    path: '/tracks/:id',
+    name: 'track-detail',
+    component: () => import('../views/TrackDetailView.vue'),
   },
 ];
 

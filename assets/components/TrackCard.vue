@@ -18,7 +18,7 @@
           <router-link
             v-for="artist in artists"
             :key="title + artist"
-            :to="{name:'search', props: {q: artist}}"
+            :to="{name:'search', params: {q: artist}}"
           >
             {{ artist }}
           </router-link>
@@ -27,7 +27,7 @@
 
       <div class="card-text mt-1">
         <router-link
-          :to="{name: 'track-detail', props: {id: id}}"
+          :to="{name: 'track-detail', params: {id: id}}"
           class="d-inline-block btn btn-primary"
         >
           Details
