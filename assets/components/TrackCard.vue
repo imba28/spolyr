@@ -27,7 +27,7 @@
 
       <div class="card-text mt-1">
         <router-link
-          :to="{name: 'track-detail', params: {id: id}}"
+          :to="{name: 'track-detail', params: {id: spotifyId}}"
           class="d-inline-block btn btn-primary"
         >
           Details
@@ -48,19 +48,15 @@
 <script>
 export default {
   props: {
-    id: {
-      type: Number,
-      required: true,
-    },
     title: {
       type: String,
       required: true,
     },
-    cover: {
-      type: String,
-      default: null,
-    },
     spotifyId: {
+      type: String,
+      required: true,
+    },
+    cover: {
       type: String,
       default: null,
     },

@@ -1,14 +1,15 @@
 package spotify
 
 import (
+	"context"
 	"github.com/imba28/spolyr/internal/db"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
 	"log"
 )
 
 type userTrackProvider interface {
-	Tracks() ([]*db.Track, error)
-	Next() error
+	Tracks(ctx context.Context) ([]*db.Track, error)
+	Next(ctx context.Context) error
 }
 
 type trackSaver interface {
@@ -16,13 +17,13 @@ type trackSaver interface {
 }
 
 type UserTrackProvider struct {
-	c        spotify.Client
+	c        *spotify.Client
 	lastPage *spotify.SavedTrackPage
 }
 
-func (p *UserTrackProvider) Tracks() ([]*db.Track, error) {
+func (p *UserTrackProvider) Tracks(ctx context.Context) ([]*db.Track, error) {
 	if p.lastPage == nil {
-		trackPage, err := p.c.CurrentUsersTracks()
+		trackPage, err := p.c.CurrentUsersTracks(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -37,19 +38,19 @@ func (p *UserTrackProvider) Tracks() ([]*db.Track, error) {
 	return tracks, nil
 }
 
-func (p *UserTrackProvider) Next() error {
-	return p.c.NextPage(p.lastPage)
+func (p *UserTrackProvider) Next(ctx context.Context) error {
+	return p.c.NextPage(ctx, p.lastPage)
 }
 
-func NewSpotifyTrackProvider(client spotify.Client) *UserTrackProvider {
+func NewSpotifyTrackProvider(client *spotify.Client) *UserTrackProvider {
 	return &UserTrackProvider{
 		c: client,
 	}
 }
 
-func SyncTracks(client userTrackProvider, store trackSaver) error {
+func SyncTracks(ctx context.Context, client userTrackProvider, store trackSaver) error {
 	for {
-		tracks, err := client.Tracks()
+		tracks, err := client.Tracks(ctx)
 		if err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func SyncTracks(client userTrackProvider, store trackSaver) error {
 			}
 		}
 
-		err = client.Next()
+		err = client.Next(ctx)
 		if err != nil {
 			if err == spotify.ErrNoMorePages {
 				break
@@ -75,12 +76,12 @@ func SyncTracks(client userTrackProvider, store trackSaver) error {
 }
 
 type PlaylistProvider struct {
-	c     spotify.Client
+	c     *spotify.Client
 	saver trackSaver
 }
 
-func (p PlaylistProvider) Download(ID string) error {
-	playlist, err := p.c.GetPlaylistTracks(spotify.ID(ID))
+func (p PlaylistProvider) Download(ctx context.Context, ID string) error {
+	playlist, err := p.c.GetPlaylistTracks(ctx, spotify.ID(ID))
 	if err != nil {
 		return err
 	}
@@ -94,7 +95,7 @@ func (p PlaylistProvider) Download(ID string) error {
 			}
 		}
 
-		err = p.c.NextPage(playlist)
+		err = p.c.NextPage(ctx, playlist)
 		if err != nil {
 			if err == spotify.ErrNoMorePages {
 				return nil
@@ -104,7 +105,7 @@ func (p PlaylistProvider) Download(ID string) error {
 	}
 }
 
-func NewPlaylistProvider(c spotify.Client, saver trackSaver) PlaylistProvider {
+func NewPlaylistProvider(c *spotify.Client, saver trackSaver) PlaylistProvider {
 	return PlaylistProvider{
 		c:     c,
 		saver: saver,

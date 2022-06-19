@@ -26,9 +26,8 @@
         class="mb-4"
       >
         <track-card
-          :id="track.id"
           :title="track.title"
-          :cover="track.cover"
+          :cover="track.coverImage"
           :spotify-id="track.spotifyId"
           :artists="track.artists"
         />
@@ -39,6 +38,10 @@
 
 <script>
 import TrackCard from '../components/TrackCard.vue';
+import {TracksApi} from '@/openapi';
+
+const tracksApi = new TracksApi();
+
 export default {
   components: {
     TrackCard,
@@ -48,21 +51,15 @@ export default {
       latestTracks: null,
     };
   },
-  mounted() {
-    setTimeout(() => {
-      this.latestTracks = [
-        {
-          id: 1,
-          title: 'Tresor',
-          spotifyId: '0k5UCvZ1BDP28db9y7OymD',
-          artists: [
-            'JURI', 'AK AUSSERKONTROLLE',
-          ],
-          album: 'Tresor',
-          cover: 'https://i.scdn.co/image/ab67616d0000b2733310f6638fa218e34d5be19e',
-        },
-      ];
-    }, 1500);
+  async mounted() {
+    try {
+      const response = await tracksApi.tracksGet({
+        limit: 10,
+      });
+      this.latestTracks = response.data;
+    } catch (e) {
+      console.error(e);
+    }
   },
 };
 </script>

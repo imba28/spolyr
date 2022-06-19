@@ -1,5 +1,4 @@
 _mongo-volume
-dist
 cover.html
 cover.out
 .idea
@@ -7,3 +6,5 @@ spolyr
 spolyr.exe
 node_modules
 internal/openapi
+public
+assets/openapi

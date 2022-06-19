@@ -37,6 +37,9 @@
 <script>
 import SearchResults from '@/components/SearchResults';
 import Player from '@/track-page/player';
+import {TracksApi} from '@/openapi';
+
+const tracksApi = new TracksApi();
 
 const player = new Player();
 
@@ -73,45 +76,19 @@ export default {
       await player.disable();
       this.playing = '';
     },
-    loadResults() {
+    async loadResults() {
       this.loading = true;
 
-      setTimeout(() => {
+      try {
+        const results = await tracksApi.tracksGet({
+          query: this.query,
+          page: 1,
+          limit: 25,
+        });
+        this.items = results.data;
+      } finally {
         this.loading = false;
-        this.items = [
-          {
-            title: 'Tresor',
-            spotifyId: '0k5UCvZ1BDP28db9y7OymD',
-            artists: [
-              'JURI', 'AK AUSSERKONTROLLE',
-            ],
-            album: 'Tresor',
-            hasLyrics: true,
-            // eslint-disable-next-line
-            previewURL: 'https://p.scdn.co/mp3-preview/a602c8aedcb0eec26fcb64289a1cc15861e89350?cid=fa338f8a902f43dfb275be2eb27d96e5',
-          },
-          {
-            title: 'Drug Test',
-            spotifyId: '0k5UCvZ1BDP28db9y7OymD',
-            artists: [
-              'JURI', 'AK AUSSERKONTROLLE',
-            ],
-            album: 'The R.E.D Album',
-            hasLyrics: true,
-          },
-          {
-            title: 'Praise The Lord',
-            spotifyId: '0k5UCvZ1BDP28db9y7OymD',
-            artists: [
-              'JURI',
-            ],
-            album: 'aaa',
-            hasLyrics: true,
-            // eslint-disable-next-line
-            previewURL: 'https://p.scdn.co/mp3-preview/a515fa169153249641255877d5a36af261cf0d7c?cid=fa338f8a902f43dfb275be2eb27d96e5'
-          },
-        ];
-      }, 500);
+      }
     },
   },
 };

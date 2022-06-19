@@ -43,15 +43,23 @@ func NewTracksApiService(repo db.TrackRepository) *TracksApiService {
 }
 
 func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int32, query string) (openapi.ImplResponse, error) {
-	if strings.Index(query, " ") > -1 && strings.Index(query, "\"") == -1 && strings.Index(query, "-") == -1 {
-		qs := strings.Split(query, " ")
-		for i := range qs {
-			qs[i] = "\"" + qs[i] + "\""
+	var tracks []*db.Track
+	var err error
+
+	if query != "" {
+		if strings.Index(query, " ") > -1 && strings.Index(query, "\"") == -1 && strings.Index(query, "-") == -1 {
+			qs := strings.Split(query, " ")
+			for i := range qs {
+				qs[i] = "\"" + qs[i] + "\""
+			}
+			query = strings.Join(qs, " ")
 		}
-		query = strings.Join(qs, " ")
+
+		tracks, err = s.repo.Search(query)
+	} else {
+		tracks, err = s.repo.LatestTracks(int64(limit))
 	}
 
-	tracks, err := s.repo.Search(query)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return openapi.Response(http.StatusNotFound, openapi.TracksGet200Response{}), nil
 	}
@@ -64,7 +72,7 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 			Album:      track.AlbumName,
 			CoverImage: track.ImageURL,
 			PreviewURL: track.PreviewURL,
-			Artists:    strings.Split(",", track.Artist),
+			Artists:    strings.Split(track.Artist, ", "),
 		}
 	}
 

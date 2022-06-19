@@ -6,29 +6,44 @@ servers:
   - url: http://127.0.0.1:8080/api
 
 paths:
-  /auth/login:
-    get:
-      tags:
-        - auth
-      summary: Redirect to Spotify OAuth2 provider
-      responses:
-        302:
-          description: Redirect to Spotify
 
-  /auth/callback:
+  /auth/configuration:
     get:
       tags:
         - auth
-      summary: Spotify OAuth2 callback
+      summary: Get configuration for oAuth2 workflow
       responses:
         200:
-          description: OK
+          description: Contains configuration options for oauth2 client library
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        400:
-          description: Invalid token
+                $ref: '#/components/schemas/OAuthConfiguration'
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Authenticate
+      responses:
+        200:
+          description: Redirect to Spotify
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oAuthUserInfo'
+
+          headers:
+            Set-Cookie:
+              description: >
+                Successfully authenticated.
+                The session ID is returned in a cookie named `jwt`.
+              schema:
+                type: string
+                example: jwt=TOKEN; Path=/; HttpOnly
+
+      requestBody:
+        $ref: '#/components/requestBodies/LoginBody'
 
   /auth/refresh:
     get:
@@ -36,7 +51,7 @@ paths:
         - auth
       summary: Refresh JWT access token
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         201:
           description: OK
@@ -90,6 +105,8 @@ paths:
     post:
       tags:
         - import
+      security:
+        - cookieAuth: [ ]
       summary: Start import of lyrics
       responses:
         200:
@@ -103,6 +120,8 @@ paths:
     post:
       tags:
         - import
+      security:
+        - cookieAuth: [ ]
       summary: Start import of tracks from spotify library
       responses:
         200:
@@ -117,6 +136,8 @@ paths:
       tags:
         - import
       summary: Start import of tracks from playlist
+      security:
+        - cookieAuth: [ ]
       parameters:
         - name: id
           in: path
@@ -139,7 +160,7 @@ paths:
         - tracks
       summary: Updates lyrics of a track
       security:
-        - bearerAuth: [ ]
+        - cookieAuth: [ ]
       parameters:
         - in: path
           name: id
@@ -195,6 +216,17 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Lyrics'
+
+    LoginBody:
+      description: Contains the oauth code
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
   schemas:
     Lyrics:
       type: object
@@ -218,13 +250,9 @@ components:
     TrackInfo:
       type: object
       required:
-        - id
         - title
         - spotifyId
       properties:
-        id:
-          type: integer
-          readOnly: true
         spotifyId:
           type: string
         title:
@@ -273,6 +301,24 @@ components:
         avatar:
           type: string
 
+    OAuthConfiguration:
+      type: object
+      properties:
+        redirectUrl:
+          type: string
+        clientId:
+          type: string
+        scope:
+          type: string
+
+    oAuthUserInfo:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+
     401Unauthorized:
       allOf:
         - description: Authentication required
@@ -289,7 +335,7 @@ components:
         - $ref: '#/components/schemas/Message'
 
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt

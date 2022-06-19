@@ -41,4 +41,8 @@ lint-frontend: node_modules
 	npm run lint
 
 openapi-spec:
-	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapic-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi
+	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapi-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
+	sed -i -e 's/"github.com\/gorilla\/mux"//g' internal/openapi/openapi/api_auth.go
+	sed -i -e 's/"encoding\/json"//g' internal/openapi/openapi/api_import.go
+	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/assets/openapi/:/local/assets/openapi/src" openapitools/openapi-generator-cli generate -g javascript -i /local/oapi-spec.yaml -o /local/assets/openapi --additional-properties=usePromises=true,moduleName=@/openapi --global-property models,modelTests=false --global-property apis,apiTests=false --global-property supportingFiles
+

@@ -5,7 +5,7 @@ import (
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
 	"io"
 	"testing"
 )

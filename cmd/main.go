@@ -15,8 +15,10 @@ func main() {
 	databaseHost := getEnv("DATABASE_HOST", "127.0.0.1")
 	httpPort := getEnv("HTTP_PORT", "8080")
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
+	oauthClientId := mustGetEnv("SPOTIFY_ID")
+	secret := []byte(mustGetEnv("SESSION_KEY"))
 
-	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken)
+	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken, oauthClientId, secret)
 	if err != nil {
 		log.Fatal(err)
 	}

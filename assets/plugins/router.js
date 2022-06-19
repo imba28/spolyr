@@ -20,6 +20,11 @@ const routes = [
     name: 'track-detail',
     component: () => import('../views/TrackDetailView.vue'),
   },
+  {
+    path: '/auth/callback',
+    name: 'auth-callback',
+    component: () => import('../views/AuthCallbackView.vue'),
+  },
 ];
 
 const router = new VueRouter({

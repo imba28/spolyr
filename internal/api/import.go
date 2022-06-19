@@ -2,12 +2,11 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"github.com/imba28/spolyr/internal/spotify"
-	"golang.org/x/oauth2"
+	spotify2 "github.com/zmb3/spotify/v2"
 	"net/http"
 )
 
@@ -26,14 +25,13 @@ type ImportApiServicer struct {
 }
 
 func (i ImportApiServicer) ImportLibraryPost(ctx context.Context) (openapi.ImplResponse, error) {
-	token := ctx.Value(spotifyTokenKey).(string)
-	var tok oauth2.Token
-	err := json.Unmarshal([]byte(token), &tok)
-	if err != nil {
+	token := tokenFromContext(ctx)
+	if token == nil || token != nil {
 		return openapi.Response(http.StatusUnauthorized, nil), nil
 	}
 
-	err = spotify.SyncTracks(spotify.NewSpotifyTrackProvider(auth.NewClient(&tok)), i.repo)
+	c := spotify2.New(auth.Client(ctx, token))
+	err := spotify.SyncTracks(ctx, spotify.NewSpotifyTrackProvider(c), i.repo)
 	if err != nil {
 		return openapi.Response(http.StatusInternalServerError, nil), nil
 	}
@@ -45,8 +43,20 @@ func (i ImportApiServicer) ImportLyricsPost(ctx context.Context) (openapi.ImplRe
 	panic("implement me")
 }
 
-func (i ImportApiServicer) ImportPlaylistIdPost(ctx context.Context, s string) (openapi.ImplResponse, error) {
-	panic("implement me")
+func (i ImportApiServicer) ImportPlaylistIdPost(ctx context.Context, playlistId string) (openapi.ImplResponse, error) {
+	token := tokenFromContext(ctx)
+	if token == nil {
+		return openapi.Response(http.StatusUnauthorized, nil), nil
+	}
+
+	c := spotify2.New(auth.Client(ctx, token))
+	err := spotify.NewPlaylistProvider(c, i.repo).Download(ctx, playlistId)
+	if err != nil {
+		return openapi.Response(http.StatusInternalServerError, nil), nil
+	}
+
+	return openapi.Response(http.StatusOK, nil), nil
+
 }
 
 var _ openapi.ImportApiServicer = &ImportApiServicer{}

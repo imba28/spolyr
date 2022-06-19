@@ -3,8 +3,14 @@ const path = require('path');
 
 module.exports = defineConfig({
   transpileDependencies: true,
+  devServer: {
+    port: 8081,
+    https: true,
+  },
   configureWebpack: (config) => {
-    console.log(config.entry);
+    config.resolve.fallback = {
+      'querystring': require.resolve('querystring-es3'),
+    };
   },
   chainWebpack: (config) => {
     config.resolve.alias
@@ -14,7 +20,6 @@ module.exports = defineConfig({
   pages: {
     index: {
       entry: 'assets/main.js',
-      template: 'assets/index.html',
     },
   },
 });

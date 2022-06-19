@@ -9,6 +9,8 @@ import router from './plugins/router';
 
 Vue.config.productionTip = false;
 
+import {ApiClient} from './openapi';
+ApiClient.instance.enableCookies = true;
 
 new Vue({
   router,
