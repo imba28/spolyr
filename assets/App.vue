@@ -30,7 +30,7 @@
               </li>
               <li class="nav-item">
                 <router-link
-                  :to="{name:'home'}"
+                  :to="{name:'dashboard'}"
                   class="nav-link"
                 >
                   <i class="fas fa-music" /> Dashboard

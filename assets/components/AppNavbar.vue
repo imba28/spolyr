@@ -21,12 +21,15 @@
 
       <b-navbar-nav class="ml-auto">
         <b-nav-item-dropdown
-          v-if="loggedIn"
+          v-if="authStore.isAuthenticated"
           right
         >
           <template #button-content>
+            <span class="mr-1">
+              {{ authStore.displayName }}
+            </span>
             <b-avatar
-              src="https://i.scdn.co/image/ab6775700000ee85c83eb00882a56e93684d7ccc"
+              :src="authStore.avatarUrl"
               variant="dark"
             />
           </template>
@@ -51,6 +54,8 @@ import SearchForm from './SearchForm.vue';
 import {AuthApi} from '@/openapi';
 import querystring from 'querystring';
 const authClient = new AuthApi();
+import {useAuthStore} from '@/stores/auth';
+import {mapStores} from 'pinia';
 
 export default {
   components: {
@@ -59,6 +64,9 @@ export default {
   data: () => ({
     loggedIn: false,
   }),
+  computed: {
+    ...mapStores(useAuthStore),
+  },
   methods: {
     search(query) {
       this.$router.push({name: 'search', params: {q: query}}).catch(() => {});

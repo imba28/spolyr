@@ -12,20 +12,6 @@ const renderSearchResults = (props, routerLinkStub = jest.fn()) => {
 };
 
 describe('SearchResults', () => {
-  test('Shows the number of results', async () => {
-    const tracks = [
-      {title: 'Foo', artists: []},
-      {title: 'Bar', artists: []},
-      {title: 'Baz', artists: []},
-    ];
-
-    const {getByText} = renderSearchResults({
-      items: tracks,
-    });
-
-    getByText(`${tracks.length} tracks found`);
-  });
-
   test('Renders the list of results', async () => {
     const tracks = [
       {title: 'Foo', artists: ['Artist A', 'Artist B']},

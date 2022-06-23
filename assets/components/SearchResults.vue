@@ -1,9 +1,5 @@
 <template>
   <div>
-    <div class="text-muted mt-1 mb-3">
-      {{ items.length }} tracks found
-    </div>
-
     <b-table
       hover
       class="search-results"
@@ -13,15 +9,6 @@
       :items="items"
       @row-hovered="(row) => playing && row.previewURL !== playing ? $emit('play', row.previewURL) : null"
     >
-      <template #table-busy>
-        <div class="text-center text-danger my-2">
-          <b-spinner
-            class="align-middle"
-            variant="primary"
-          />
-        </div>
-      </template>
-
       <template #cell(icons)="data">
         <div class="d-flex justify-content-end">
           <b-icon-music-note
@@ -101,6 +88,7 @@ export default {
 .search-results {
   tbody {
     td {
+      padding: .25rem;
       vertical-align: middle;
     }
   }

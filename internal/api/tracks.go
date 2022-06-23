@@ -45,6 +45,7 @@ func NewTracksApiService(repo db.TrackRepository) *TracksApiService {
 func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int32, query string) (openapi.ImplResponse, error) {
 	var tracks []*db.Track
 	var err error
+	var total int
 
 	if query != "" {
 		if strings.Index(query, " ") > -1 && strings.Index(query, "\"") == -1 && strings.Index(query, "-") == -1 {
@@ -55,8 +56,9 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 			query = strings.Join(qs, " ")
 		}
 
-		tracks, err = s.repo.Search(query)
+		tracks, total, err = s.repo.Search(query, int(page), int(limit))
 	} else {
+		total = 10
 		tracks, err = s.repo.LatestTracks(int64(limit))
 	}
 
@@ -78,6 +80,11 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 
 	res := openapi.TracksGet200Response{
 		Data: data,
+		Meta: openapi.PaginationMetadata{
+			Page:  page,
+			Limit: limit,
+			Total: int32(total),
+		},
 	}
 
 	return openapi.Response(http.StatusOK, res), nil

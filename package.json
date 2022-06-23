@@ -11,17 +11,21 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.11.5",
+    "@vue/composition-api": "^1.6.2",
     "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.17.3",
     "bootswatch": "^4.6.0",
     "core-js": "^3.8.3",
     "mutationobserver-shim": "^0.3.7",
+    "pinia": "^2.0.14",
+    "pinia-plugin-persistedstate": "^1.6.1",
     "popper.js": "^1.16.1",
     "portal-vue": "^2.1.7",
     "querystring-es3": "^0.2.1",
     "superagent": "^7.1.6",
     "vue": "^2.6.14",
-    "vue-router": "^3.5.1"
+    "vue-router": "^3.5.1",
+    "vue-toastification": "^1.7.14"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

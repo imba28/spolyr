@@ -4,8 +4,7 @@ import App from './App.vue';
 import './scss/main.scss';
 
 import './icons';
-import './plugins/bootstrap-vue';
-import router from './plugins/router';
+import {router, pinia} from './plugins';
 
 Vue.config.productionTip = false;
 
@@ -14,6 +13,7 @@ ApiClient.instance.enableCookies = true;
 
 new Vue({
   router,
+  pinia,
 
   render: (h) => h(App),
 }).$mount('#app');

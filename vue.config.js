@@ -20,6 +20,7 @@ module.exports = defineConfig({
   pages: {
     index: {
       entry: 'assets/main.js',
+      template: 'assets/index.html',
     },
   },
 });

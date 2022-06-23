@@ -7,10 +7,13 @@
 
 <script>
 import querystring from 'querystring';
-import {AuthApi, AuthLoginPostRequest} from '@/openapi';
+import {mapStores} from 'pinia';
+import {useAuthStore} from '@/stores/auth';
 
-const authApi = new AuthApi();
 export default {
+  computed: {
+    ...mapStores(useAuthStore),
+  },
   async mounted() {
     try {
       const params = querystring.parse(window.location.search.substring(1));
@@ -18,18 +21,10 @@ export default {
         alert('ERROR');
       }
 
-      const body = AuthLoginPostRequest.constructFromObject({
-        code: params.code,
-      });
-      const response = await authApi.authLoginPost(body);
-
-      sessionStorage.setItem('displayName', response.displayName);
-      sessionStorage.setItem('avatarUrl', response.avatarUrl);
-
+      await this.authStore.login(params.code);
       this.$router.push({name: 'home'});
     } catch (e) {
       console.error(e);
-
       this.$router.push({name: 'home'});
     }
   },

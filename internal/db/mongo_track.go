@@ -22,7 +22,7 @@ type TrackRepository interface {
 	CountWithLyrics() (int64, error)
 	Count() (int64, error)
 	LatestTracks(limit int64) ([]*Track, error)
-	Search(query string) ([]*Track, error)
+	Search(query string, page, limit int) ([]*Track, int, error)
 	Save(track *Track) error
 }
 
@@ -71,12 +71,24 @@ func (t MongoTrackRepository) LatestTracks(limit int64) ([]*Track, error) {
 	return t.store.Find(bson.D{{}}, opts)
 }
 
-func (t MongoTrackRepository) Search(query string) ([]*Track, error) {
-	return t.store.Find(bson.M{
+func (t MongoTrackRepository) Search(query string, page, limit int) ([]*Track, int, error) {
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64((page - 1) * limit))
+	filter := bson.M{
 		"$text": bson.M{
 			"$search": query,
 		},
-	})
+	}
+
+	total, err := t.store.Count(filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	tracks, err := t.store.Find(filter, opts)
+
+	return tracks, int(total), err
 }
 
 func (t MongoTrackRepository) Save(track *Track) error {
