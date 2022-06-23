@@ -34,7 +34,7 @@
             />
           </template>
 
-          <b-dropdown-item href="#">
+          <b-dropdown-item @click="logout">
             Sign Out
           </b-dropdown-item>
         </b-nav-item-dropdown>
@@ -61,15 +61,15 @@ export default {
   components: {
     SearchForm,
   },
-  data: () => ({
-    loggedIn: false,
-  }),
   computed: {
     ...mapStores(useAuthStore),
   },
   methods: {
     search(query) {
       this.$router.push({name: 'search', params: {q: query}}).catch(() => {});
+    },
+    async logout() {
+      await this.authStore.logout();
     },
     async login() {
       const config = await authClient.authConfigurationGet();
