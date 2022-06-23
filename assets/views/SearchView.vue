@@ -23,14 +23,36 @@
         Please try another query.
       </div>
     </div>
-    <search-results
-      v-else-if="items !== null"
-      :loading="loading"
-      :items="items"
-      :playing="playing"
-      @play="startPlaying"
-      @stop="stopPlaying"
-    />
+    <div v-else-if="items !== null">
+      <div class="text-muted mt-1 mb-3">
+        {{ totalRows }} tracks found
+      </div>
+
+      <b-pagination
+        v-if="totalRows > perPage"
+        v-model="currentPage"
+        class="justify-content-center"
+        :total-rows="totalRows"
+        :per-page="perPage"
+        aria-controls="my-table"
+        :ellipsis="true"
+      />
+      <search-results
+        :loading="loading"
+        :items="items"
+        :playing="playing"
+        @play="startPlaying"
+        @stop="stopPlaying"
+      />
+      <b-pagination
+        v-if="totalRows > perPage"
+        v-model="currentPage"
+        class="justify-content-center"
+        :total-rows="totalRows"
+        :per-page="perPage"
+        aria-controls="my-table"
+      />
+    </div>
   </b-container>
 </template>
 
@@ -47,6 +69,9 @@ export default {
   components: {SearchResults},
   data: () => ({
     loading: true,
+    currentPage: 1,
+    perPage: 12,
+    totalRows: null,
     playing: '',
     items: null,
   }),
@@ -59,9 +84,15 @@ export default {
     query() {
       this.loadResults();
     },
+    currentPage() {
+      this.loadResults();
+    },
   },
   mounted() {
     this.loadResults();
+  },
+  async beforeDestroy() {
+    await this.stopPlaying();
   },
   methods: {
     async startPlaying(url) {
@@ -82,10 +113,15 @@ export default {
       try {
         const results = await tracksApi.tracksGet({
           query: this.query,
-          page: 1,
-          limit: 25,
+          page: this.currentPage,
+          limit: this.perPage,
         });
-        this.items = results.data;
+
+        this.totalRows = results.meta.total ?? 0;
+        this.items = results.data ?? [];
+      } catch (e) {
+        this.items = [];
+        this.totalRows = 0;
       } finally {
         this.loading = false;
       }
