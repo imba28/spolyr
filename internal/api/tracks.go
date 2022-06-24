@@ -75,6 +75,7 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 			CoverImage: track.ImageURL,
 			PreviewURL: track.PreviewURL,
 			Artists:    strings.Split(track.Artist, ", "),
+			HasLyrics:  track.Loaded,
 		}
 	}
 

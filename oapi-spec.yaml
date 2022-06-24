@@ -342,6 +342,8 @@ components:
           type: array
           items:
             type: string
+        hasLyrics:
+          type: boolean
 
     LyricsImportStatus:
       type: object
