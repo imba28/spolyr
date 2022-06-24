@@ -58,7 +58,7 @@
 
 <script>
 import SearchResults from '@/components/SearchResults';
-import Player from '@/track-page/player';
+import Player from '@/audio-player';
 import {TracksApi} from '@/openapi';
 
 const tracksApi = new TracksApi();

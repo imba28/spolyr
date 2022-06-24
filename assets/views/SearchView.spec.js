@@ -2,10 +2,8 @@ import {waitFor, render, fireEvent} from '@testing-library/vue';
 
 import SearchView from './SearchView';
 import {TracksApi} from '@/openapi';
-import Player from '@/track-page/player';
 
-// Set all module functions to jest.fn
-jest.mock('@/track-page/player');
+jest.mock('@/audio-player');
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -3,7 +3,7 @@ import EventEmitter from 'events';
 /**
  * A wrapper class for the AudioContext API
  */
-export default class Player extends EventEmitter {
+export default class Index extends EventEmitter {
   /**
    * @constructor
    * @param {number} replayTimeout - wait time in ms until a new song is started
