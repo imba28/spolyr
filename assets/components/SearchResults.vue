@@ -13,12 +13,12 @@
         <div class="d-flex justify-content-end">
           <b-icon-music-note
             v-if="data.item.previewURL"
-            v-b-popover.hover.top="'Lyrics available'"
+            v-b-popover.hover.top="'Audio snippet available'"
             class="mr-1"
           />
           <b-icon-chat-quote-fill
             v-if="data.item.hasLyrics"
-            v-b-popover.hover.top="'Audio snippet available'"
+            v-b-popover.hover.top="'Lyrics available'"
           />
         </div>
       </template>

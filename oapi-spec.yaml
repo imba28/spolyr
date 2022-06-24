@@ -207,6 +207,46 @@ paths:
         500:
           $ref: '#/components/schemas/500InternalError'
 
+  /playlists:
+    get:
+      tags:
+        - playlists
+      security:
+        - cookieAuth: [ ]
+      summary: Returns a list of your saved playlists
+      parameters:
+        - name: page
+          in: query
+          description: Current page number
+          schema:
+            type: integer
+            format: int32
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Limits the size of the result size
+          schema:
+            type: integer
+            format: int32
+            default: 25
+            minimum: 5
+            maximum: 100
+      responses:
+        200:
+          description: Paginated list of playlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/PaginationMetadata'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlaylistInfo'
+
 components:
   requestBodies:
     TrackLyricsBody:
@@ -246,6 +286,26 @@ components:
               format: int32
             hasLyrics:
               type: boolean
+
+    PlaylistInfo:
+      type: object
+      properties:
+        spotifyId:
+          type: string
+        name:
+          type: string
+        coverImage:
+          type: string
+        trackCount:
+          type: integer
+          format: int32
+        owner:
+          type: string
+        isPublic:
+          type: boolean
+        isCollaborative:
+          type: boolean
+
 
     TrackInfo:
       type: object

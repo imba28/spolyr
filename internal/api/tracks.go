@@ -35,8 +35,8 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, s2 string, lyrics 
 	return openapi.Response(http.StatusNotImplemented, nil), errors.New("TracksIdPost method not implemented")
 }
 
-// NewTracksApiService creates a default api service
-func NewTracksApiService(repo db.TrackRepository) *TracksApiService {
+// newTracksApiService creates a default api service
+func newTracksApiService(repo db.TrackRepository) *TracksApiService {
 	return &TracksApiService{
 		repo: repo,
 	}

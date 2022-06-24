@@ -7,10 +7,11 @@ import (
 	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"github.com/imba28/spolyr/internal/spotify"
 	spotify2 "github.com/zmb3/spotify/v2"
+	"log"
 	"net/http"
 )
 
-func NewImportApiService(repo db.TrackRepository, syncer *lyrics.Syncer, fetcher lyrics.AsyncFetcher) ImportApiServicer {
+func newImportApiService(repo db.TrackRepository, syncer *lyrics.Syncer, fetcher lyrics.AsyncFetcher) ImportApiServicer {
 	return ImportApiServicer{
 		repo:    repo,
 		syncer:  syncer,
@@ -25,14 +26,14 @@ type ImportApiServicer struct {
 }
 
 func (i ImportApiServicer) ImportLibraryPost(ctx context.Context) (openapi.ImplResponse, error) {
-	token := tokenFromContext(ctx)
-	if token == nil || token != nil {
-		return openapi.Response(http.StatusUnauthorized, nil), nil
+	c := spotifyClientFromContext(ctx)
+	if c == nil {
+		return openapi.Response(http.StatusForbidden, nil), nil
 	}
 
-	c := spotify2.New(auth.Client(ctx, token))
 	err := spotify.SyncTracks(ctx, spotify.NewSpotifyTrackProvider(c), i.repo)
 	if err != nil {
+		log.Println(err)
 		return openapi.Response(http.StatusInternalServerError, nil), nil
 	}
 

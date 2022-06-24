@@ -6,40 +6,38 @@
     <img
       class="card-img-top"
       :src="cover"
-      :alt="`album cover of ${title} from ${artists.join(', and ')}`"
+      :alt="`cover of playlist ${name} created by ${owner}`"
     >
 
     <div class="card-body d-flex justify-content-between flex-column">
       <div>
         <h5 class="card-title">
-          {{ title }}
+          {{ name }}
         </h5>
         <p class="card-text">
-          <router-link
-            v-for="artist in artists"
-            :key="title + artist"
-            :to="{name:'search', params: {q: artist}}"
-          >
-            {{ artist }}
-          </router-link>
+          created by <span class="text-muted">{{ owner }}</span>
         </p>
       </div>
 
       <div class="card-text mt-1">
-        <router-link
-          :to="{name: 'track-detail', params: {id: spotifyId}}"
-          class="d-inline-block btn btn-primary"
+        <b-button
+          variant="primary"
+          :disabled="isImporting"
+          :block="true"
+          @click="$emit('button-click')"
         >
-          Details
-        </router-link> <a
-          v-if="spotifyId"
-          :href="`https://open.spotify.com/track/${spotifyId}`"
-          class="d-inline-block btn btn-primary"
-          target="_blank"
-          rel="noopener"
-        >
-          to Spotify
-        </a>
+          <div v-if="isImporting">
+            <b-spinner
+              small
+              label="Busy"
+            /> Importing...
+          </div>
+          <span
+            v-else
+          >
+            <i class="fa fa-music" /> Import {{ trackCount }} tracks
+          </span>
+        </b-button>
       </div>
     </div>
   </div>
@@ -48,11 +46,11 @@
 <script>
 export default {
   props: {
-    title: {
+    spotifyId: {
       type: String,
       required: true,
     },
-    spotifyId: {
+    name: {
       type: String,
       required: true,
     },
@@ -60,9 +58,25 @@ export default {
       type: String,
       default: null,
     },
-    artists: {
-      type: Array,
-      default: () => [],
+    owner: {
+      type: String,
+      default: null,
+    },
+    trackCount: {
+      type: Number,
+      default: null,
+    },
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
+    isCollaborative: {
+      type: Boolean,
+      default: false,
+    },
+    isImporting: {
+      type: Boolean,
+      default: false,
     },
   },
 };

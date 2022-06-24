@@ -14,9 +14,13 @@ import (
 )
 
 var (
-	permissions = []string{spotifyauth.ScopeUserLibraryRead, spotifyauth.ScopeUserReadEmail, spotifyauth.ScopePlaylistReadCollaborative, spotifyauth.ScopePlaylistReadPrivate}
-	scope       = strings.Join(permissions, " ")
-	auth        = spotifyauth.New(spotifyauth.WithRedirectURL(redirectUrl()), spotifyauth.WithScopes(scope))
+	permissions = []string{
+		spotifyauth.ScopeUserLibraryRead,
+		spotifyauth.ScopeUserReadEmail,
+		spotifyauth.ScopePlaylistReadCollaborative,
+		spotifyauth.ScopePlaylistReadPrivate}
+	scope = strings.Join(permissions, " ")
+	auth  = spotifyauth.New(spotifyauth.WithRedirectURL(redirectUrl()), spotifyauth.WithScopes(scope))
 )
 
 func getEnv(key, fallback string) string {
@@ -43,7 +47,6 @@ func redirectUrl() string {
 
 type AuthApiService struct {
 	clientId   string
-	oauthScope string
 	hmacSecret []byte
 }
 
@@ -85,7 +88,7 @@ func (a AuthApiService) AuthConfigurationGet(ctx context.Context) (openapi.ImplR
 	res := openapi.OAuthConfiguration{
 		RedirectUrl: redirectUrl(),
 		ClientId:    a.clientId,
-		Scope:       a.oauthScope,
+		Scope:       scope,
 	}
 
 	return openapi.Response(http.StatusOK, res), nil
@@ -95,7 +98,7 @@ func (a AuthApiService) AuthRefreshGet(ctx context.Context) (openapi.ImplRespons
 	return openapi.Response(http.StatusNotImplemented, nil), errors.New("AuthRefreshGet method not implemented")
 }
 
-func NewAuthApiService(clientId string, secret []byte) AuthApiService {
+func newAuthApiService(clientId string, secret []byte) AuthApiService {
 	return AuthApiService{
 		clientId:   clientId,
 		hmacSecret: secret,

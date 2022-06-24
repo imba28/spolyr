@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"github.com/rs/cors"
+	spotify2 "github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
@@ -17,6 +19,10 @@ import (
 
 const authKey = "auth"
 
+var (
+	ErrNotAuthenticated = errors.New("no authentication provided")
+)
+
 type customClaims struct {
 	Token oauth2.Token `json:"oauth_token"`
 	jwt.RegisteredClaims
@@ -25,6 +31,14 @@ type customClaims struct {
 func tokenFromContext(ctx context.Context) *oauth2.Token {
 	t, _ := ctx.Value(authKey).(oauth2.Token)
 	return &t
+}
+
+func spotifyClientFromContext(ctx context.Context) *spotify2.Client {
+	t := tokenFromContext(ctx)
+	if t == nil {
+		return nil
+	}
+	return spotify2.New(auth.Client(ctx, t))
 }
 
 func AuthenticationMiddleware(secret []byte) mux.MiddlewareFunc {
@@ -53,14 +67,16 @@ func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret [
 	fetcher := lyrics.New(geniusAPIToken, 3)
 	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
 
-	AuthApiController := openapi.NewAuthApiController(NewAuthApiService(oauthClientId, secret))
-	ImportController := openapi.NewImportApiController(NewImportApiService(db.Tracks, syncer, fetcher))
-	TracksApiController := openapi.NewTracksApiController(NewTracksApiService(db.Tracks))
-	r := openapi.NewRouter(AuthApiController, TracksApiController, ImportController)
+	authApiController := openapi.NewAuthApiController(newAuthApiService(oauthClientId, secret))
+	importController := openapi.NewImportApiController(newImportApiService(db.Tracks, syncer, fetcher))
+	tracksApiController := openapi.NewTracksApiController(newTracksApiService(db.Tracks))
+	playlistController := openapi.NewPlaylistsApiController(newPlaylistApiService())
+
+	r := openapi.NewRouter(authApiController, tracksApiController, importController, playlistController)
 
 	c := cors.New(cors.Options{
 		AllowCredentials: true,
-		AllowedOrigins:   []string{"https://localhost:8081", "http://localhost:8081", "http://127.0.0.1:8081"},
+		AllowedOrigins:   []string{"https://localhost:8081", "http://localhost:8081", "http://localhost:8080", "http://127.0.0.1:8081"},
 		AllowedHeaders:   []string{"User-Agent", "Content-Type"},
 		Debug:            true,
 	})

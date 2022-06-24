@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/zmb3/spotify/v2"
-	"log"
 )
 
 type userTrackProvider interface {
@@ -57,7 +56,6 @@ func SyncTracks(ctx context.Context, client userTrackProvider, store trackSaver)
 
 		for i := range tracks {
 			err := store.Save(tracks[i])
-			log.Println(tracks[i].Name)
 			if err != nil {
 				return err
 			}
