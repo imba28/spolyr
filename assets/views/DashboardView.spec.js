@@ -1,19 +1,27 @@
 import DashboardView from '@/views/DashboardView';
-import {render, fireEvent, waitForElementToBeRemoved, getByLabelText} from '@testing-library/vue';
+import {render, fireEvent} from '@testing-library/vue';
 
 import {PlaylistsApi, ImportApi} from '@/openapi';
 
 beforeEach(() => {
+  jest.spyOn(ImportApi.prototype, 'importLyricsGet').mockImplementation(
+      () => Promise.resolve({}),
+  );
   jest.clearAllMocks();
 });
 
-const renderDashboardView = (successToast = jest.fn(), errorToast = jest.fn()) => {
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+const renderDashboardView = (successToast = jest.fn(), errorToast = jest.fn(), warningToast = jest.fn()) => {
   return render(DashboardView, {
     stubs: ['router-link'],
     mocks: {
       $toast: {
         success: successToast,
         error: errorToast,
+        warning: warningToast,
       },
     },
   });
@@ -92,5 +100,51 @@ describe('DashboardView', function() {
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({
       page: 2,
     }));
+  });
+
+  it('calls the import api when clicking the `import lyrics` button', async () => {
+    const spy = jest.spyOn(ImportApi.prototype, 'importLyricsPost').mockImplementationOnce(
+        () => Promise.resolve({}),
+    );
+
+    const {getByText} = renderDashboardView();
+
+    await fireEvent.click(getByText('Import lyrics'));
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('starts to continuously check the endpoint for updates after the import was successfully started', async () => {
+    jest.useFakeTimers();
+
+    jest.spyOn(ImportApi.prototype, 'importLyricsPost').mockImplementationOnce(
+        () => Promise.resolve({}),
+    );
+    const spy = jest.spyOn(ImportApi.prototype, 'importLyricsGet').mockImplementationOnce(
+        () => Promise.resolve({}),
+    );
+
+    const {getByText} = renderDashboardView();
+    await fireEvent.click(getByText('Import lyrics'));
+
+    jest.advanceTimersByTime(3000);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders shows the number of failed and successfully imported lyrics', async () => {
+    jest.spyOn(ImportApi.prototype, 'importLyricsGet').mockImplementation(
+        () => Promise.resolve({
+          tracksError: 5,
+          tracksSuccessful: 10,
+          running: true,
+        }),
+    );
+
+    const {findByText} = renderDashboardView();
+
+    await findByText(10);
+    await findByText('Lyrics found');
+    await findByText(5);
+    await findByText('Lyrics not found');
   });
 });

@@ -16,7 +16,7 @@ describe('SearchResults', () => {
     const tracks = [
       {title: 'Foo', artists: ['Artist A', 'Artist B']},
       {title: 'Bar', artists: [], album: 'Album A'},
-      {title: 'Baz', artists: []},
+      {title: 'Baz'},
     ];
 
     const {getByText} = renderSearchResults({
@@ -34,9 +34,9 @@ describe('SearchResults', () => {
 
   test('Table uses the router-link component', async () => {
     const tracks = [
-      {title: 'Foo', artists: []},
-      {title: 'Bar', artists: []},
-      {title: 'Baz', artists: []},
+      {title: 'Foo'},
+      {title: 'Bar'},
+      {title: 'Baz'},
     ];
 
     const routerLinkMock = jest.fn();
@@ -49,9 +49,9 @@ describe('SearchResults', () => {
 
   test('Renders a play buttons if track contains an audio snippet', async () => {
     const tracks = [
-      {title: 'Foo', artists: [], previewURL: '1'},
+      {title: 'Foo', previewURL: '1'},
       {title: 'Bar', artists: []},
-      {title: 'Baz', artists: [], previewURL: null},
+      {title: 'Baz', previewURL: null},
     ];
     const {getAllByLabelText} = renderSearchResults({
       items: tracks,
@@ -63,9 +63,9 @@ describe('SearchResults', () => {
 
   test('Renders a stop buttons if track contains an audio snippet and in playing state', async () => {
     const tracks = [
-      {title: 'Foo', artists: [], previewURL: 'http://foo.com/foo.mp3'},
-      {title: 'Bar', artists: [], previewURL: 'http://bar.com/foo.mp3'},
-      {title: 'Baz', artists: [], previewURL: 'http://baz.com/foo.mp3'},
+      {title: 'Foo', previewURL: 'http://foo.com/foo.mp3'},
+      {title: 'Bar', previewURL: 'http://bar.com/foo.mp3'},
+      {title: 'Baz', previewURL: 'http://baz.com/foo.mp3'},
     ];
     const {getAllByLabelText} = renderSearchResults({
       items: tracks,
@@ -78,7 +78,7 @@ describe('SearchResults', () => {
 
   test('Clicking a play button emits a `play` event', async () => {
     const tracks = [
-      {title: 'Foo', artists: [], previewURL: 'http://foo.com/foo.mp3'},
+      {title: 'Foo', previewURL: 'http://foo.com/foo.mp3'},
       {title: 'Bar', artists: []},
     ];
     const {getByLabelText, emitted} = renderSearchResults({
@@ -93,9 +93,9 @@ describe('SearchResults', () => {
 
   test('Clicking a pause button emits a `stop` event', async () => {
     const tracks = [
-      {title: 'Foo', artists: [], previewURL: 'http://foo.com/foo.mp3'},
-      {title: 'Bar', artists: [], previewURL: 'http://bar.com/foo.mp3'},
-      {title: 'Baz', artists: [], previewURL: 'http://baz.com/foo.mp3'},
+      {title: 'Foo', previewURL: 'http://foo.com/foo.mp3'},
+      {title: 'Bar', previewURL: 'http://bar.com/foo.mp3'},
+      {title: 'Baz', previewURL: 'http://baz.com/foo.mp3'},
     ];
 
     const {getByLabelText, emitted} = renderSearchResults({

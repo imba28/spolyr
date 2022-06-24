@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/imba28/spolyr/internal/db"
 	"strings"
+	"sync"
 )
 
 type tracksSyncFetcherSaver interface {
@@ -15,10 +16,14 @@ type Syncer struct {
 	ready                   chan struct{}
 	syncLyricsTracksCurrent int
 	syncLyricsTrackTotal    int
+	tracksSuccess           int
+	tracksFailed            int
 	syncLog                 []string
 
 	fetcher Fetcher
 	db      tracksSyncFetcherSaver
+
+	sync.Mutex
 }
 
 func (s *Syncer) Sync() (<-chan struct{}, error) {
@@ -32,6 +37,8 @@ func (s *Syncer) Sync() (<-chan struct{}, error) {
 	select {
 	case s.ready <- struct{}{}:
 		s.syncLyricsTracksCurrent = 0
+		s.tracksSuccess = 0
+		s.tracksFailed = 0
 		s.syncLyricsTrackTotal = len(tracks)
 
 		go s.run(tracks, finished)
@@ -39,6 +46,20 @@ func (s *Syncer) Sync() (<-chan struct{}, error) {
 	default:
 		return nil, ErrBusy
 	}
+}
+
+func (s *Syncer) TracksSuccess() int {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.tracksSuccess
+}
+
+func (s *Syncer) TracksFailed() int {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.tracksFailed
 }
 
 func (s *Syncer) run(tracks []*db.Track, finishedSignal chan<- struct{}) {
@@ -76,22 +97,30 @@ func (s *Syncer) run(tracks []*db.Track, finishedSignal chan<- struct{}) {
 			if err != nil {
 				message = err
 			}
+			s.tracksFailed++
 			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9D\x8C %s - %s: %s", result.Track.Name, result.Track.Artist, message.Error()))
 		} else {
+			s.tracksSuccess++
 			s.syncLog = append(s.syncLog, fmt.Sprintf("\xE2\x9C\x85 %s - %s", result.Track.Name, result.Track.Artist))
 		}
 	}
 }
 
 func (s *Syncer) Syncing() bool {
+	s.Lock()
+	defer s.Unlock()
 	return s.syncLyricsTracksCurrent > -1
 }
 
 func (s *Syncer) SyncedTracks() int {
+	s.Lock()
+	defer s.Unlock()
 	return s.syncLyricsTracksCurrent
 }
 
 func (s *Syncer) TotalTracks() int {
+	s.Lock()
+	defer s.Unlock()
 	return s.syncLyricsTrackTotal
 }
 

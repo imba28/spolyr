@@ -7,6 +7,7 @@
       :busy="loading"
       :fields="fields"
       :items="items"
+      :tbody-tr-class="rowClass"
       @row-hovered="(row) => playing && row.previewURL !== playing ? $emit('play', row.previewURL) : null"
     >
       <template #cell(icons)="data">
@@ -74,12 +75,19 @@ export default {
   data: () => ({
     fields: [
       {key: 'title', label: 'Title'},
-      {key: 'artists', label: 'Artists', formatter: (v) => v.join(', ')},
+      {key: 'artists', label: 'Artists', formatter: (v) => v ? v.join(', ') : ''},
       {key: 'album', label: 'Album'},
       {key: 'icons', label: ''},
       {key: 'actions', label: ''},
     ],
   }),
+  methods: {
+    rowClass(item) {
+      if (item.previewURL && item.previewURL === this.playing) {
+        return 'table-dark font-weight-bold';
+      }
+    },
+  },
 };
 </script>
 

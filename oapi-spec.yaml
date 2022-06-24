@@ -116,6 +116,22 @@ paths:
         429:
           description: Import running
 
+    get:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Get status of import process
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LyricsImportStatus'
+        401:
+          description: No access token provided
+
   /import/library:
     post:
       tags:
@@ -306,7 +322,6 @@ components:
         isCollaborative:
           type: boolean
 
-
     TrackInfo:
       type: object
       required:
@@ -327,6 +342,28 @@ components:
           type: array
           items:
             type: string
+
+    LyricsImportStatus:
+      type: object
+      required:
+        - running
+      properties:
+        running:
+          type: boolean
+        tracksCompleted:
+          type: integer
+          format: int32
+        tracksSuccessful:
+          type: integer
+          format: int32
+        tracksError:
+          type: integer
+          format: int32
+        tracksTotal:
+          type: integer
+          format: int32
+        log:
+          type: string
 
     Message:
       type: object

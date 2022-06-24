@@ -78,6 +78,7 @@ func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret [
 		AllowCredentials: true,
 		AllowedOrigins:   []string{"https://localhost:8081", "http://localhost:8081", "http://localhost:8080", "http://127.0.0.1:8081"},
 		AllowedHeaders:   []string{"User-Agent", "Content-Type"},
+		MaxAge:           3600,
 		Debug:            true,
 	})
 	return AuthenticationMiddleware(secret)(c.Handler(r))

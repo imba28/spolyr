@@ -25,6 +25,23 @@ type ImportApiServicer struct {
 	fetcher lyrics.Fetcher
 }
 
+func (i ImportApiServicer) ImportLyricsGet(ctx context.Context) (openapi.ImplResponse, error) {
+	if !i.syncer.Syncing() {
+		return openapi.Response(http.StatusOK, openapi.LyricsImportStatus{
+			Running: false,
+		}), nil
+	}
+
+	return openapi.Response(http.StatusOK, openapi.LyricsImportStatus{
+		Running:          true,
+		TracksCompleted:  int32(i.syncer.SyncedTracks()),
+		TracksTotal:      int32(i.syncer.TotalTracks()),
+		TracksError:      int32(i.syncer.TracksFailed()),
+		TracksSuccessful: int32(i.syncer.TracksSuccess()),
+		Log:              i.syncer.Logs(),
+	}), nil
+}
+
 func (i ImportApiServicer) ImportLibraryPost(ctx context.Context) (openapi.ImplResponse, error) {
 	c := spotifyClientFromContext(ctx)
 	if c == nil {
@@ -41,7 +58,12 @@ func (i ImportApiServicer) ImportLibraryPost(ctx context.Context) (openapi.ImplR
 }
 
 func (i ImportApiServicer) ImportLyricsPost(ctx context.Context) (openapi.ImplResponse, error) {
-	panic("implement me")
+	_, err := i.syncer.Sync()
+	if err == lyrics.ErrBusy {
+		return openapi.Response(http.StatusTooManyRequests, nil), nil
+	}
+
+	return openapi.Response(http.StatusOK, nil), nil
 }
 
 func (i ImportApiServicer) ImportPlaylistIdPost(ctx context.Context, playlistId string) (openapi.ImplResponse, error) {
