@@ -4,7 +4,6 @@ services:
     image: imba28/spolyr
     restart: always
     environment:
-      GIN_MODE: release
       DATABASE_HOST: mongo
       DATABASE_USER: root
       DATABASE_PASSWORD: example
@@ -12,7 +11,7 @@ services:
       SPOTIFY_SECRET:
       GENIUS_API_TOKEN:
     ports:
-      - 127.0.0.1:8080:8080
+      - "127.0.0.1:8080:8080"
     depends_on:
       - mongo
 

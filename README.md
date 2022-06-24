@@ -61,3 +61,30 @@ docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate \
     -g javascript \
     -o /local/internal/spec
 ```
+
+## Development
+
+1. Install `node`, `docker` and `docker compose`
+2. Install frontend dependencies `npm i`
+3. Generate the api and clients stubs: `make openapi-spec`
+4. Start database: `docker compose -f docker-compose.dev.yml up`
+5. Set the following environment variables:
+   - DATABASE_HOST=127.0.0.1
+   - DATABASE_PASSWORD=example
+   - DATABASE_USER=root
+   - DOMAIN=localhost
+   - HTTP_PUBLIC_PORT=8081
+   - PROTOCOL=https
+   - SESSION_KEY=dev
+   - SPOTIFY_ID=YOUR_ID
+   - SPOTIFY_SECRET=YOUR_SECRET 
+   - GENIUS_API_TOKEN=YOUR_TOKEN
+6. Start api: `go run cmd/main.go`
+7. Start webpack dev server: `npm run serve`
+8. Open [localhost:8080](https://localhost:8080) in your preferred browser
+
+### Tests and linting
+```bash
+npm run lint
+npm run test:unit
+```
