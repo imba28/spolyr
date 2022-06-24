@@ -24,7 +24,7 @@
           variant="primary"
           :disabled="isImporting"
           :block="true"
-          @click="$emit('button-click')"
+          @click="$emit('button-click', spotifyId)"
         >
           <div v-if="isImporting">
             <b-spinner
