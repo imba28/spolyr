@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,23 +15,30 @@ type TracksApiService struct {
 	repo db.TrackRepository
 }
 
-func (s *TracksApiService) TracksIdPatch(ctx context.Context, s2 string, lyrics openapi.Lyrics) (openapi.ImplResponse, error) {
-	// TODO - update TracksIdPost with the required logic for this service method.
-	// Add api_tracks_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics openapi.Lyrics) (openapi.ImplResponse, error) {
+	t, err := s.repo.FindTrack(id)
+	if err != nil {
+		return openapi.Response(404, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, TrackDetail{}) or use other options such as http.Ok ...
-	//return openapi.Response(200, TrackDetail{}), nil
+	t.Lyrics = lyrics.Lyrics
 
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return openapi.Response(404, nil),nil
+	err = s.repo.Save(t)
+	if err != nil {
+		return openapi.Response(500, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return openapi.Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return openapi.Response(500, nil),nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("TracksIdPost method not implemented")
+	return openapi.Response(200, openapi.TrackDetail{
+		SpotifyId:              t.SpotifyID,
+		Title:                  t.Name,
+		Album:                  t.AlbumName,
+		CoverImage:             t.ImageURL,
+		PreviewURL:             t.PreviewURL,
+		Artists:                strings.Split(t.Artist, ","),
+		HasLyrics:              t.Loaded,
+		Lyrics:                 t.Lyrics,
+		LyricsImportErrorCount: int32(t.LyricsImportErrorCount),
+	}), nil
 }
 
 // newTracksApiService creates a default api service
@@ -93,17 +99,20 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 
 // TracksIdGet - Returns a track
 func (s *TracksApiService) TracksIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	// TODO - update TracksIdGet with the required logic for this service method.
-	// Add api_tracks_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	t, err := s.repo.FindTrack(id)
+	if err != nil {
+		return openapi.Response(404, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, TrackDetail{}) or use other options such as http.Ok ...
-	//return openapi.Response(200, TrackDetail{}), nil
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return openapi.Response(404, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return openapi.Response(500, nil),nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("TracksIdGet method not implemented")
+	return openapi.Response(200, openapi.TrackDetail{
+		SpotifyId:              t.SpotifyID,
+		Title:                  t.Name,
+		Album:                  t.AlbumName,
+		CoverImage:             t.ImageURL,
+		PreviewURL:             t.PreviewURL,
+		Artists:                strings.Split(t.Artist, ","),
+		HasLyrics:              t.Loaded,
+		Lyrics:                 t.Lyrics,
+		LyricsImportErrorCount: int32(t.LyricsImportErrorCount),
+	}), nil
 }

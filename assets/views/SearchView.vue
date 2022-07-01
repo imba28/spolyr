@@ -8,21 +8,12 @@
         variant="primary"
       />
     </div>
-    <div
+
+    <error-box
       v-if="items !== null && items.length === 0"
-      class="text-center"
-    >
-      <img
-        src="@/static/undraw_happy_music_g6wc.svg"
-        style="width: 35%;"
-      >
-      <h1 class="h3 mt-4">
-        Sorry, no results found
-      </h1>
-      <div class="text-muted">
-        Please try another query.
-      </div>
-    </div>
+      message="Sorry, no results found"
+      text="Please try another query."
+    />
     <div v-else-if="items !== null">
       <div class="text-muted mt-1 mb-3">
         {{ totalRows }} tracks found
@@ -60,13 +51,14 @@
 import SearchResults from '@/components/SearchResults';
 import Player from '@/audio-player';
 import {TracksApi} from '@/openapi';
+import ErrorBox from '@/components/ErrorBox';
 
 const tracksApi = new TracksApi();
 
 const player = new Player();
 
 export default {
-  components: {SearchResults},
+  components: {ErrorBox, SearchResults},
   data: () => ({
     loading: true,
     currentPage: 1,
