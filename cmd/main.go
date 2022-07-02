@@ -24,11 +24,10 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Handler: s,
-		Addr:    fmt.Sprintf(":%s", httpPort),
-		// Good practice: enforce timeouts for servers you create!
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		Handler:      s,
+		Addr:         fmt.Sprintf(":%s", httpPort),
+		WriteTimeout: 1 * time.Minute,
+		ReadTimeout:  10 * time.Second,
 	}
 
 	log.Fatal(srv.ListenAndServe())

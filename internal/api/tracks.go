@@ -21,6 +21,7 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics 
 		return openapi.Response(404, nil), nil
 	}
 
+	t.Loaded = true
 	t.Lyrics = lyrics.Lyrics
 
 	err = s.repo.Save(t)
@@ -28,7 +29,11 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics 
 		return openapi.Response(500, nil), nil
 	}
 
-	return openapi.Response(200, openapi.TrackDetail{
+	return openapi.Response(200, toTrackDetail(*t)), nil
+}
+
+func toTrackDetail(t db.Track) openapi.TrackDetail {
+	return openapi.TrackDetail{
 		SpotifyId:              t.SpotifyID,
 		Title:                  t.Name,
 		Album:                  t.AlbumName,
@@ -38,7 +43,7 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics 
 		HasLyrics:              t.Loaded,
 		Lyrics:                 t.Lyrics,
 		LyricsImportErrorCount: int32(t.LyricsImportErrorCount),
-	}), nil
+	}
 }
 
 // newTracksApiService creates a default api service

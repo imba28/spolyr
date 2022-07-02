@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/openapi/openapi"
@@ -9,6 +10,10 @@ import (
 	spotify2 "github.com/zmb3/spotify/v2"
 	"log"
 	"net/http"
+)
+
+var (
+	errLyricsNotFound = errors.New("no lyrics found")
 )
 
 func newImportApiService(repo db.TrackRepository, syncer *lyrics.Syncer, fetcher lyrics.AsyncFetcher) ImportApiServicer {
@@ -23,6 +28,30 @@ type ImportApiServicer struct {
 	repo    db.TrackRepository
 	syncer  *lyrics.Syncer
 	fetcher lyrics.Fetcher
+}
+
+func (i ImportApiServicer) ImportLyricsTrackIdPost(ctx context.Context, id string) (openapi.ImplResponse, error) {
+	t, err := i.repo.FindTrack(id)
+	if err != nil {
+		return openapi.Response(http.StatusNotFound, nil), nil
+	}
+
+	// do not import lyrics more than once
+	if t.Loaded {
+		return openapi.Response(http.StatusOK, toTrackDetail(*t)), nil
+	}
+
+	err = i.fetcher.Fetch(t)
+	if err != nil {
+		return openapi.Response(http.StatusNotFound, nil), errLyricsNotFound
+	}
+
+	err = i.repo.Save(t)
+	if err != nil {
+		return openapi.Response(http.StatusInternalServerError, nil), err
+	}
+
+	return openapi.Response(http.StatusOK, toTrackDetail(*t)), nil
 }
 
 func (i ImportApiServicer) ImportLyricsGet(ctx context.Context) (openapi.ImplResponse, error) {

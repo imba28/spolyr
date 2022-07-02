@@ -35,7 +35,7 @@
                 {{ track.title }}
               </h5>
               <p class="card-text">
-                <span v-if="track.artists.length > 0">
+                <span v-if="track.artists">
                   <router-link
                     v-for="artist in track.artists"
                     :key="`artist-${artist}`"
@@ -49,6 +49,7 @@
               <div class="card-text">
                 <audio
                   v-if="track.previewURL"
+                  data-testid="audio-player"
                   controls
                   preload="none"
                   style="width: 100%"
@@ -79,10 +80,12 @@
               <div class="d-flex align-items-center justify-content-between">
                 Lyrics
 
-                <div v-if="track.hasLyrics">
+                <div v-if="authStore.isAuthenticated">
                   <b-button
                     v-if="editMode"
                     variant="primary"
+                    aria-label="save lyrics"
+                    :disabled="importingLyrics"
                     @click="save"
                   >
                     <i class="fa fa-save" /> Save
@@ -90,28 +93,34 @@
                   <b-button
                     v-else
                     variant="primary"
+                    aria-label="edit lyrics"
+                    :disabled="importingLyrics"
                     @click="edit"
                   >
                     <i class="fa fa-edit" /> Edit
                   </b-button>
+                  <loading-button
+                    v-if="!track.hasLyrics"
+                    :loading="importingLyrics"
+                    aria-label="import lyrics"
+                    :disabled="importingLyrics"
+                    @click="importLyrics"
+                  >
+                    <i class="fa fa-quote-left" /> Download lyrics
+                  </loading-button>
                 </div>
               </div>
             </template>
             <b-card-body>
               <b-card-text>
-                <div
-                  v-if="track.lyrics"
-                >
-                  <textarea
-                    v-if="editMode"
-                    v-model="track.lyrics"
-                    class="form-control"
-                    :style="textareaStyle"
-                  />
-                  <span
-                    v-else
-                    class="lyrics-text"
-                  >{{ track.lyrics }}</span>
+                <textarea
+                  v-if="editMode"
+                  v-model="track.lyrics"
+                  class="form-control"
+                  :style="textareaStyle"
+                />
+                <div v-else-if="track.lyrics">
+                  <span class="lyrics-text">{{ track.lyrics }}</span>
                 </div>
                 <div v-else-if="track.lyricsImportErrorCount > maxImportErrorCount">
                   <small class="text-warning">Lyrics not found. Import
@@ -134,22 +143,35 @@
 </template>
 
 <script>
-import {Lyrics, TracksApi} from '@/openapi';
+import {ImportApi, Lyrics, TracksApi} from '@/openapi';
 import ErrorBox from '@/components/ErrorBox';
+import {mapStores} from 'pinia';
+import {useAuthStore} from '@/stores/auth';
+import LoadingButton from '@/components/LoadingButton';
 const api = new TracksApi();
+const importApi = new ImportApi();
 
 export default {
-  components: {ErrorBox},
+  components: {LoadingButton, ErrorBox},
   data: () => ({
     track: null,
     notFound: false,
     maxImportErrorCount: 3,
     editMode: false,
+    importingLyrics: false,
   }),
   computed: {
+    ...mapStores(useAuthStore),
     textareaStyle() {
+      const lineBreaks = this.track.lyrics.match(/\n/g);
+      if (!lineBreaks) {
+        return {
+          height: '5em',
+        };
+      }
+
       return {
-        height: 1.5 * this.track.lyrics.match(/\n/g).length + 'em',
+        height: 1.5 * lineBreaks.length + 'em',
       };
     },
   },
@@ -174,6 +196,18 @@ export default {
         this.$toast.error(e.message);
       } finally {
         this.editMode = false;
+      }
+    },
+    async importLyrics() {
+      this.importingLyrics = true;
+
+      try {
+        this.track = await importApi.importLyricsTrackIdPost(this.track.spotifyId);
+        this.$toast.success('Lyrics were found and successfully saved!');
+      } catch (e) {
+        this.$toast.info('Sadly, no lyrics were found.');
+      } finally {
+        this.importingLyrics = false;
       }
     },
   },

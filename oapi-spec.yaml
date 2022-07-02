@@ -132,6 +132,33 @@ paths:
         401:
           description: No access token provided
 
+  /import/lyrics/track/{id}:
+    post:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Try to import lyrics of a specific track
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID of the track to update
+
+      responses:
+        200:
+          description: Updated track info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          description: No lyrics found
+        401:
+          description: No access token provided
+
   /import/library:
     post:
       tags:
