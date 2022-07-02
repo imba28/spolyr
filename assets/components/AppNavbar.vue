@@ -35,14 +35,14 @@
           </template>
 
           <b-dropdown-item @click="logout">
-            Sign Out
+            <i class="fa fa-sign-out" /> Sign out
           </b-dropdown-item>
         </b-nav-item-dropdown>
         <b-nav-item
           v-else
           @click="login"
         >
-          Link
+          <i class="fa fa-sign-in" /> Sign in
         </b-nav-item>
       </b-navbar-nav>
     </b-collapse>
