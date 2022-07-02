@@ -260,7 +260,7 @@ export default {
           timeout: 2000,
         });
       } catch (e) {
-        this.$toast.error(e.body);
+        this.$toast.error('Something went wrong while importing your playlist ' + name);
       } finally {
         this.playlists.importingIds.splice(this.playlists.importingIds.indexOf(spotifyId), 1);
       }

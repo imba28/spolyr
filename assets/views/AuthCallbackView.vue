@@ -18,13 +18,16 @@ export default {
     try {
       const params = querystring.parse(window.location.search.substring(1));
       if (!params.code) {
-        alert('ERROR');
+        this.$toast.error('Authentication with Spotify failed. No code was provided!');
+        this.$router.push({name: 'home'});
+        return;
       }
 
       await this.authStore.login(params.code);
       this.$router.push({name: 'home'});
     } catch (e) {
       console.error(e);
+      this.$toast.error('Something went wrong when trying to sign you in!');
       this.$router.push({name: 'home'});
     }
   },
