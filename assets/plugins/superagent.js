@@ -4,50 +4,40 @@ const authApi = new AuthApi();
 
 /**
  *
- * @param{any} request
+ * @param{Request} request
  */
 function reset(request) {
-  const headers = request.req._headers;
-  const path = request.req.path;
-
-  request.req.abort();
-  request.called = false;
-  delete request.req;
-
-  for (const k in headers) {
-    if (Object.prototype.hasOwnProperty.call(headers, k)) {
-      request.set(k, headers[k]);
-    }
-  }
-
-  if (!request.qs) {
-    request.req.path = path;
-  }
+  request._endCalled = false;
 }
 
-reset;
-
 /**
- * @param{Number} Request
+ * This plugin intercepts http responses.
+ * If a requests triggers a 401 response, two things happen:
+ *   1. The plugin tries to refresh the JWT
+ *   2. If the tokens were refreshed, the original request is repeated once again.
+ *
+ * @param{Request} Request
  */
 function refreshTokenMiddleware(Request) {
   const originalEnd = Request.end;
 
   Request.end = async (callback) => {
     originalEnd.call(Request, async function(err, response) {
-      if (err && err.status === 401) {
-        debugger;
-
-        try {
-          await authApi.authRefreshGet();
-
-          originalEnd.call(Request, callback);
-        } catch (e) {
-          err = new Error('Could not refresh token');
-        }
+      if (!err || err.status !== 401) {
+        callback(err, response);
+        return;
       }
 
-      callback(err, response);
+      try {
+        // acquire fresh access token...
+        await authApi.authRefreshGet();
+
+        // repeat the original request
+        reset(Request);
+        originalEnd.call(Request, callback);
+      } catch (e) {
+        callback(new Error('could not refresh token'), response);
+      }
     });
   };
 }

@@ -148,6 +148,7 @@ import ErrorBox from '@/components/ErrorBox';
 import {mapStores} from 'pinia';
 import {useAuthStore} from '@/stores/auth';
 import LoadingButton from '@/components/LoadingButton';
+
 const api = new TracksApi();
 const importApi = new ImportApi();
 
@@ -193,7 +194,7 @@ export default {
         }));
         this.$toast.success('You\'ve successfully updated the lyrics of this track!');
       } catch (e) {
-        this.$toast.error(e.message);
+        this.$toast.error(e.message ?? e.body);
       } finally {
         this.editMode = false;
       }
