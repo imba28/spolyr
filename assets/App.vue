@@ -15,48 +15,7 @@
           lg="2"
           class="bg-dark-lighter pt-4"
         >
-          <aside
-            class="position-sticky"
-            style="stop: 1em"
-          >
-            <ul class="nav flex-column">
-              <li class="nav-item">
-                <router-link
-                  :to="{name:'home'}"
-                  class="nav-link"
-                >
-                  <i class="fas fa-home" /> Home
-                </router-link>
-              </li>
-              <li class="nav-item">
-                <router-link
-                  :to="{name:'dashboard'}"
-                  class="nav-link"
-                >
-                  <i class="fas fa-music" /> Dashboard
-                </router-link>
-              </li>
-              <li class="nav-item">
-                Songs
-              </li>
-              <li class="nav-item">
-                <router-link
-                  :to="{name:'home'}"
-                  class="nav-link"
-                >
-                  <i class="fas fa-question" /> Without lyrics
-                </router-link>
-              </li>
-              <li class="nav-item">
-                <router-link
-                  :to="{name:'home'}"
-                  class="nav-link"
-                >
-                  <i class="fas fa-exclamation-triangle" /> Manual action required
-                </router-link>
-              </li>
-            </ul>
-          </aside>
+          <app-sidebar />
         </b-col>
         <b-col
           md="9"
@@ -87,10 +46,12 @@
 
 <script>
 import AppNavbar from './components/AppNavbar';
+import AppSidebar from '@/components/AppSidebar';
 
 export default {
   name: 'App',
   components: {
+    AppSidebar,
     AppNavbar,
   },
 };

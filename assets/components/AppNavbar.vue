@@ -69,7 +69,11 @@ export default {
       this.$router.push({name: 'search', params: {q: query}}).catch(() => {});
     },
     async logout() {
-      await this.authStore.logout();
+      try {
+        await this.authStore.logout();
+      } catch (e) {
+        this.$toast.error('Something went wrong while trying to sign you out!');
+      }
     },
     async login() {
       const config = await authClient.authConfigurationGet();

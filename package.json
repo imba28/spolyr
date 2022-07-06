@@ -18,6 +18,7 @@
     "bootswatch": "^4.6.0",
     "core-js": "^3.8.3",
     "mutationobserver-shim": "^0.3.7",
+    "nprogress": "^0.2.0",
     "pinia": "^2.0.14",
     "pinia-plugin-persistedstate": "^1.6.1",
     "popper.js": "^1.16.1",
