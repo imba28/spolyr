@@ -1,67 +1,16 @@
 package api
 
 import (
-	"context"
-	"errors"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/imba28/spolyr/internal/db"
+	jwt2 "github.com/imba28/spolyr/internal/jwt"
 	"github.com/imba28/spolyr/internal/lyrics"
 	"github.com/imba28/spolyr/internal/openapi/openapi"
 	"github.com/rs/cors"
-	spotify2 "github.com/zmb3/spotify/v2"
-	"golang.org/x/oauth2"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
-
-const authKey = "auth"
-
-var (
-	ErrNotAuthenticated = errors.New("no authentication provided")
-)
-
-type customClaims struct {
-	Token oauth2.Token `json:"oauth_token"`
-	jwt.RegisteredClaims
-}
-
-func tokenFromContext(ctx context.Context) *oauth2.Token {
-	t, _ := ctx.Value(authKey).(oauth2.Token)
-	return &t
-}
-
-func spotifyClientFromContext(ctx context.Context) *spotify2.Client {
-	t := tokenFromContext(ctx)
-	if t == nil {
-		return nil
-	}
-	return spotify2.New(auth.Client(ctx, t))
-}
-
-func AuthenticationMiddleware(secret []byte) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-
-			if r.Method != http.MethodOptions {
-				if c, err := r.Cookie("jwt"); err == nil {
-					token, _ := jwt.ParseWithClaims(c.Value, &customClaims{}, func(t *jwt.Token) (interface{}, error) {
-						return secret, nil
-					})
-					if claims, ok := token.Claims.(*customClaims); ok && token.Valid {
-						log.Println(claims.Token)
-						ctx = context.WithValue(ctx, authKey, claims.Token)
-					}
-				}
-			}
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
 
 func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte) http.Handler {
 	fetcher := lyrics.New(geniusAPIToken, 3)
@@ -76,13 +25,13 @@ func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret [
 
 	c := cors.New(cors.Options{
 		AllowCredentials: true,
-		AllowedOrigins:   []string{"https://localhost:8081", "http://localhost:8081", "http://localhost:8080", "http://127.0.0.1:8081"},
+		AllowedOrigins:   []string{"https://localhost:8081", "https://127.0.0.1:8081"},
 		AllowedHeaders:   []string{"User-Agent", "Content-Type"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "OPTIONS"},
 		MaxAge:           3600,
 		Debug:            true,
 	})
-	return AuthenticationMiddleware(secret)(c.Handler(r))
+	return AuthenticationMiddleware(jwt2.New(secret))(c.Handler(r))
 }
 
 func spaFileHandler(publicFolder string) http.HandlerFunc {

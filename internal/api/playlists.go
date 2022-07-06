@@ -11,11 +11,11 @@ type playlistApiService struct {
 }
 
 func (p playlistApiService) PlaylistsGet(ctx context.Context, page int32, limit int32) (openapi.ImplResponse, error) {
-	c := spotifyClientFromContext(ctx)
-	if c == nil {
-		return openapi.Response(http.StatusForbidden, nil), nil
+	if !isAuthenticated(ctx) {
+		return openapi.Response(http.StatusUnauthorized, nil), ErrNotAuthenticated
 	}
 
+	c := oauthClientFromContext(ctx)
 	pp, err := c.CurrentUsersPlaylists(ctx, spotify2.Limit(int(limit)), spotify2.Offset(int((page-1)*limit)))
 	if err != nil {
 		return openapi.Response(http.StatusInternalServerError, nil), err

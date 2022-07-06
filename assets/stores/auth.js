@@ -17,7 +17,7 @@ export const useAuthStore = defineStore({
 
   actions: {
     async logout() {
-      console.log('TODO: invalidate cookie');
+      await authApi.authLogoutGet();
 
       this.$patch({
         avatarUrl: null,

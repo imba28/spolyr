@@ -1,16 +1,17 @@
 import Vue from 'vue';
 import App from './App.vue';
 
-import './scss/main.scss';
-
+import {ApiClient} from './openapi';
 import './icons';
 import {router, pinia} from './plugins';
+import jwtRefreshPlugin from './plugins/superagent';
+
+import './scss/main.scss';
+
+ApiClient.instance.enableCookies = true;
+ApiClient.instance.plugins = [jwtRefreshPlugin];
 
 Vue.config.productionTip = false;
-
-import {ApiClient} from './openapi';
-ApiClient.instance.enableCookies = true;
-
 new Vue({
   router,
   pinia,

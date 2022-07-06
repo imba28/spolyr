@@ -16,9 +16,13 @@ type TracksApiService struct {
 }
 
 func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics openapi.Lyrics) (openapi.ImplResponse, error) {
+	if !isAuthenticated(ctx) {
+		return openapi.Response(http.StatusUnauthorized, nil), ErrNotAuthenticated
+	}
+
 	t, err := s.repo.FindTrack(id)
 	if err != nil {
-		return openapi.Response(404, nil), nil
+		return openapi.Response(http.StatusNotFound, nil), nil
 	}
 
 	t.Loaded = true
@@ -26,10 +30,10 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics 
 
 	err = s.repo.Save(t)
 	if err != nil {
-		return openapi.Response(500, nil), nil
+		return openapi.Response(http.StatusInternalServerError, nil), err
 	}
 
-	return openapi.Response(200, toTrackDetail(*t)), nil
+	return openapi.Response(http.StatusOK, toTrackDetail(*t)), nil
 }
 
 func toTrackDetail(t db.Track) openapi.TrackDetail {
@@ -74,7 +78,7 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 	}
 
 	if err != nil && err != mongo.ErrNoDocuments {
-		return openapi.Response(http.StatusNotFound, openapi.TracksGet200Response{}), nil
+		return openapi.Response(http.StatusInternalServerError, nil), err
 	}
 
 	data := make([]openapi.TrackInfo, len(tracks))

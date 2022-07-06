@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"github.com/zmb3/spotify"
+	"github.com/zmb3/spotify/v2"
 	"testing"
 )
 

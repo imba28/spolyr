@@ -1,74 +1,112 @@
 package db
 
 import (
+	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type mongoTrackStore interface {
-	Save(filter interface{}, data interface{}) error
-	FindOne(filter interface{}) (*Track, error)
-	Find(filter interface{}, opts ...*options.FindOptions) ([]*Track, error)
-	Count(filter interface{}) (int64, error)
-}
+var (
+	ErrTrackNotFound  = errors.New("track not found")
+	ErrTracksNotFound = errors.New("tracks not found")
+)
 
 type TrackRepository interface {
 	FindTrack(string) (*Track, error)
-	TracksWithoutLyrics() ([]*Track, error)
-	TracksWithoutLyricsError() ([]*Track, error)
-	TracksWithLyricsError() ([]*Track, error)
-	CountWithoutLyrics() (int64, error)
-	CountWithLyrics() (int64, error)
-	Count() (int64, error)
 	LatestTracks(limit int64) ([]*Track, error)
+	TracksWithoutLyricsError() ([]*Track, error)
 	Search(query string, page, limit int) ([]*Track, int, error)
 	Save(track *Track) error
 }
 
 type MongoTrackRepository struct {
-	store                mongoTrackStore
 	maxLyricsImportError int
+	db                   *mongo.Database
+}
+
+func decodeTracks(cur *mongo.Cursor) ([]*Track, error) {
+	var tracks []*Track
+	ctx := context.Background()
+	for cur.Next(ctx) {
+		var t Track
+		err := cur.Decode(&t)
+		if err != nil {
+			return tracks, err
+		}
+
+		tracks = append(tracks, &t)
+	}
+
+	if err := cur.Err(); err != nil {
+		return tracks, err
+	}
+
+	err := cur.Close(context.Background())
+	return tracks, err
+}
+
+func (r MongoTrackRepository) findOneByQuery(filter interface{}, o ...*options.FindOneOptions) (*Track, error) {
+	var t Track
+	err := r.db.Collection(TrackCollection).FindOne(context.Background(), filter, o...).Decode(&t)
+	if err != nil {
+		return nil, ErrTrackNotFound
+	}
+	return &t, nil
+}
+func (r MongoTrackRepository) findByQuery(filter interface{}, o ...*options.FindOptions) ([]*Track, error) {
+	c, err := r.db.Collection(TrackCollection).Find(context.Background(), filter, o...)
+	if err != nil {
+		return nil, ErrTracksNotFound
+	}
+	return decodeTracks(c)
+}
+
+func (r MongoTrackRepository) count(filter interface{}) (int64, error) {
+	return r.db.Collection(TrackCollection).CountDocuments(context.Background(), filter)
 }
 
 func (t MongoTrackRepository) FindTrack(spotifyID string) (*Track, error) {
 	filter := bson.D{primitive.E{Key: "spotify_id", Value: spotifyID}}
-	return t.store.FindOne(filter)
+
+	return t.findOneByQuery(filter)
 }
 
 func (t MongoTrackRepository) TracksWithoutLyrics() ([]*Track, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}}
-	return t.store.Find(filter)
+	return t.findByQuery(filter)
 }
 
 func (t MongoTrackRepository) TracksWithoutLyricsError() ([]*Track, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}, "lyrics_import_error_count": bson.M{"$lt": t.maxLyricsImportError}}
-	return t.store.Find(filter)
+	return t.findByQuery(filter)
 }
 
 func (t MongoTrackRepository) TracksWithLyricsError() ([]*Track, error) {
 	filter := bson.M{"lyrics_import_error_count": bson.M{"$gte": t.maxLyricsImportError}}
-	return t.store.Find(filter)
+	return t.findByQuery(filter)
 }
 
 func (t MongoTrackRepository) CountWithoutLyrics() (int64, error) {
 	filter := bson.M{"loaded": bson.M{"$ne": true}}
-	return t.store.Count(filter)
+	return t.count(filter)
 }
 
 func (t MongoTrackRepository) CountWithLyrics() (int64, error) {
 	filter := bson.M{"loaded": bson.M{"$eq": true}}
-	return t.store.Count(filter)
+	return t.count(filter)
 }
 
 func (t MongoTrackRepository) Count() (int64, error) {
-	return t.store.Count(bson.M{})
+	return t.count(bson.M{})
 }
 
 func (t MongoTrackRepository) LatestTracks(limit int64) ([]*Track, error) {
 	opts := options.Find().SetLimit(limit).
 		SetSort(bson.D{{"_id", -1}})
-	return t.store.Find(bson.D{{}}, opts)
+	return t.findByQuery(bson.D{{}}, opts)
 }
 
 func (t MongoTrackRepository) Search(query string, page, limit int) ([]*Track, int, error) {
@@ -81,12 +119,12 @@ func (t MongoTrackRepository) Search(query string, page, limit int) ([]*Track, i
 		},
 	}
 
-	total, err := t.store.Count(filter)
+	total, err := t.count(filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	tracks, err := t.store.Find(filter, opts)
+	tracks, err := t.findByQuery(filter, opts)
 
 	return tracks, int(total), err
 }
@@ -107,14 +145,21 @@ func (t MongoTrackRepository) Save(track *Track) error {
 		fieldsToUpdate = append(fieldsToUpdate, bson.E{"lyrics", track.Lyrics}, bson.E{"loaded", track.Loaded})
 	}
 
-	return t.store.Save(filter, bson.D{
+	return t.save(filter, bson.D{
 		{"$set", fieldsToUpdate},
 	})
 }
 
-func NewMongoTrackRepository(s mongoTrackStore, maxLyricsImportError int) MongoTrackRepository {
+func (r MongoTrackRepository) save(filter, update interface{}) error {
+	opts := options.Update().SetUpsert(true)
+	_, err := r.db.Collection(TrackCollection).UpdateOne(context.Background(), filter, update, opts)
+	return err
+}
+
+func NewMongoTrackRepository(db *mongo.Database, maxLyricsImportError int) (MongoTrackRepository, error) {
+	err := createIndices(db)
 	return MongoTrackRepository{
-		store:                s,
+		db:                   db,
 		maxLyricsImportError: maxLyricsImportError,
-	}
+	}, err
 }

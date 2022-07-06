@@ -1,6 +1,7 @@
 package spotify
 
 import (
+	"context"
 	"errors"
 	"github.com/imba28/spolyr/internal/db"
 	"github.com/stretchr/testify/assert"
@@ -14,12 +15,12 @@ type userProviderMock struct {
 	mock.Mock
 }
 
-func (c userProviderMock) Tracks() ([]*db.Track, error) {
-	args := c.Called()
+func (c userProviderMock) Tracks(ctx context.Context) ([]*db.Track, error) {
+	args := c.Called(ctx)
 	return args.Get(0).([]*db.Track), args.Error(1)
 }
-func (c userProviderMock) Next() error {
-	return c.Called().Error(0)
+func (c userProviderMock) Next(ctx context.Context) error {
+	return c.Called(ctx).Error(0)
 }
 
 type trackSaverMock struct {
@@ -50,7 +51,7 @@ func TestSyncTracks__saves_tracks_to_store(t *testing.T) {
 		Times(len(result)).
 		Return(nil)
 
-	_ = SyncTracks(client, store)
+	_ = SyncTracks(context.Background(), client, store)
 
 	store.AssertExpectations(t)
 	client.AssertExpectations(t)
@@ -64,7 +65,7 @@ func TestSyncTracks__returns_error_if_fetching_tracks_results_in_error(t *testin
 
 	store := new(trackSaverMock)
 
-	err := SyncTracks(client, store)
+	err := SyncTracks(context.Background(), client, store)
 
 	assert.EqualError(t, err, expectedError.Error())
 	store.AssertExpectations(t)
@@ -78,7 +79,7 @@ func TestSyncTracks__returns_error_if_fetching_next_page_results_in_error(t *tes
 
 	store := new(trackSaverMock)
 
-	err := SyncTracks(client, store)
+	err := SyncTracks(context.Background(), client, store)
 
 	assert.EqualError(t, err, io.ErrUnexpectedEOF.Error())
 	store.AssertExpectations(t)
@@ -97,7 +98,7 @@ func TestSyncTracks__returns_error_if_database_returns_error(t *testing.T) {
 	store := new(trackSaverMock)
 	store.On("Save", mock.Anything).Times(1).Return(expectedError)
 
-	err := SyncTracks(client, store)
+	err := SyncTracks(context.Background(), client, store)
 
 	assert.EqualError(t, err, expectedError.Error())
 	store.AssertExpectations(t)

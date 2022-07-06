@@ -6,6 +6,24 @@ servers:
   - url: http://127.0.0.1:8080/api
 
 paths:
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      security:
+        - cookieAuth: [ ]
+      summary: Invalidates the jwt token
+      responses:
+        200:
+          description: Contains configuration options for oauth2 client library
+          headers:
+            Set-Cookie:
+              description: >
+                Client is asked to delete the cookie `jwt` as it is invalid afterwards.
+              schema:
+                type: string
+                example: jwt=TOKEN; Path=/api; HttpOnly
+
 
   /auth/configuration:
     get:
@@ -36,11 +54,10 @@ paths:
           headers:
             Set-Cookie:
               description: >
-                Successfully authenticated.
-                The session ID is returned in a cookie named `jwt`.
+                Successfully authenticated. The cookie `jwt` is set which contains the JWT.
               schema:
                 type: string
-                example: jwt=TOKEN; Path=/; HttpOnly
+                example: jwt=TOKEN; Path=/api; HttpOnly
 
       requestBody:
         $ref: '#/components/requestBodies/LoginBody'

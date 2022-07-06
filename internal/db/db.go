@@ -29,14 +29,12 @@ func New(username, password, databaseName, host string, maxLyricsImportErrorCoun
 		return nil, err
 	}
 
-	db := client.Database(databaseName)
-	trackStore, err := newMongoTrackStore(db)
+	trackRepo, err := NewMongoTrackRepository(client.Database(databaseName), maxLyricsImportErrorCount)
 	if err != nil {
 		return nil, err
 	}
-
 	return &Repositories{
-		NewMongoTrackRepository(trackStore, maxLyricsImportErrorCount),
+		trackRepo,
 		client,
 	}, nil
 }
