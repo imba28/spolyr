@@ -5,6 +5,9 @@ cover.out
 spolyr
 spolyr.exe
 node_modules
-internal/openapi
 public
+internal/openapi
 assets/openapi
+assets/coverage
+
+!/**/.gitkeep

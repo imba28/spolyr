@@ -40,8 +40,12 @@ frontend: node_modules
 lint-frontend: node_modules
 	npm run lint
 
+test-frontend: node_modules
+	npm run test:unit
+
 openapi-spec:
 	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapi-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
+	sudo chown -R $(USER): internal/openapi/
 	sed -i -e 's/"github.com\/gorilla\/mux"//g' internal/openapi/openapi/api_auth.go
 	sed -i -e 's/"encoding\/json"//g' internal/openapi/openapi/api_import.go
 	sed -i -e 's/"encoding\/json"//g' -e 's/"github.com\/gorilla\/mux"//g' internal/openapi/openapi/api_playlists.go

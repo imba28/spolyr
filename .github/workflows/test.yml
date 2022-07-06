@@ -7,7 +7,24 @@ on:
     branches: [ 'master' ]
 
 jobs:
+  openapi-code-generator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - run: make openapi-spec
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openapi-files
+          path: |
+            assets/openapi
+            internal/openapi
+          if-no-files-found: error
+
   frontend:
+    needs: openapi-code-generator
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,11 +32,19 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '14'
+      - uses: actions/download-artifact@v3
+        with:
+          name: openapi-files
+          path: .
+
       - run: make lint-frontend
       - run: make frontend
 
+      - run: make test-frontend
+
   backend:
+    needs: openapi-code-generator
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -44,6 +69,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: openapi-files
+          path: .
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
