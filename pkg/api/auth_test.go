@@ -173,3 +173,27 @@ func TestAuthApiService_AuthLoginPost(t *testing.T) {
 	assert.Contains(t, res.Headers["Set-Cookie"][0], "jwt=", "should set the cookie `jwt` ")
 	assert.Contains(t, res.Headers["Set-Cookie"][1], "jwt-refresh=", "should set the cookie `jwt-refresh` ")
 }
+
+func TestAuthApiService_AuthLogoutGet(t *testing.T) {
+	auth := AuthApiService{}
+
+	res, err := auth.AuthLogoutGet(context.Background())
+
+	assert.Nil(t, err)
+	assert.Len(t, res.Headers["Set-Cookie"], 2, "should set two cookies")
+	assert.Contains(t, res.Headers["Set-Cookie"][0], "jwt=", "should set the cookie `jwt` ")
+	assert.Contains(t, res.Headers["Set-Cookie"][1], "jwt-refresh=", "should set the cookie `jwt-refresh` ")
+
+	c := parseCookies(res.Headers["Set-Cookie"])
+	assert.True(t, c[0].Expires.Before(time.Now()), "jwt cookie should be expired")
+	assert.True(t, c[1].Expires.Before(time.Now()), "jwt-refresh cookie should be expired")
+}
+
+func parseCookies(cookieHeaders []string) []*http.Cookie {
+	header := http.Header{}
+	for i := range cookieHeaders {
+		header.Add("Cookie", cookieHeaders[i])
+	}
+	req := http.Request{Header: header}
+	return req.Cookies()
+}

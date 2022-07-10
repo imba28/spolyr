@@ -4,70 +4,121 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/imba28/spolyr/pkg/db"
 	jwt2 "github.com/imba28/spolyr/pkg/jwt"
-	"github.com/imba28/spolyr/pkg/language"
 	"github.com/imba28/spolyr/pkg/lyrics"
 	"github.com/imba28/spolyr/pkg/openapi/openapi"
 	"github.com/rs/cors"
 	"net/http"
-	"os"
-	"path/filepath"
+	"sync"
 )
 
 type languageDetector interface {
 	Detect(string) (string, error)
 }
 
-func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte, d languageDetector) http.Handler {
-	fetcher := lyrics.New(geniusAPIToken, 3, d)
-	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
+func (s *Server) apiHandler() http.Handler {
+	fetcher := lyrics.New(s.geniusAPIToken, 3, s.languageDetector)
+	syncer := lyrics.NewSyncer(fetcher, s.db.Tracks)
 
-	authApiController := openapi.NewAuthApiController(newAuthApiService(oauthClientId, secret))
-	importController := openapi.NewImportApiController(newImportApiService(db.Tracks, syncer, fetcher, d))
-	tracksApiController := openapi.NewTracksApiController(newTracksApiService(db.Tracks, d))
+	authApiController := openapi.NewAuthApiController(newAuthApiService(s.oauthClientID, s.secret))
+	importController := openapi.NewImportApiController(newImportApiService(s.db.Tracks, syncer, fetcher, s.languageDetector))
+	tracksApiController := openapi.NewTracksApiController(newTracksApiService(s.db.Tracks, s.languageDetector))
 	playlistController := openapi.NewPlaylistsApiController(newPlaylistApiService())
 
 	r := openapi.NewRouter(authApiController, tracksApiController, importController, playlistController)
 
-	c := cors.New(cors.Options{
-		AllowCredentials: true,
-		AllowedOrigins:   []string{"https://localhost:8081", "https://127.0.0.1:8081"},
-		AllowedHeaders:   []string{"User-Agent", "Content-Type"},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "OPTIONS"},
-		MaxAge:           3600,
-		Debug:            true,
-	})
-	return AuthenticationMiddleware(jwt2.New(secret))(c.Handler(r))
+	var handler http.Handler = r
+
+	if s.env == Dev {
+		c := cors.New(cors.Options{
+			AllowCredentials: true,
+			AllowedOrigins:   []string{"https://localhost:8081", "https://127.0.0.1:8081"},
+			AllowedHeaders:   []string{"User-Agent", "Content-Type"},
+			AllowedMethods:   []string{"GET", "POST", "PATCH", "OPTIONS"},
+			MaxAge:           3600,
+			Debug:            true,
+		})
+		handler = c.Handler(r)
+	}
+
+	return AuthenticationMiddleware(jwt2.New(s.secret))(handler)
 }
 
-func spaFileHandler(publicFolder string) http.HandlerFunc {
-	const indexPath = "index.html"
-	staticHandler := http.FileServer(http.Dir(publicFolder))
+type Server struct {
+	db               *db.Repositories
+	oauthClientID    string
+	geniusAPIToken   string
+	secret           []byte
+	languageDetector languageDetector
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		path, err := filepath.Abs(r.URL.Path)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	env    Env
+	router *mux.Router
 
-		path = filepath.Join(publicFolder, path)
+	sync.Once
+}
 
-		_, err = os.Stat(path)
-		if os.IsNotExist(err) {
-			http.ServeFile(w, r, filepath.Join(publicFolder, indexPath))
-			return
-		} else if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		staticHandler.ServeHTTP(w, r)
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.Do(func() {
+		s.init()
+	})
+	s.router.ServeHTTP(w, r)
+}
+
+func (s *Server) init() {
+	s.router.PathPrefix("/api").Handler(s.apiHandler())
+	s.router.PathPrefix("/").Handler(spaFileHandler("public"))
+}
+
+func NewServer(options ...ServerOptions) *Server {
+	s := Server{
+		secret: []byte("not so secret. change me"),
+		router: mux.NewRouter(),
+		env:    Prod,
+	}
+
+	for i := range options {
+		options[i](&s)
+	}
+
+	return &s
+}
+
+type ServerOptions func(s *Server)
+
+func WithOAuth(clientId string) ServerOptions {
+	return func(s *Server) {
+		s.oauthClientID = clientId
+	}
+}
+func WithGeniusAPI(token string) ServerOptions {
+	return func(s *Server) {
+		s.geniusAPIToken = token
+	}
+}
+func WithSecret(secret []byte) ServerOptions {
+	return func(s *Server) {
+		s.secret = secret
+	}
+}
+func WithDatabase(repositories *db.Repositories) ServerOptions {
+	return func(s *Server) {
+		s.db = repositories
+	}
+}
+func WithLanguageDetector(detector languageDetector) ServerOptions {
+	return func(s *Server) {
+		s.languageDetector = detector
 	}
 }
 
-func New(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte, d language.Detector) http.Handler {
-	r := mux.NewRouter()
-
-	r.PathPrefix("/api").Handler(NewOAPI(db, geniusAPIToken, oauthClientId, secret, d))
-	r.PathPrefix("/").Handler(spaFileHandler("public"))
-	return r
+func WithEnv(env Env) ServerOptions {
+	return func(s *Server) {
+		s.env = env
+	}
 }
+
+type Env int
+
+const (
+	Prod Env = iota
+	Dev
+)

@@ -8,6 +8,9 @@ import jwtRefreshPlugin from './plugins/superagent';
 
 import './scss/main.scss';
 
+if (process.env.NODE_ENV === 'production') {
+  ApiClient.instance.basePath = '/api';
+}
 ApiClient.instance.enableCookies = true;
 ApiClient.instance.plugins = [jwtRefreshPlugin];
 

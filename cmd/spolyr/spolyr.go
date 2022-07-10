@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/imba28/spolyr/pkg/api"
+	"github.com/imba28/spolyr/pkg/db"
 	"github.com/imba28/spolyr/pkg/language"
-	"github.com/imba28/spolyr/pkg/spolyr"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,12 @@ func main() {
 	geniusAPIToken := mustGetEnv("GENIUS_API_TOKEN")
 	oauthClientId := mustGetEnv("SPOTIFY_ID")
 	secret := []byte(mustGetEnv("SESSION_KEY"))
+
+	env := api.Prod
+	if os.Getenv("DEBUG") != "" {
+		env = api.Dev
+	}
+
 	var d language.Detector
 	if os.Getenv("SUPPORTED_LANGUAGES") != "" {
 		languages := strings.Split(os.Getenv("SUPPORTED_LANGUAGES"), ",")
@@ -31,10 +38,18 @@ func main() {
 		d = language.New()
 	}
 
-	s, err := spolyr.New(databaseHost, databaseUsername, databasePassword, geniusAPIToken, oauthClientId, secret, d)
+	dbConn, err := db.New(databaseUsername, databasePassword, "spolyr", databaseHost, 3)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	s := api.NewServer(
+		api.WithDatabase(dbConn),
+		api.WithSecret(secret),
+		api.WithLanguageDetector(d),
+		api.WithGeniusAPI(geniusAPIToken),
+		api.WithOAuth(oauthClientId),
+		api.WithEnv(env))
 
 	srv := &http.Server{
 		Handler:      s,
