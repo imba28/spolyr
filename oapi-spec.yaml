@@ -338,6 +338,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/TrackInfo'
         - type: object
+          required:
+            - lyrics
+            - hasLyrics
+            - lyricsImportErrorCount
           properties:
             lyrics:
               type: string
@@ -371,6 +375,7 @@ components:
       required:
         - title
         - spotifyId
+        - hasLyrics
       properties:
         spotifyId:
           type: string
