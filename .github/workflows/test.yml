@@ -20,7 +20,7 @@ jobs:
           name: openapi-files
           path: |
             assets/openapi
-            internal/openapi
+            pkg/openapi
           if-no-files-found: error
 
   frontend:
