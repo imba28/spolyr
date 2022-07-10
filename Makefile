@@ -1,10 +1,10 @@
 .PHONY: all clean bundle build test frontend
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr cmd/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr ./cmd/spolyr/spolyr.go
 
 build-windows:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr.exe cmd/main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr.exe cmd/spolyr/spolyr.go
 
 build: build-linux build-windows
 
@@ -14,7 +14,7 @@ clean:
 	rm -f spolyr-linux-amd64.tar.gz
 	rm -f spolyr-windows-amd64.tar.gz
 	rm -rf dist
-	rm -rf internal/openapi
+	rm -rf pkg/openapi
 
 bundle: build
 	mkdir -p ./dist
