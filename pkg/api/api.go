@@ -2,23 +2,28 @@ package api
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/imba28/spolyr/internal/db"
-	jwt2 "github.com/imba28/spolyr/internal/jwt"
-	"github.com/imba28/spolyr/internal/lyrics"
-	"github.com/imba28/spolyr/internal/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/db"
+	jwt2 "github.com/imba28/spolyr/pkg/jwt"
+	"github.com/imba28/spolyr/pkg/language"
+	"github.com/imba28/spolyr/pkg/lyrics"
+	"github.com/imba28/spolyr/pkg/openapi/openapi"
 	"github.com/rs/cors"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
-func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte) http.Handler {
-	fetcher := lyrics.New(geniusAPIToken, 3)
+type languageDetector interface {
+	Detect(string) (string, error)
+}
+
+func NewOAPI(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte, d languageDetector) http.Handler {
+	fetcher := lyrics.New(geniusAPIToken, 3, d)
 	syncer := lyrics.NewSyncer(fetcher, db.Tracks)
 
 	authApiController := openapi.NewAuthApiController(newAuthApiService(oauthClientId, secret))
-	importController := openapi.NewImportApiController(newImportApiService(db.Tracks, syncer, fetcher))
-	tracksApiController := openapi.NewTracksApiController(newTracksApiService(db.Tracks))
+	importController := openapi.NewImportApiController(newImportApiService(db.Tracks, syncer, fetcher, d))
+	tracksApiController := openapi.NewTracksApiController(newTracksApiService(db.Tracks, d))
 	playlistController := openapi.NewPlaylistsApiController(newPlaylistApiService())
 
 	r := openapi.NewRouter(authApiController, tracksApiController, importController, playlistController)
@@ -59,10 +64,10 @@ func spaFileHandler(publicFolder string) http.HandlerFunc {
 	}
 }
 
-func New(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte) http.Handler {
+func New(db *db.Repositories, oauthClientId, geniusAPIToken string, secret []byte, d language.Detector) http.Handler {
 	r := mux.NewRouter()
 
-	r.PathPrefix("/api").Handler(NewOAPI(db, geniusAPIToken, oauthClientId, secret))
+	r.PathPrefix("/api").Handler(NewOAPI(db, geniusAPIToken, oauthClientId, secret, d))
 	r.PathPrefix("/").Handler(spaFileHandler("public"))
 	return r
 }

@@ -276,7 +276,10 @@ export default {
         this.playlists.items = response.data;
         this.playlists.total = response.meta.total;
       } catch (e) {
-        this.$toast.error(e.body);
+        this.$toast.error(
+            'An error occurred while loading your Spotify profile. Please try to logout and sign in again.',
+        );
+        this.$router.push({name: 'home'});
       } finally {
         this.playlists.loading = false;
       }

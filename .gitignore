@@ -2,11 +2,11 @@ _mongo-volume
 cover.html
 cover.out
 .idea
-spolyr
-spolyr.exe
+/spolyr
+/spolyr.exe
 node_modules
 public
-internal/openapi
+pkg/openapi
 assets/openapi
 assets/coverage
 

@@ -18,7 +18,8 @@ type TrackRepository interface {
 	FindTrack(string) (*Track, error)
 	LatestTracks(limit int64) ([]*Track, error)
 	TracksWithoutLyricsError() ([]*Track, error)
-	Search(query string, page, limit int) ([]*Track, int, error)
+	AllTracks(page, limit int) ([]*Track, int, error)
+	Search(query string, page, limit int, language string) ([]*Track, int, error)
 	Save(track *Track) error
 }
 
@@ -109,13 +110,30 @@ func (t MongoTrackRepository) LatestTracks(limit int64) ([]*Track, error) {
 	return t.findByQuery(bson.D{{}}, opts)
 }
 
-func (t MongoTrackRepository) Search(query string, page, limit int) ([]*Track, int, error) {
+func (t MongoTrackRepository) AllTracks(page, limit int) ([]*Track, int, error) {
+	opts := options.Find().
+		SetLimit(int64(limit)).
+		SetSkip(int64((page - 1) * limit))
+
+	filter := bson.D{}
+	total, err := t.count(filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	tracks, err := t.findByQuery(filter, opts)
+
+	return tracks, int(total), err
+}
+
+func (t MongoTrackRepository) Search(query string, page, limit int, language string) ([]*Track, int, error) {
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64((page - 1) * limit))
 	filter := bson.M{
 		"$text": bson.M{
-			"$search": query,
+			"$search":   query,
+			"$language": language,
 		},
 	}
 
@@ -145,6 +163,10 @@ func (t MongoTrackRepository) Save(track *Track) error {
 		fieldsToUpdate = append(fieldsToUpdate, bson.E{"lyrics", track.Lyrics}, bson.E{"loaded", track.Loaded})
 	}
 
+	if track.Language != "" {
+		fieldsToUpdate = append(fieldsToUpdate, bson.E{"language", track.Language})
+	}
+
 	return t.save(filter, bson.D{
 		{"$set", fieldsToUpdate},
 	})
@@ -157,7 +179,7 @@ func (r MongoTrackRepository) save(filter, update interface{}) error {
 }
 
 func NewMongoTrackRepository(db *mongo.Database, maxLyricsImportError int) (MongoTrackRepository, error) {
-	err := createIndices(db)
+	err := migrateDatabase(db)
 	return MongoTrackRepository{
 		db:                   db,
 		maxLyricsImportError: maxLyricsImportError,

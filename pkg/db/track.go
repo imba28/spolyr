@@ -17,6 +17,7 @@ type Track struct {
 	Lyrics                 string             `bson:"lyrics"`
 	LyricsImportErrorCount int                `bson:"lyrics_import_error_count"`
 	Loaded                 bool               `bson:"loaded"`
+	Language               string             `bson:"language"`
 }
 
 func NewTrack(t spotify.FullTrack) Track {

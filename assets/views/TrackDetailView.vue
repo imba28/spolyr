@@ -78,7 +78,12 @@
           <b-card header-bg-variant="secondary">
             <template #header>
               <div class="d-flex align-items-center justify-content-between">
-                Lyrics
+                <span>
+                  Lyrics <span
+                    v-if="track.language"
+                    class="text-muted"
+                  >({{ track.language }})</span>
+                </span>
 
                 <div v-if="authStore.isAuthenticated">
                   <b-button

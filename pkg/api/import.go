@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/imba28/spolyr/internal/db"
-	"github.com/imba28/spolyr/internal/lyrics"
-	"github.com/imba28/spolyr/internal/openapi/openapi"
-	"github.com/imba28/spolyr/internal/spotify"
+	"github.com/imba28/spolyr/pkg/db"
+	"github.com/imba28/spolyr/pkg/lyrics"
+	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/spotify"
 	"log"
 	"net/http"
 )
@@ -15,18 +15,20 @@ var (
 	errLyricsNotFound = errors.New("no lyrics found")
 )
 
-func newImportApiService(repo db.TrackRepository, syncer *lyrics.Syncer, fetcher lyrics.AsyncFetcher) ImportApiServicer {
+func newImportApiService(repo db.TrackRepository, syncer *lyrics.Syncer, fetcher lyrics.AsyncFetcher, d languageDetector) ImportApiServicer {
 	return ImportApiServicer{
-		repo:    repo,
-		syncer:  syncer,
-		fetcher: fetcher,
+		repo:             repo,
+		syncer:           syncer,
+		fetcher:          fetcher,
+		languageDetector: d,
 	}
 }
 
 type ImportApiServicer struct {
-	repo    db.TrackRepository
-	syncer  *lyrics.Syncer
-	fetcher lyrics.Fetcher
+	repo             db.TrackRepository
+	syncer           *lyrics.Syncer
+	fetcher          lyrics.Fetcher
+	languageDetector languageDetector
 }
 
 func (i ImportApiServicer) ImportLyricsTrackIdPost(ctx context.Context, id string) (openapi.ImplResponse, error) {
@@ -47,6 +49,14 @@ func (i ImportApiServicer) ImportLyricsTrackIdPost(ctx context.Context, id strin
 	err = i.fetcher.Fetch(t)
 	if err != nil {
 		return openapi.Response(http.StatusNotFound, nil), errLyricsNotFound
+	}
+
+	languageOfLyrics, err := i.languageDetector.Detect(t.Lyrics)
+	if err != nil {
+		log.Printf("Could not detect language of track %d. Falling back to english.", t.ID)
+		t.Language = "english"
+	} else {
+		t.Language = languageOfLyrics
 	}
 
 	err = i.repo.Save(t)

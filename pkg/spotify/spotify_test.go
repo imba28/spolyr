@@ -3,7 +3,7 @@ package spotify
 import (
 	"context"
 	"errors"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/zmb3/spotify/v2"
@@ -40,10 +40,11 @@ func TestSyncTracks__saves_tracks_to_store(t *testing.T) {
 		{Name: "track 1", Artist: "an artist, another artist"},
 		{Name: "track 2", Artist: "an artist, another artist"},
 	}
+	ctx := context.Background()
 
 	client := new(userProviderMock)
-	client.On("Tracks").Return(result, nil)
-	client.On("Next").Return(spotify.ErrNoMorePages)
+	client.On("Tracks", ctx).Return(result, nil)
+	client.On("Next", ctx).Return(spotify.ErrNoMorePages)
 
 	store := new(trackSaverMock)
 	store.
@@ -51,7 +52,7 @@ func TestSyncTracks__saves_tracks_to_store(t *testing.T) {
 		Times(len(result)).
 		Return(nil)
 
-	_ = SyncTracks(context.Background(), client, store)
+	_ = SyncTracks(ctx, client, store)
 
 	store.AssertExpectations(t)
 	client.AssertExpectations(t)
@@ -59,13 +60,13 @@ func TestSyncTracks__saves_tracks_to_store(t *testing.T) {
 
 func TestSyncTracks__returns_error_if_fetching_tracks_results_in_error(t *testing.T) {
 	expectedError := errors.New("unexpected error")
-
+	ctx := context.Background()
 	client := new(userProviderMock)
-	client.On("Tracks").Times(1).Return([]*db.Track{}, expectedError)
+	client.On("Tracks", ctx).Times(1).Return([]*db.Track{}, expectedError)
 
 	store := new(trackSaverMock)
 
-	err := SyncTracks(context.Background(), client, store)
+	err := SyncTracks(ctx, client, store)
 
 	assert.EqualError(t, err, expectedError.Error())
 	store.AssertExpectations(t)
@@ -73,13 +74,14 @@ func TestSyncTracks__returns_error_if_fetching_tracks_results_in_error(t *testin
 }
 
 func TestSyncTracks__returns_error_if_fetching_next_page_results_in_error(t *testing.T) {
+	ctx := context.Background()
 	client := new(userProviderMock)
-	client.On("Tracks").Times(1).Return([]*db.Track{}, nil)
-	client.On("Next").Times(1).Return(io.ErrUnexpectedEOF)
+	client.On("Tracks", ctx).Times(1).Return([]*db.Track{}, nil)
+	client.On("Next", ctx).Times(1).Return(io.ErrUnexpectedEOF)
 
 	store := new(trackSaverMock)
 
-	err := SyncTracks(context.Background(), client, store)
+	err := SyncTracks(ctx, client, store)
 
 	assert.EqualError(t, err, io.ErrUnexpectedEOF.Error())
 	store.AssertExpectations(t)
@@ -88,9 +90,10 @@ func TestSyncTracks__returns_error_if_fetching_next_page_results_in_error(t *tes
 
 func TestSyncTracks__returns_error_if_database_returns_error(t *testing.T) {
 	expectedError := errors.New("could not write to database")
+	ctx := context.Background()
 
 	client := new(userProviderMock)
-	client.On("Tracks").Times(1).Return([]*db.Track{
+	client.On("Tracks", ctx).Times(1).Return([]*db.Track{
 		{Name: "track 1", Artist: "an artist, another artist"},
 		{Name: "track 2", Artist: "an artist, another artist"},
 	}, nil)
@@ -98,7 +101,7 @@ func TestSyncTracks__returns_error_if_database_returns_error(t *testing.T) {
 	store := new(trackSaverMock)
 	store.On("Save", mock.Anything).Times(1).Return(expectedError)
 
-	err := SyncTracks(context.Background(), client, store)
+	err := SyncTracks(ctx, client, store)
 
 	assert.EqualError(t, err, expectedError.Error())
 	store.AssertExpectations(t)

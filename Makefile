@@ -22,11 +22,11 @@ bundle: build
 	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe
 
 test:
-	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 go test -coverprofile cover.out ./internal/...
+	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 go test -coverprofile cover.out ./pkg/...
 	go tool cover -html=cover.out -o cover.html
 
 test-units:
-	go test -short ./internal/...
+	go test -short ./pkg/...
 
 coverage: test
 	go tool cover -func cover.out | tail -n 1 | awk '{print $3}'
@@ -44,10 +44,10 @@ test-frontend: node_modules
 	npm run test:unit
 
 openapi-spec:
-	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapi-spec.yaml -o /local/internal/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
-	sudo chown -R $(USER): internal/openapi/
-	sed -i -e 's/"github.com\/gorilla\/mux"//g' internal/openapi/openapi/api_auth.go
-	sed -i -e 's/"encoding\/json"//g' internal/openapi/openapi/api_import.go
-	sed -i -e 's/"encoding\/json"//g' -e 's/"github.com\/gorilla\/mux"//g' internal/openapi/openapi/api_playlists.go
+	docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli generate -g go-server -i /local/oapi-spec.yaml -o /local/pkg/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
+	sudo chown -R $(USER): pkg/openapi/
+	sed -i -e 's/"github.com\/gorilla\/mux"//g' pkg/openapi/openapi/api_auth.go
+	sed -i -e 's/"encoding\/json"//g' pkg/openapi/openapi/api_import.go
+	sed -i -e 's/"encoding\/json"//g' -e 's/"github.com\/gorilla\/mux"//g' pkg/openapi/openapi/api_playlists.go
 	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/assets/openapi/:/local/assets/openapi/src" openapitools/openapi-generator-cli generate -g javascript -i /local/oapi-spec.yaml -o /local/assets/openapi --additional-properties=usePromises=true,moduleName=@/openapi --global-property models,modelTests=false --global-property apis,apiTests=false --global-property supportingFiles
 

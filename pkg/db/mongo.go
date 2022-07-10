@@ -15,7 +15,7 @@ const TrackCollection = "tracks"
 //go:embed migrations
 var migrationFiles embed.FS
 
-func createIndices(db *mongo.Database) error {
+func migrateDatabase(db *mongo.Database) error {
 	driver, err := mongodb.WithInstance(db.Client(), &mongodb.Config{
 		DatabaseName: db.Name(),
 	})

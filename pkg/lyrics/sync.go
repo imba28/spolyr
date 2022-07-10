@@ -2,7 +2,7 @@ package lyrics
 
 import (
 	"fmt"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"strings"
 	"sync"
 )

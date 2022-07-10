@@ -2,7 +2,7 @@ package lyrics
 
 import (
 	"errors"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"

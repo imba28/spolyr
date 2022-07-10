@@ -2,7 +2,7 @@ package spotify
 
 import (
 	"context"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"github.com/zmb3/spotify/v2"
 )
 

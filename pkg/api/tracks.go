@@ -2,9 +2,10 @@ package api
 
 import (
 	"context"
-	"github.com/imba28/spolyr/internal/db"
-	"github.com/imba28/spolyr/internal/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/db"
+	"github.com/imba28/spolyr/pkg/openapi/openapi"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -12,7 +13,8 @@ import (
 var _ openapi.TracksApiServicer = &TracksApiService{}
 
 type TracksApiService struct {
-	repo db.TrackRepository
+	repo             db.TrackRepository
+	languageDetector languageDetector
 }
 
 func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics openapi.Lyrics) (openapi.ImplResponse, error) {
@@ -27,6 +29,14 @@ func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics 
 
 	t.Loaded = true
 	t.Lyrics = lyrics.Lyrics
+
+	ll, err := s.languageDetector.Detect(t.Lyrics)
+	if err != nil {
+		log.Printf("Could not detect language of track(%d). Using english as default", t.ID)
+		t.Language = "english"
+	} else {
+		t.Language = ll
+	}
 
 	err = s.repo.Save(t)
 	if err != nil {
@@ -47,13 +57,15 @@ func toTrackDetail(t db.Track) openapi.TrackDetail {
 		HasLyrics:              t.Loaded,
 		Lyrics:                 t.Lyrics,
 		LyricsImportErrorCount: int32(t.LyricsImportErrorCount),
+		Language:               t.Language,
 	}
 }
 
 // newTracksApiService creates a default api service
-func newTracksApiService(repo db.TrackRepository) *TracksApiService {
+func newTracksApiService(repo db.TrackRepository, languageDetector languageDetector) *TracksApiService {
 	return &TracksApiService{
-		repo: repo,
+		repo:             repo,
+		languageDetector: languageDetector,
 	}
 }
 
@@ -63,6 +75,12 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 	var total int
 
 	if query != "" {
+		var queryLanguage string
+		queryLanguage, err = s.languageDetector.Detect(query)
+		if err != nil {
+			queryLanguage = "english"
+		}
+
 		if strings.Index(query, " ") > -1 && strings.Index(query, "\"") == -1 && strings.Index(query, "-") == -1 {
 			qs := strings.Split(query, " ")
 			for i := range qs {
@@ -71,7 +89,7 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 			query = strings.Join(qs, " ")
 		}
 
-		tracks, total, err = s.repo.Search(query, int(page), int(limit))
+		tracks, total, err = s.repo.Search(query, int(page), int(limit), queryLanguage)
 	} else {
 		total = 10
 		tracks, err = s.repo.LatestTracks(int64(limit))
@@ -91,6 +109,7 @@ func (s *TracksApiService) TracksGet(ctx context.Context, page int32, limit int3
 			PreviewURL: track.PreviewURL,
 			Artists:    strings.Split(track.Artist, ", "),
 			HasLyrics:  track.Loaded,
+			Language:   track.Language,
 		}
 	}
 
@@ -123,5 +142,6 @@ func (s *TracksApiService) TracksIdGet(ctx context.Context, id string) (openapi.
 		HasLyrics:              t.Loaded,
 		Lyrics:                 t.Lyrics,
 		LyricsImportErrorCount: int32(t.LyricsImportErrorCount),
+		Language:               t.Language,
 	}), nil
 }

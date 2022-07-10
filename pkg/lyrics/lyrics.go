@@ -3,7 +3,7 @@ package lyrics
 import (
 	"errors"
 	lyrics "github.com/imba28/lyric-api-go"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"strings"
 	"sync"
 )
@@ -26,7 +26,7 @@ type provider interface {
 	Search(string, string) (string, error)
 }
 
-func fetchTrackLyrics(t *db.Track, l provider) error {
+func fetchTrackLyrics(t *db.Track, l provider, d languageDetector) error {
 	artist := t.Artist
 	if strings.Index(t.Artist, ", ") > -1 {
 		artist = strings.Split(artist, ", ")[0]
@@ -39,18 +39,26 @@ func fetchTrackLyrics(t *db.Track, l provider) error {
 	t.Lyrics = lyric
 	t.Loaded = true
 
+	languageOfLyrics, err := d.Detect(t.Lyrics)
+	if err != nil {
+		t.Language = "english"
+	} else {
+		t.Language = languageOfLyrics
+	}
+
 	return nil
 }
 
 type AsyncFetcher struct {
-	concurrency   int
-	ready         chan struct{}
-	fetchingQueue chan *db.Track
-	lyricsFetcher provider
+	concurrency      int
+	ready            chan struct{}
+	fetchingQueue    chan *db.Track
+	lyricsFetcher    provider
+	languageDetector languageDetector
 }
 
 func (s AsyncFetcher) Fetch(t *db.Track) error {
-	err := fetchTrackLyrics(t, s.lyricsFetcher)
+	err := fetchTrackLyrics(t, s.lyricsFetcher, s.languageDetector)
 	if err != nil {
 		return err
 	}
@@ -67,15 +75,20 @@ func (s AsyncFetcher) FetchAll(tracks []*db.Track) (<-chan Result, error) {
 	return results, nil
 }
 
-func New(geniusAPIToken string, concurrencyLevel int) AsyncFetcher {
+type languageDetector interface {
+	Detect(string) (string, error)
+}
+
+func New(geniusAPIToken string, concurrencyLevel int, d languageDetector) AsyncFetcher {
 	provider := lyrics.New(
 		lyrics.WithGeniusLyrics(geniusAPIToken),
 		lyrics.WithSongLyrics(),
 	)
 	return AsyncFetcher{
-		ready:         make(chan struct{}, 1),
-		concurrency:   concurrencyLevel,
-		lyricsFetcher: &provider,
+		ready:            make(chan struct{}, 1),
+		concurrency:      concurrencyLevel,
+		lyricsFetcher:    &provider,
+		languageDetector: d,
 	}
 }
 
@@ -86,7 +99,7 @@ func (s *AsyncFetcher) initWorkers(results chan<- Result, wg *sync.WaitGroup) ch
 	for i := 0; i < s.concurrency; i++ {
 		go func() {
 			for t := range c {
-				err := fetchTrackLyrics(t, s.lyricsFetcher)
+				err := fetchTrackLyrics(t, s.lyricsFetcher, s.languageDetector)
 				results <- Result{Track: t, Err: err}
 				wg.Done()
 			}

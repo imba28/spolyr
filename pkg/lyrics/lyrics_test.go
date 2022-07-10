@@ -3,7 +3,7 @@ package lyrics
 import (
 	"errors"
 	"fmt"
-	"github.com/imba28/spolyr/internal/db"
+	"github.com/imba28/spolyr/pkg/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -21,28 +21,42 @@ func (p providerMock) Search(a string, b string) (string, error) {
 
 var _ provider = providerMock{}
 
+type languageDetectorMock struct {
+	mock.Mock
+}
+
+func (l *languageDetectorMock) Detect(s string) (string, error) {
+	args := l.Called(s)
+	return args.String(0), args.Error(1)
+}
+
+var _ languageDetector = &languageDetectorMock{}
+
 func TestAsyncFetcher_Fetch(t *testing.T) {
 	t.Run("fetches lyrics", func(t *testing.T) {
 		artist, song := "artist", "a song"
 		expectedLyrics := "la la la la"
+		expectedLanguage := "english"
 		track := db.Track{
 			Artist: artist,
 			Name:   song,
 		}
 		providerMock := providerMock{}
 		providerMock.On("Search", artist, song).Return(expectedLyrics, nil)
-
-		fetcher := AsyncFetcher{lyricsFetcher: providerMock}
+		languageDetector := languageDetectorMock{}
+		languageDetector.On("Detect", expectedLyrics).Return(expectedLanguage, nil)
+		fetcher := AsyncFetcher{lyricsFetcher: &providerMock, languageDetector: &languageDetector}
 
 		err := fetcher.Fetch(&track)
 
 		assert.Nil(t, err)
 		assert.Equal(t, track.Lyrics, expectedLyrics)
 		assert.True(t, track.Loaded)
+		assert.Equal(t, track.Language, expectedLanguage)
 		providerMock.AssertExpectations(t)
 	})
 
-	t.Run("picks the first artist if Track has multiple artists", func(t *testing.T) {
+	t.Run("picks the first artist if track has multiple artists", func(t *testing.T) {
 		artist, song := "Eminem, Nate Dog", "'Till I Collapse"
 		expectedLyrics := "la la la la"
 		track := db.Track{
@@ -51,8 +65,10 @@ func TestAsyncFetcher_Fetch(t *testing.T) {
 		}
 		providerMock := providerMock{}
 		providerMock.On("Search", "Eminem", song).Return(expectedLyrics, nil)
+		languageDetector := languageDetectorMock{}
+		languageDetector.On("Detect", expectedLyrics).Return("english", nil)
 
-		fetcher := AsyncFetcher{lyricsFetcher: providerMock}
+		fetcher := AsyncFetcher{lyricsFetcher: &providerMock, languageDetector: &languageDetector}
 
 		err := fetcher.Fetch(&track)
 
@@ -91,12 +107,16 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(fmt.Sprintf("with %d workers", tt), func(t *testing.T) {
 				expectedLyrics := "la la la la"
+
+				lm := new(languageDetectorMock)
+				lm.On("Detect", expectedLyrics).Return("english", nil)
+
 				providerMock := providerMock{}
 				providerMock.
 					On("Search", mock.AnythingOfType("string"), mock.AnythingOfType("string")).
 					Times(len(tracks)).
 					Return(expectedLyrics, nil)
-				fetcher := AsyncFetcher{lyricsFetcher: providerMock, concurrency: tt}
+				fetcher := AsyncFetcher{lyricsFetcher: &providerMock, concurrency: tt, languageDetector: lm}
 
 				c, err := fetcher.FetchAll(tracks)
 
@@ -120,12 +140,15 @@ func TestAsyncFetcher_FetchAll(t *testing.T) {
 		expectedLyrics := ""
 		expectedError := errors.New("something went wrong")
 
+		lm := new(languageDetectorMock)
+		lm.On("Detect", mock.AnythingOfType("string")).Return("", nil)
+
 		providerMock := providerMock{}
 		providerMock.
 			On("Search", mock.AnythingOfType("string"), mock.AnythingOfType("string")).
 			Times(len(tracks)).
 			Return(expectedLyrics, expectedError)
-		fetcher := AsyncFetcher{lyricsFetcher: providerMock, concurrency: 2}
+		fetcher := AsyncFetcher{lyricsFetcher: &providerMock, concurrency: 2, languageDetector: lm}
 
 		c, err := fetcher.FetchAll(tracks)
 		assert.Nil(t, err)

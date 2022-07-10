@@ -130,7 +130,7 @@ func TestTrackRepository_Search__by_artist_name__partly(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Dean Martin"})
 	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
-	tracks, n, err := repos.Tracks.Search("Frank", 1, 10)
+	tracks, n, err := repos.Tracks.Search("Frank", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, n)
@@ -150,7 +150,7 @@ func TestTrackRepository_Search__by_artist_name__full(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Artist: "Dean Martin"})
 	repos.Tracks.Save(&Track{SpotifyID: "3"})
 
-	tracks, n, err := repos.Tracks.Search("Frank Sinatra", 1, 10)
+	tracks, n, err := repos.Tracks.Search("Frank Sinatra", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 1)
@@ -171,7 +171,7 @@ func TestTrackRepository_Search__by_album_name__partly(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
 	repos.Tracks.Save(&Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
 
-	tracks, n, err := repos.Tracks.Search("Show", 1, 10)
+	tracks, n, err := repos.Tracks.Search("Show", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, n)
@@ -193,7 +193,7 @@ func TestTrackRepository_Search__by_album_name(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "3", Artist: "Eminem", AlbumName: "The Slim Shady LP"})
 	repos.Tracks.Save(&Track{SpotifyID: "4", Artist: "The Bloodhound Gang", AlbumName: "Show us your hits"})
 
-	tracks, _, err := repos.Tracks.Search("Encore", 1, 10)
+	tracks, _, err := repos.Tracks.Search("Encore", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 1)
@@ -212,7 +212,7 @@ func TestTrackRepository_Search__by_lyrics(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
 	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
-	tracks, n, err := repos.Tracks.Search("car", 1, 10)
+	tracks, n, err := repos.Tracks.Search("car", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 1)
@@ -232,7 +232,7 @@ func TestTrackRepository_Search__by_lyrics__multiple_results(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
 	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
-	tracks, n, err := repos.Tracks.Search("house", 1, 10)
+	tracks, n, err := repos.Tracks.Search("house", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 2, n)
@@ -251,7 +251,7 @@ func TestTrackRepository_Search__by_lyrics__multiple_query_term(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
 	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
-	tracks, n, err := repos.Tracks.Search("house money", 1, 10)
+	tracks, n, err := repos.Tracks.Search("house money", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 2)
@@ -272,7 +272,7 @@ func TestTrackRepository_Search__by_lyrics__multiple_query_term__inclusive_searc
 	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "B", Lyrics: "house sky school", Loaded: true})
 	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "C", Lyrics: "fish company tank", Loaded: true})
 
-	tracks, n, err := repos.Tracks.Search("house \"money\"", 1, 10)
+	tracks, n, err := repos.Tracks.Search("house \"money\"", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 1)
@@ -292,7 +292,7 @@ func TestTrackRepository_Search__by_name(t *testing.T) {
 	repos.Tracks.Save(&Track{SpotifyID: "2", Name: "Stan"})
 	repos.Tracks.Save(&Track{SpotifyID: "3", Name: "'Till I Collapse'"})
 
-	tracks, n, err := repos.Tracks.Search("collapse", 1, 10)
+	tracks, n, err := repos.Tracks.Search("collapse", 1, 10, "en")
 
 	assert.Nil(t, err)
 	assert.Len(t, tracks, 1)
