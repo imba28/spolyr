@@ -118,6 +118,72 @@ paths:
                     items:
                       $ref: '#/components/schemas/TrackInfo'
 
+  /tracks-stats:
+    get:
+      tags:
+        - tracks
+      summary: Returns stats about your index
+      responses:
+        200:
+          description: Track index stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TracksStats'
+
+  /tracks/{id}:
+    patch:
+      tags:
+        - tracks
+      summary: Updates lyrics of a track
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to update
+      requestBody:
+        $ref: '#/components/requestBodies/TrackLyricsBody'
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        401:
+          $ref: '#/components/schemas/401Unauthorized'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+    get:
+      tags:
+        - tracks
+      summary: Returns a track
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to get
+
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+
   /import/lyrics:
     post:
       tags:
@@ -213,59 +279,6 @@ paths:
           description: No access token provided
         429:
           description: Import running
-
-  /tracks/{id}:
-    patch:
-      tags:
-        - tracks
-      summary: Updates lyrics of a track
-      security:
-        - cookieAuth: [ ]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Numeric ID of the track to update
-      requestBody:
-        $ref: '#/components/requestBodies/TrackLyricsBody'
-      responses:
-        200:
-          description: Track details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TrackDetail'
-        404:
-          $ref: '#/components/schemas/404NotFound'
-        401:
-          $ref: '#/components/schemas/401Unauthorized'
-        500:
-          $ref: '#/components/schemas/500InternalError'
-    get:
-      tags:
-        - tracks
-      summary: Returns a track
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Numeric ID of the track to get
-
-      responses:
-        200:
-          description: Track details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TrackDetail'
-        404:
-          $ref: '#/components/schemas/404NotFound'
-        500:
-          $ref: '#/components/schemas/500InternalError'
 
   /playlists:
     get:
@@ -395,6 +408,19 @@ components:
           type: boolean
         language:
           type: string
+
+    TracksStats:
+      type: object
+      required:
+        - numberOfTracks
+        - numberOfTracksWithLyrics
+      properties:
+        numberOfTracks:
+          type: integer
+          format: int32
+        numberOfTracksWithLyrics:
+          type: integer
+          format: in32
 
     LyricsImportStatus:
       type: object

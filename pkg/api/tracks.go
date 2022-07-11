@@ -17,6 +17,16 @@ type TracksApiService struct {
 	languageDetector languageDetector
 }
 
+func (s *TracksApiService) TracksStatsGet(ctx context.Context) (openapi.ImplResponse, error) {
+	numberOfTracks, _ := s.repo.Count()
+	NumberOfTracksWithLyrics, _ := s.repo.CountWithLyrics()
+
+	return openapi.Response(http.StatusOK, openapi.TracksStats{
+		NumberOfTracks:           int32(numberOfTracks),
+		NumberOfTracksWithLyrics: int32(NumberOfTracksWithLyrics),
+	}), nil
+}
+
 func (s *TracksApiService) TracksIdPatch(ctx context.Context, id string, lyrics openapi.Lyrics) (openapi.ImplResponse, error) {
 	if !isAuthenticated(ctx) {
 		return openapi.Response(http.StatusUnauthorized, nil), ErrNotAuthenticated

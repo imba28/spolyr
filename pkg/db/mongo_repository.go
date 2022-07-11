@@ -21,6 +21,9 @@ type TrackRepository interface {
 	AllTracks(page, limit int) ([]*Track, int, error)
 	Search(query string, page, limit int, language string) ([]*Track, int, error)
 	Save(track *Track) error
+
+	Count() (int64, error)
+	CountWithLyrics() (int64, error)
 }
 
 type MongoTrackRepository struct {
