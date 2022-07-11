@@ -90,13 +90,12 @@ func (i ImportApiServicer) ImportLyricsGet(ctx context.Context) (openapi.ImplRes
 
 func (i ImportApiServicer) ImportLibraryPost(ctx context.Context) (openapi.ImplResponse, error) {
 	if !isAuthenticated(ctx) {
-		return openapi.Response(http.StatusUnauthorized, nil), nil
+		return openapi.Response(http.StatusUnauthorized, nil), ErrNotAuthenticated
 	}
 
 	err := spotify.SyncTracks(ctx, spotify.NewSpotifyTrackProvider(oauthClientFromContext(ctx)), i.repo)
 	if err != nil {
-		log.Println(err)
-		return openapi.Response(http.StatusInternalServerError, nil), nil
+		return openapi.Response(http.StatusInternalServerError, nil), err
 	}
 
 	return openapi.Response(http.StatusOK, nil), nil
