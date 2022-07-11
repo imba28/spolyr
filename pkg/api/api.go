@@ -19,7 +19,7 @@ func (s *Server) apiHandler() http.Handler {
 	fetcher := lyrics.New(s.geniusAPIToken, 3, s.languageDetector)
 	syncer := lyrics.NewSyncer(fetcher, s.db.Tracks)
 
-	authApiController := openapi.NewAuthApiController(newAuthApiService(s.oauthClientID, s.secret))
+	authApiController := openapi.NewAuthApiController(newAuthApiService(s.oauthClientID, s.secret, s.publicProtocol, s.publicDomain, s.publicHttpPort))
 	importController := openapi.NewImportApiController(newImportApiService(s.db.Tracks, syncer, fetcher, s.languageDetector))
 	tracksApiController := openapi.NewTracksApiController(newTracksApiService(s.db.Tracks, s.languageDetector))
 	playlistController := openapi.NewPlaylistsApiController(newPlaylistApiService())
@@ -53,6 +53,10 @@ type Server struct {
 	env    Env
 	router *mux.Router
 
+	publicHttpPort int
+	publicDomain   string
+	publicProtocol string
+
 	sync.Once
 }
 
@@ -73,6 +77,10 @@ func NewServer(options ...ServerOptions) *Server {
 		secret: []byte("not so secret. change me"),
 		router: mux.NewRouter(),
 		env:    Prod,
+
+		publicDomain:   "localhost",
+		publicProtocol: "http",
+		publicHttpPort: 8080,
 	}
 
 	for i := range options {
@@ -113,6 +121,14 @@ func WithLanguageDetector(detector languageDetector) ServerOptions {
 func WithEnv(env Env) ServerOptions {
 	return func(s *Server) {
 		s.env = env
+	}
+}
+
+func WithReverseProxy(protocol, domain string, port int) ServerOptions {
+	return func(s *Server) {
+		s.publicProtocol = protocol
+		s.publicDomain = domain
+		s.publicHttpPort = port
 	}
 }
 

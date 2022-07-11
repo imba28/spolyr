@@ -11,7 +11,6 @@ import (
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -32,7 +31,7 @@ var (
 		spotifyauth.ScopePlaylistReadCollaborative,
 		spotifyauth.ScopePlaylistReadPrivate}
 	scope = strings.Join(permissions, " ")
-	auth  = spotifyauth.New(spotifyauth.WithRedirectURL(redirectUrl()), spotifyauth.WithScopes(scope))
+	auth  = spotifyauth.New(spotifyauth.WithScopes(scope))
 
 	accessTokenExpiry  = time.Minute * 10
 	refreshTokenExpiry = time.Hour * 24
@@ -70,26 +69,14 @@ func oauthRefreshTokenFromContext(ctx context.Context) string {
 	return ""
 }
 
-func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
-}
-
-func redirectUrl() string {
-	var protocol = getEnv("PROTOCOL", "http")
-	var domain = getEnv("DOMAIN", "localhost")
-
-	var httpPort = getEnv("HTTP_PUBLIC_PORT", getEnv("HTTP_PORT", "8080"))
-	if httpPort != "80" && httpPort != "443" {
-		httpPort = ":" + httpPort
-	} else {
-		httpPort = ""
+func (a AuthApiService) redirectUrl() string {
+	port := a.publicHttpPort
+	publicPort := ""
+	if port != 80 && port != 443 && port != 0 {
+		publicPort = fmt.Sprintf(":%d", port)
 	}
 
-	return fmt.Sprintf("%s://%s%s/auth/callback", protocol, domain, httpPort)
+	return fmt.Sprintf("%s://%s%s/auth/callback", a.publicHttpProtocol, a.publicHostname, publicPort)
 }
 
 func isAuthenticated(ctx context.Context) bool {
@@ -132,6 +119,10 @@ func AuthenticationMiddleware(j jwt2.JWT) mux.MiddlewareFunc {
 type AuthApiService struct {
 	clientId string
 	jwt      jwt2.JWT
+
+	publicHttpProtocol string
+	publicHostname     string
+	publicHttpPort     int
 }
 
 func (a AuthApiService) jwtTokenHeaders(t oauth2.Token, generateRefreshToken bool) (map[string][]string, error) {
@@ -228,7 +219,7 @@ func (a AuthApiService) AuthLoginPost(ctx context.Context, request openapi.AuthL
 
 func (a AuthApiService) AuthConfigurationGet(ctx context.Context) (openapi.ImplResponse, error) {
 	res := openapi.OAuthConfiguration{
-		RedirectUrl: redirectUrl(),
+		RedirectUrl: a.redirectUrl(),
 		ClientId:    a.clientId,
 		Scope:       scope,
 	}
@@ -256,11 +247,20 @@ func (a AuthApiService) AuthRefreshGet(ctx context.Context) (openapi.ImplRespons
 	return openapi.ResponseWithHeaders(http.StatusOK, headers, nil), nil
 }
 
-func newAuthApiService(clientId string, secret []byte) AuthApiService {
-	return AuthApiService{
-		clientId: clientId,
-		jwt:      jwt2.New(secret),
+func newAuthApiService(clientId string, secret []byte, publicProtocol, publicHostname string, publicPort int) AuthApiService {
+	a := AuthApiService{
+		clientId:           clientId,
+		jwt:                jwt2.New(secret),
+		publicHttpPort:     publicPort,
+		publicHostname:     publicHostname,
+		publicHttpProtocol: publicProtocol,
 	}
+
+	// todo: this is extremely ugly, but the public hostname/port are only available after setting up the service
+	// alternatively, we could directly access the environment variables (but that breaks the top-down approach of the configuration flow)
+	spotifyauth.WithRedirectURL(a.redirectUrl())(auth)
+
+	return a
 }
 
 var _ openapi.AuthApiServicer = AuthApiService{}
