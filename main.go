@@ -13,6 +13,8 @@ func main() {
 
 	rootCmd.AddCommand(cmd.NewDoctorCommand())
 	rootCmd.AddCommand(cmd.NewWebCommand())
+	rootCmd.AddCommand(cmd.NewFixturesCommand())
+
 	err := rootCmd.Execute()
 	if err != nil {
 		log.Fatal(err)

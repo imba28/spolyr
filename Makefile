@@ -1,10 +1,10 @@
 .PHONY: all clean bundle build test frontend
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr ./cmd/spolyr/spolyr.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr ./main.go
 
 build-windows:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr.exe cmd/spolyr/spolyr.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr.exe ./main.go
 
 build: build-linux build-windows
 
@@ -27,6 +27,13 @@ test:
 
 test-units:
 	go test -short ./pkg/...
+
+test-e2e: build-linux frontend
+	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 ./spolyr fixtures
+	DATABASE_USER=root DATABASE_PASSWORD=example DATABASE_HOST=127.0.0.1 ./spolyr web > /tmp/backend.log 2>&1 &
+	npm run test:e2e:ci:chromium
+	killall spolyr
+	cat /tmp/backend.log
 
 coverage: test
 	go tool cover -func cover.out | tail -n 1 | awk '{print $3}'
