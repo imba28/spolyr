@@ -34,11 +34,13 @@
         class="text-center p-3"
         style="background-color: rgba(0, 0, 0, 0.2)"
       >
-        0.0.4
+        dev-build
         <a
           class="text-light"
-          href="/"
-        >spolyr.app</a>
+          rel="noopener"
+          target="_blank"
+          href="https://github.com/imba28/spolyr"
+        >github.com/imba28/spolyr</a>
       </div>
     </footer>
   </div>
