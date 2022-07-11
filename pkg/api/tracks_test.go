@@ -17,6 +17,16 @@ type trackRepoMock struct {
 	mock.Mock
 }
 
+func (t *trackRepoMock) Count() (int64, error) {
+	args := t.Called()
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (t *trackRepoMock) CountWithLyrics() (int64, error) {
+	args := t.Called()
+	return args.Get(0).(int64), args.Error(1)
+}
+
 func (t *trackRepoMock) AllTracks(page, limit int) ([]*db.Track, int, error) {
 	args := t.Called(page, limit)
 	return args.Get(0).([]*db.Track), args.Int(1), args.Error(2)
