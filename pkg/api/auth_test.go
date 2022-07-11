@@ -6,6 +6,7 @@ import (
 	"github.com/imba28/spolyr/pkg/openapi/openapi"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/http/httptest"
@@ -40,8 +41,8 @@ func TestAuthenticationMiddleware(t *testing.T) {
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			if v := ctx.Value(spotifyTokenKey); v != nil {
-				t.Error("oauth access token should not be set, got", v)
+			if v := ctx.Value(spotifyOauthClientKey); v != nil {
+				t.Error("oauth client should not be set, got", v)
 			}
 			if v := ctx.Value(spotifyRefreshTokenKey); v != nil {
 				t.Error("oauth refresh token should not be set, got", v)
@@ -72,8 +73,8 @@ func TestAuthenticationMiddleware(t *testing.T) {
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			if v, ok := ctx.Value(spotifyTokenKey).(oauth2.Token); !ok {
-				t.Errorf("oauth access token should be set, got %v", v)
+			if v, ok := ctx.Value(spotifyOauthClientKey).(*spotify.Client); !ok {
+				t.Errorf("oauth client should be set, got %v", v)
 			}
 			if v, ok := ctx.Value(spotifyRefreshTokenKey).(string); !ok || v != spotifyRefreshTokenValue {
 				t.Errorf("oauth refresh token should be set to %v, got %v", spotifyRefreshTokenValue, v)
@@ -111,8 +112,8 @@ func TestAuthenticationMiddleware(t *testing.T) {
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			if v := ctx.Value(spotifyTokenKey); v != nil {
-				t.Error("oauth access token should not be set, got", v)
+			if v := ctx.Value(spotifyOauthClientKey); v != nil {
+				t.Error("oauth client should not be set, got", v)
 			}
 			if v := ctx.Value(spotifyRefreshTokenKey); v != nil {
 				t.Error("oauth refresh token should not be set, got", v)

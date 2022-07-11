@@ -19,10 +19,10 @@ import (
 type authContextKey int
 
 const (
-	spotifyTokenKey authContextKey = iota
-	spotifyRefreshTokenKey
+	spotifyRefreshTokenKey authContextKey = iota
 	jwtRefreshKey
 	jwtAccessKey
+	spotifyOauthClientKey
 )
 
 var (
@@ -56,19 +56,11 @@ func accessTokenFromContext(ctx context.Context) *string {
 	return nil
 }
 
-func oauthTokenFromContext(ctx context.Context) *oauth2.Token {
-	if t, ok := ctx.Value(spotifyTokenKey).(oauth2.Token); ok {
-		return &t
+func oauthClientFromContext(ctx context.Context) *spotify.Client {
+	if c, ok := ctx.Value(spotifyOauthClientKey).(*spotify.Client); ok {
+		return c
 	}
 	return nil
-}
-
-func oauthClientFromContext(ctx context.Context) *spotify.Client {
-	t := oauthTokenFromContext(ctx)
-	if t == nil {
-		return nil
-	}
-	return spotify.New(auth.Client(ctx, t))
 }
 
 func oauthRefreshTokenFromContext(ctx context.Context) string {
@@ -120,8 +112,8 @@ func AuthenticationMiddleware(j jwt2.JWT) mux.MiddlewareFunc {
 				if c, err := r.Cookie("jwt"); err == nil {
 					claims, valid := j.ValidateAccessToken(c.Value)
 					if valid {
-						ctx = context.WithValue(ctx, spotifyTokenKey, claims.Token)
 						ctx = context.WithValue(ctx, jwtAccessKey, c.Value)
+						ctx = context.WithValue(ctx, spotifyOauthClientKey, spotify.New(auth.Client(ctx, &claims.Token)))
 					}
 				}
 				if c, err := r.Cookie("jwt-refresh"); err == nil {
