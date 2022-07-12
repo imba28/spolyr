@@ -1,6 +1,6 @@
 _mongo-volume
 .git
-dist
+/dist
 node_modules
 public
 
