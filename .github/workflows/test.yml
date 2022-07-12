@@ -133,6 +133,7 @@ jobs:
         env:
           SPOTIFY_ID: ${{ secrets.SPOTIFY_ID }}
           SPOTIFY_SECRET: ${{ secrets.SPOTIFY_SECRET }}
+          GENIUS_API_TOKEN: ${{ secrets.GENIUS_API_TOKEN }}
         run: make test-e2e
 
       - uses: actions/upload-artifact@v3
