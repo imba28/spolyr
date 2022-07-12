@@ -110,10 +110,6 @@ jobs:
         ports:
           - 27017:27017
 
-    env:
-      SPOTIFY_ID: ${{ secrets.SPOTIFY_ID }}
-      SPOTIFY_SECRET: ${{ secrets.SPOTIFY_SECRET }}
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -134,6 +130,9 @@ jobs:
           go-version: ${{ env.go_version }}
 
       - name: Run e2e suite
+        env:
+          SPOTIFY_ID: ${{ secrets.SPOTIFY_ID }}
+          SPOTIFY_SECRET: ${{ secrets.SPOTIFY_SECRET }}
         run: make test-e2e
 
       - uses: actions/upload-artifact@v3
