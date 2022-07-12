@@ -25,7 +25,7 @@
           right
         >
           <template #button-content>
-            <span class="mr-1">
+            <span class="mr-1 text-white font-weight-bold">
               {{ authStore.displayName }}
             </span>
             <b-avatar
@@ -42,7 +42,9 @@
           v-else
           @click="login"
         >
-          <i class="fa fa-sign-in" /> Sign in
+          <div class="btn btn-dark">
+            <i class="fa fa-sign-in" /> Sign in
+          </div>
         </b-nav-item>
       </b-navbar-nav>
     </b-collapse>
@@ -53,9 +55,10 @@
 import SearchForm from './SearchForm.vue';
 import {AuthApi} from '@/openapi';
 import querystring from 'querystring';
-const authClient = new AuthApi();
 import {useAuthStore} from '@/stores/auth';
 import {mapStores} from 'pinia';
+
+const authClient = new AuthApi();
 
 export default {
   components: {
