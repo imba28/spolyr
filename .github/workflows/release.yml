@@ -57,7 +57,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-
       - name: Get current tag
         id: get_version
         run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | tail -c 6)
@@ -65,15 +64,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.node_version }}
-      - run: npm ci
-      - run: npm run build
-
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.go_version }}
-      - name: Build backend
-        run: |
+
+      - run: make openapi-spec
+      - run: |
           sed -i "s/dev-build/${{ steps.get_version.outputs.VERSION }}/" assets/App.vue
           make bundle
 

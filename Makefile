@@ -16,7 +16,7 @@ clean:
 	rm -rf dist
 	rm -rf pkg/openapi
 
-bundle: build
+bundle: build frontend
 	mkdir -p ./dist
 	tar -czvf dist/spolyr-linux-amd64.tar.gz public spolyr
 	tar -czvf dist/spolyr-windows-amd64.tar.gz public spolyr.exe
