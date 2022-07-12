@@ -1,0 +1,517 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Spolyr
+servers:
+  - url: http://127.0.0.1:8080/api
+
+paths:
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      security:
+        - cookieAuth: [ ]
+      summary: Invalidates the jwt token
+      responses:
+        200:
+          description: Contains configuration options for oauth2 client library
+          headers:
+            Set-Cookie:
+              description: >
+                Client is asked to delete the cookie `jwt` as it is invalid afterwards.
+              schema:
+                type: string
+                example: jwt=TOKEN; Path=/api; HttpOnly
+
+
+  /auth/configuration:
+    get:
+      tags:
+        - auth
+      summary: Get configuration for oAuth2 workflow
+      responses:
+        200:
+          description: Contains configuration options for oauth2 client library
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthConfiguration'
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Authenticate
+      responses:
+        200:
+          description: Redirect to Spotify
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oAuthUserInfo'
+
+          headers:
+            Set-Cookie:
+              description: >
+                Successfully authenticated. The cookie `jwt` is set which contains the JWT.
+              schema:
+                type: string
+                example: jwt=TOKEN; Path=/api; HttpOnly
+
+      requestBody:
+        $ref: '#/components/requestBodies/LoginBody'
+
+  /auth/refresh:
+    get:
+      tags:
+        - auth
+      summary: Refresh JWT access token
+      security:
+        - cookieAuth: []
+      responses:
+        201:
+          description: OK
+        401:
+          description: No refresh token provided
+
+  /tracks:
+    get:
+      tags:
+        - tracks
+      summary: Returns a list of tracks
+      parameters:
+        - name: page
+          in: query
+          description: Current page number
+          schema:
+            type: integer
+            format: int32
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Limits the size of the result size
+          schema:
+            type: integer
+            format: int32
+            default: 25
+            minimum: 5
+            maximum: 100
+        - name: query
+          in: query
+          description: Keywords or query to filter results
+          schema:
+            type: string
+      responses:
+        200:
+          description: Paginated list of tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/PaginationMetadata'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrackInfo'
+
+  /tracks-stats:
+    get:
+      tags:
+        - tracks
+      summary: Returns stats about your index
+      responses:
+        200:
+          description: Track index stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TracksStats'
+
+  /tracks/{id}:
+    patch:
+      tags:
+        - tracks
+      summary: Updates lyrics of a track
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to update
+      requestBody:
+        $ref: '#/components/requestBodies/TrackLyricsBody'
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        401:
+          $ref: '#/components/schemas/401Unauthorized'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+    get:
+      tags:
+        - tracks
+      summary: Returns a track
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Numeric ID of the track to get
+
+      responses:
+        200:
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          $ref: '#/components/schemas/404NotFound'
+        500:
+          $ref: '#/components/schemas/500InternalError'
+
+  /import/lyrics:
+    post:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Start import of lyrics
+      responses:
+        200:
+          description: Successfully imported lyrics
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+    get:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Get status of import process
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LyricsImportStatus'
+        401:
+          description: No access token provided
+
+  /import/lyrics/track/{id}:
+    post:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Try to import lyrics of a specific track
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID of the track to update
+
+      responses:
+        200:
+          description: Updated track info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+        404:
+          description: No lyrics found
+        401:
+          description: No access token provided
+
+  /import/library:
+    post:
+      tags:
+        - import
+      security:
+        - cookieAuth: [ ]
+      summary: Start import of tracks from spotify library
+      responses:
+        200:
+          description: Successfully imported library
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+  /import/playlist/{id}:
+    post:
+      tags:
+        - import
+      summary: Start import of tracks from playlist
+      security:
+        - cookieAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Spotify id of playlist
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Successfully imported playlist
+        401:
+          description: No access token provided
+        429:
+          description: Import running
+
+  /playlists:
+    get:
+      tags:
+        - playlists
+      security:
+        - cookieAuth: [ ]
+      summary: Returns a list of your saved playlists
+      parameters:
+        - name: page
+          in: query
+          description: Current page number
+          schema:
+            type: integer
+            format: int32
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Limits the size of the result size
+          schema:
+            type: integer
+            format: int32
+            default: 25
+            minimum: 5
+            maximum: 100
+      responses:
+        200:
+          description: Paginated list of playlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/PaginationMetadata'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlaylistInfo'
+
+components:
+  requestBodies:
+    TrackLyricsBody:
+      description: Contains new lyrics of track
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Lyrics'
+
+    LoginBody:
+      description: Contains the oauth code
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+  schemas:
+    Lyrics:
+      type: object
+      properties:
+        lyrics:
+          type: string
+
+    TrackDetail:
+      allOf:
+        - $ref: '#/components/schemas/TrackInfo'
+        - type: object
+          required:
+            - lyrics
+            - hasLyrics
+            - lyricsImportErrorCount
+          properties:
+            lyrics:
+              type: string
+            lyricsImportErrorCount:
+              type: integer
+              format: int32
+            hasLyrics:
+              type: boolean
+
+    PlaylistInfo:
+      type: object
+      properties:
+        spotifyId:
+          type: string
+        name:
+          type: string
+        coverImage:
+          type: string
+        trackCount:
+          type: integer
+          format: int32
+        owner:
+          type: string
+        isPublic:
+          type: boolean
+        isCollaborative:
+          type: boolean
+
+    TrackInfo:
+      type: object
+      required:
+        - title
+        - spotifyId
+        - hasLyrics
+      properties:
+        spotifyId:
+          type: string
+        title:
+          type: string
+        album:
+          type: string
+        coverImage:
+          type: string
+        previewURL:
+          type: string
+        artists:
+          type: array
+          items:
+            type: string
+        hasLyrics:
+          type: boolean
+        language:
+          type: string
+
+    TracksStats:
+      type: object
+      required:
+        - numberOfTracks
+        - numberOfTracksWithLyrics
+      properties:
+        numberOfTracks:
+          type: integer
+          format: int32
+        numberOfTracksWithLyrics:
+          type: integer
+          format: in32
+
+    LyricsImportStatus:
+      type: object
+      required:
+        - running
+      properties:
+        running:
+          type: boolean
+        tracksCompleted:
+          type: integer
+          format: int32
+        tracksSuccessful:
+          type: integer
+          format: int32
+        tracksError:
+          type: integer
+          format: int32
+        tracksTotal:
+          type: integer
+          format: int32
+        log:
+          type: string
+
+    Message:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+
+    PaginationMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        limit:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+
+    UserResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        avatar:
+          type: string
+
+    OAuthConfiguration:
+      type: object
+      properties:
+        redirectUrl:
+          type: string
+        clientId:
+          type: string
+        scope:
+          type: string
+
+    oAuthUserInfo:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+
+    401Unauthorized:
+      allOf:
+        - description: Authentication required
+        - $ref: '#/components/schemas/Message'
+
+    404NotFound:
+      allOf:
+        - description: The URI of the required resource does not exist.
+        - $ref: '#/components/schemas/Message'
+
+    500InternalError:
+      allOf:
+        - description: Internal server error.
+        - $ref: '#/components/schemas/Message'
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt

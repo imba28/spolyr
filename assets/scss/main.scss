@@ -1,9 +1,11 @@
-@import './_variables.scss';
-@import "~bootswatch/dist/darkly/_variables.scss";
-@import "~bootstrap/scss/bootstrap.scss";
-@import "~bootswatch/dist/darkly/_bootswatch.scss";
+@import 'https://fonts.googleapis.com/css2?family=Londrina+Solid&family=Roboto&display=swap';
 
-@import './global/_bg.scss';
-@import './global/_table.scss';
+@import './_variables';
+@import "~bootswatch/dist/darkly/_variables";
+@import "~bootstrap/scss/bootstrap";
+@import 'node_modules/bootstrap-vue/src/index';
+@import "~bootswatch/dist/darkly/_bootswatch";
 
-@import './components/sync_log.scss';
+@import './global/bg';
+@import './global/table';
+@import './components/nprogress';
