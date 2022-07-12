@@ -140,6 +140,78 @@ func TestAuthenticationMiddleware(t *testing.T) {
 	})
 }
 
+func TestAuthApiService_AuthLoginPost_secure_cookies(t *testing.T) {
+	t.Run("if protocol is http do not use secure cookies", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("GET", "=~/me$",
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(200, map[string]interface{}{
+					"email": "user@test.com",
+				})
+			},
+		)
+
+		httpmock.RegisterResponder("POST", "=~/api/token",
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(200, map[string]interface{}{
+					"access_token":  "access-token",
+					"token_type":    "Bearer",
+					"refresh_token": "refresh_token",
+				})
+			},
+		)
+
+		ctx := context.Background()
+		loginRequest := openapi.AuthLoginPostRequest{Code: "oauth-code"}
+
+		auth := AuthApiService{
+			publicHttpProtocol: "http",
+		}
+		res, _ := auth.AuthLoginPost(ctx, loginRequest)
+
+		cookies := parseCookies(res.Headers["Set-Cookie"])
+		assert.False(t, cookies[0].Secure)
+		assert.False(t, cookies[1].Secure)
+	})
+
+	t.Run("if protocol is https define cookies as secure", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder("GET", "=~/me$",
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(200, map[string]interface{}{
+					"email": "user@test.com",
+				})
+			},
+		)
+
+		httpmock.RegisterResponder("POST", "=~/api/token",
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewJsonResponse(200, map[string]interface{}{
+					"access_token":  "access-token",
+					"token_type":    "Bearer",
+					"refresh_token": "refresh_token",
+				})
+			},
+		)
+
+		ctx := context.Background()
+		loginRequest := openapi.AuthLoginPostRequest{Code: "oauth-code"}
+
+		auth := AuthApiService{
+			publicHttpProtocol: "https",
+		}
+		res, _ := auth.AuthLoginPost(ctx, loginRequest)
+
+		cookies := parseCookies(res.Headers["Set-Cookie"])
+		assert.True(t, cookies[0].Secure)
+		assert.True(t, cookies[1].Secure)
+	})
+}
+
 func TestAuthApiService_AuthLoginPost(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -171,8 +243,12 @@ func TestAuthApiService_AuthLoginPost(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, res.Code)
 	assert.Len(t, res.Headers["Set-Cookie"], 2, "should set two cookies ")
-	assert.Contains(t, res.Headers["Set-Cookie"][0], "jwt=", "should set the cookie `jwt` ")
-	assert.Contains(t, res.Headers["Set-Cookie"][1], "jwt-refresh=", "should set the cookie `jwt-refresh` ")
+	c := parseCookies(res.Headers["Set-Cookie"])
+
+	assert.Equal(t, "jwt", c[0].Name, "should set the cookie `jwt`")
+	assert.Equal(t, "/api", c[0].Path, "`jwt` should be valid for path /api")
+	assert.Equal(t, "jwt-refresh", c[1].Name, "should set the cookie `jwt-refresh`")
+	assert.Equal(t, "/api/auth", c[1].Path, "`jwt-refresh` should only be valid for path /api/auth")
 }
 
 func TestAuthApiService_AuthLogoutGet(t *testing.T) {
@@ -182,9 +258,6 @@ func TestAuthApiService_AuthLogoutGet(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Len(t, res.Headers["Set-Cookie"], 2, "should set two cookies")
-	assert.Contains(t, res.Headers["Set-Cookie"][0], "jwt=", "should set the cookie `jwt` ")
-	assert.Contains(t, res.Headers["Set-Cookie"][1], "jwt-refresh=", "should set the cookie `jwt-refresh` ")
-
 	c := parseCookies(res.Headers["Set-Cookie"])
 	assert.True(t, c[0].Expires.Before(time.Now()), "jwt cookie should be expired")
 	assert.True(t, c[1].Expires.Before(time.Now()), "jwt-refresh cookie should be expired")
@@ -193,8 +266,8 @@ func TestAuthApiService_AuthLogoutGet(t *testing.T) {
 func parseCookies(cookieHeaders []string) []*http.Cookie {
 	header := http.Header{}
 	for i := range cookieHeaders {
-		header.Add("Cookie", cookieHeaders[i])
+		header.Add("Set-Cookie", cookieHeaders[i])
 	}
-	req := http.Request{Header: header}
+	req := http.Response{Header: header}
 	return req.Cookies()
 }

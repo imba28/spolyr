@@ -123,6 +123,17 @@ type AuthApiService struct {
 	publicHttpPort     int
 }
 
+func (a AuthApiService) cookie(name, value, path string) http.Cookie {
+	return http.Cookie{
+		Name:     name,
+		Path:     path,
+		Value:    value,
+		Secure:   a.publicHttpProtocol == "https",
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	}
+}
+
 func (a AuthApiService) jwtTokenHeaders(t oauth2.Token, generateRefreshToken bool) (map[string][]string, error) {
 	headers := make(map[string][]string)
 	var cookies []string
@@ -131,14 +142,7 @@ func (a AuthApiService) jwtTokenHeaders(t oauth2.Token, generateRefreshToken boo
 	if err != nil {
 		return nil, errors.New("could not sign access jwt")
 	}
-	accessTokenCookie := http.Cookie{
-		Name:     "jwt",
-		Path:     "/api",
-		Value:    accessToken,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	accessTokenCookie := a.cookie("jwt", accessToken, "/api")
 	cookies = append(cookies, accessTokenCookie.String())
 
 	if generateRefreshToken {
@@ -147,15 +151,8 @@ func (a AuthApiService) jwtTokenHeaders(t oauth2.Token, generateRefreshToken boo
 		if err != nil {
 			return nil, errors.New("could not sign refresh jwt")
 		}
-		refreshTokenCookie := http.Cookie{
-			Name:     "jwt-refresh",
-			Path:     "/api/auth",
-			Value:    refreshToken,
-			Expires:  time.Now().Add(time.Hour * 24),
-			Secure:   true,
-			HttpOnly: true,
-			SameSite: http.SameSiteNoneMode,
-		}
+		refreshTokenCookie := a.cookie("jwt-refresh", refreshToken, "/api/auth")
+		refreshTokenCookie.Expires = time.Now().Add(refreshTokenExpiry)
 		cookies = append(cookies, refreshTokenCookie.String())
 	}
 
@@ -165,23 +162,12 @@ func (a AuthApiService) jwtTokenHeaders(t oauth2.Token, generateRefreshToken boo
 }
 
 func (a AuthApiService) AuthLogoutGet(ctx context.Context) (openapi.ImplResponse, error) {
-	accessTokenCookie := http.Cookie{
-		Name:     "jwt",
-		Path:     "/api",
-		Expires:  time.Unix(0, 0),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	accessTokenCookie := a.cookie("jwt", "1", "/api")
+	accessTokenCookie.Expires = time.Unix(0, 0)
+
 	// todo: revoke refresh token => delete from database
-	refreshTokenCookie := http.Cookie{
-		Name:     "jwt-refresh",
-		Path:     "/api/auth/refresh",
-		Expires:  time.Unix(0, 0),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	refreshTokenCookie := a.cookie("jwt-refresh", "1", "/api/auth")
+	refreshTokenCookie.Expires = time.Unix(0, 0)
 
 	headers := make(map[string][]string)
 	headers["Set-Cookie"] = []string{accessTokenCookie.String(), refreshTokenCookie.String()}
