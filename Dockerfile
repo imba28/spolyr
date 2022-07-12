@@ -40,7 +40,7 @@ FROM node:14-alpine as frontend_builder
 
 WORKDIR /build
 
-COPY --from=openapi-generator /local/assets/openapi /build/assets/openapi
+COPY --from=openapi-generator /local/assets/openapi/src /build/assets/openapi
 
 COPY package.json .
 COPY package-lock.json .
@@ -48,7 +48,7 @@ RUN npm remove cypress
 RUN npm ci
 
 COPY . .
-RUN npm run lint && npm run build
+RUN npm run build
 
 # runtime
 FROM alpine:3

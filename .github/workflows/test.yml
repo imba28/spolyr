@@ -143,3 +143,18 @@ jobs:
           path: |
             tests/e2e/screenshots
             tests/e2e/videos
+
+  docker-image:
+    needs: e2e
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Build image
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          context: .
