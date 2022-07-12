@@ -23,7 +23,7 @@ Spolyr is a side project I've been working on that helps you index and retrieve 
 
 ## Configuration options
 
-## Environment variables
+### Environment variables
 
 `SPOTIFY_ID`: unique identifier of your Spotify application - **required**
 
@@ -53,7 +53,7 @@ reverse proxy (default: value of `HTTP_PORT`)
 
 `DATABASE_PASSWORD` (default: `example`)
 
-## Configuration file
+### Configuration file
 
 Alternatively, all configuration options can be set by using a `config.yaml`:
 
@@ -100,7 +100,15 @@ supported_languages: "german,english,french,russian"
 8. Open [localhost:8080](https://localhost:8080) in your preferred browser
 
 ### Tests and linting
+
 ```bash
-npm run lint
-npm run test:unit
+# frontend
+make lint-frontend
+make test-frontend
+
+# backend
+make test
+
+# e2e
+make test-e2e
 ```
