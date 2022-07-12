@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -79,20 +78,4 @@ func web(c *config) func(cmd *cobra.Command, args []string) {
 
 		log.Fatal(srv.ListenAndServe())
 	}
-}
-
-func getEnv(key, fallback string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		return fallback
-	}
-	return v
-}
-
-func mustGetEnv(key string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		log.Fatalf("Please specify the environment variable %s", key)
-	}
-	return value
 }

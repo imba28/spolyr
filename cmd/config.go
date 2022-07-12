@@ -17,9 +17,9 @@ type config struct {
 	spotifyOAuthClientId string
 	secret               string
 
-	protocol       string // getEnv("PROTOCOL", "http")
-	domain         string // getEnv("DOMAIN", "localhost")
-	httpPublicPort int    // = getEnv("HTTP_PUBLIC_PORT", getEnv("HTTP_PORT", "8080"))
+	protocol       string
+	domain         string
+	httpPublicPort int
 
 	supportedLanguages []string
 
