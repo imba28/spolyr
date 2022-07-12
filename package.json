@@ -27,7 +27,7 @@
     "portal-vue": "^2.1.7",
     "querystring-es3": "^0.2.1",
     "superagent": "^7.1.6",
-    "vue": "^2.6.14",
+    "vue": "^3.0.0",
     "vue-router": "^3.5.1",
     "vue-toastification": "^1.7.14"
   },
