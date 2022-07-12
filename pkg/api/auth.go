@@ -124,13 +124,18 @@ type AuthApiService struct {
 }
 
 func (a AuthApiService) cookie(name, value, path string) http.Cookie {
+	sameSite := http.SameSiteLaxMode
+	if a.publicHttpProtocol == "https" {
+		sameSite = http.SameSiteNoneMode
+	}
+
 	return http.Cookie{
 		Name:     name,
 		Path:     path,
 		Value:    value,
 		Secure:   a.publicHttpProtocol == "https",
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: sameSite,
 	}
 }
 
