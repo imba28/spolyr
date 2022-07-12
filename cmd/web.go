@@ -63,7 +63,7 @@ func web(c *config) func(cmd *cobra.Command, args []string) {
 			api.WithSecret([]byte(c.secret)),
 			api.WithLanguageDetector(languageDetector),
 			api.WithGeniusAPI(c.geniusAPIToken),
-			api.WithOAuth(c.spotifyOAuthClientId),
+			api.WithOAuth(c.spotifyOAuthClientId, c.spotifyOAuthClientSecret),
 			api.WithEnv(env),
 			api.WithReverseProxy(c.protocol, c.domain, c.httpPublicPort))
 

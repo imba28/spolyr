@@ -22,6 +22,9 @@ const (
 	jwtRefreshKey
 	jwtAccessKey
 	spotifyOauthClientKey
+
+	accessTokenExpiry  = time.Minute * 10
+	refreshTokenExpiry = time.Hour * 24
 )
 
 var (
@@ -33,11 +36,6 @@ var (
 	scope = strings.Join(permissions, " ")
 	auth  = spotifyauth.New(spotifyauth.WithScopes(scope))
 
-	accessTokenExpiry  = time.Minute * 10
-	refreshTokenExpiry = time.Hour * 24
-)
-
-var (
 	ErrNotAuthenticated = errors.New("no authentication provided")
 )
 
@@ -247,7 +245,7 @@ func (a AuthApiService) AuthRefreshGet(ctx context.Context) (openapi.ImplRespons
 	return openapi.ResponseWithHeaders(http.StatusOK, headers, nil), nil
 }
 
-func newAuthApiService(clientId string, secret []byte, publicProtocol, publicHostname string, publicPort int) AuthApiService {
+func newAuthApiService(clientId, clientSecret string, secret []byte, publicProtocol, publicHostname string, publicPort int) AuthApiService {
 	a := AuthApiService{
 		clientId:           clientId,
 		jwt:                jwt2.New(secret),
@@ -256,9 +254,11 @@ func newAuthApiService(clientId string, secret []byte, publicProtocol, publicHos
 		publicHttpProtocol: publicProtocol,
 	}
 
-	// todo: this is extremely ugly, but the public hostname/port are only available after setting up the service
+	// todo: this is extremely ugly, but public hostname/port are only available after setting up the service
 	// alternatively, we could directly access the environment variables (but that breaks the top-down approach of the configuration flow)
 	spotifyauth.WithRedirectURL(a.redirectUrl())(auth)
+	spotifyauth.WithClientID(clientId)(auth)
+	spotifyauth.WithClientSecret(clientSecret)(auth)
 
 	return a
 }

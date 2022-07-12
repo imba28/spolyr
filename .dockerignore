@@ -3,3 +3,5 @@ _mongo-volume
 dist
 node_modules
 public
+
+/config.*

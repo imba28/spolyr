@@ -9,13 +9,14 @@ import (
 )
 
 type config struct {
-	databaseUsername     string
-	databasePassword     string
-	databaseHost         string
-	httpPort             int
-	geniusAPIToken       string
-	spotifyOAuthClientId string
-	secret               string
+	databaseUsername         string
+	databasePassword         string
+	databaseHost             string
+	httpPort                 int
+	geniusAPIToken           string
+	spotifyOAuthClientId     string
+	spotifyOAuthClientSecret string
+	secret                   string
 
 	protocol       string
 	domain         string
@@ -28,7 +29,7 @@ type config struct {
 
 func initConfig(cmd *cobra.Command) error {
 	v := viper.New()
-	v.SetConfigName("spolyr")
+	v.SetConfigName("config")
 	v.AddConfigPath(".")
 
 	if err := v.ReadInConfig(); err != nil {
@@ -51,15 +52,21 @@ func initConfig(cmd *cobra.Command) error {
 }
 
 func initFlags(cmd *cobra.Command, c *config) {
+	cmd.Flags().StringVarP(&c.spotifyOAuthClientId, "spotify_id", "", "", "Spotify OAuth2 client id")
+	cmd.Flags().StringVarP(&c.spotifyOAuthClientSecret, "spotify_secret", "", "", "Spotify OAuth2 client secret")
+	cmd.Flags().StringVarP(&c.geniusAPIToken, "genius_api_token", "", "", "Genius.com api token")
+	_ = cmd.MarkFlagRequired("spotify_id")
+	_ = cmd.MarkFlagRequired("spotify_secret")
+	_ = cmd.MarkFlagRequired("genius_api_token")
+
 	cmd.Flags().StringVarP(&c.databaseUsername, "database_user", "", "root", "Username of mongodb user")
 	cmd.Flags().StringVarP(&c.databasePassword, "database_password", "", "example", "Password of mongodb user")
 	cmd.Flags().StringVarP(&c.databaseHost, "database_host", "", "127.0.0.1", "Host of mongodb instance")
-	cmd.Flags().IntVarP(&c.httpPort, "http_port", "", 8080, "Port Spolyr should bind to")
-	cmd.Flags().StringVarP(&c.spotifyOAuthClientId, "spotify_id", "", "", "Spotify OAuth2 client id")
-	cmd.Flags().StringVarP(&c.geniusAPIToken, "genius_api_token", "", "", "Genius.com api token")
-	cmd.Flags().StringVarP(&c.secret, "session_key", "", "", "Secret value used for validating session data")
-	cmd.Flags().StringSliceVarP(&c.supportedLanguages, "supported_languages", "", []string{}, "List of languages used for language specific database queries")
+
 	cmd.Flags().BoolVarP(&c.debug, "debug", "d", false, "Start api in debug mode. Enables cors for local development.")
+	cmd.Flags().IntVarP(&c.httpPort, "http_port", "", 8080, "Port Spolyr should bind to")
+	cmd.Flags().StringVarP(&c.secret, "session_key", "", "dev", "Secret value used for validating session data")
+	cmd.Flags().StringSliceVarP(&c.supportedLanguages, "supported_languages", "", []string{}, "List of languages used for language specific database queries")
 
 	cmd.Flags().StringVarP(&c.protocol, "protocol", "", "http", "Public http protocol. Pick https if Spolyr resides behind a reverse proxy using TLS")
 	cmd.Flags().StringVarP(&c.domain, "domain", "", "localhost", "Public hostname")

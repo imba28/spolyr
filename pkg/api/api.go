@@ -19,7 +19,7 @@ func (s *Server) apiHandler() http.Handler {
 	fetcher := lyrics.New(s.geniusAPIToken, 3, s.languageDetector)
 	syncer := lyrics.NewSyncer(fetcher, s.db.Tracks)
 
-	authApiController := openapi.NewAuthApiController(newAuthApiService(s.oauthClientID, s.secret, s.publicProtocol, s.publicDomain, s.publicHttpPort))
+	authApiController := openapi.NewAuthApiController(newAuthApiService(s.oauthClientID, s.oauthClientSecret, s.secret, s.publicProtocol, s.publicDomain, s.publicHttpPort))
 	importController := openapi.NewImportApiController(newImportApiService(s.db.Tracks, syncer, fetcher, s.languageDetector))
 	tracksApiController := openapi.NewTracksApiController(newTracksApiService(s.db.Tracks, s.languageDetector))
 	playlistController := openapi.NewPlaylistsApiController(newPlaylistApiService())
@@ -44,11 +44,12 @@ func (s *Server) apiHandler() http.Handler {
 }
 
 type Server struct {
-	db               *db.Repositories
-	oauthClientID    string
-	geniusAPIToken   string
-	secret           []byte
-	languageDetector languageDetector
+	db                *db.Repositories
+	oauthClientID     string
+	oauthClientSecret string
+	geniusAPIToken    string
+	secret            []byte
+	languageDetector  languageDetector
 
 	env    Env
 	router *mux.Router
@@ -92,9 +93,10 @@ func NewServer(options ...ServerOptions) *Server {
 
 type ServerOptions func(s *Server)
 
-func WithOAuth(clientId string) ServerOptions {
+func WithOAuth(clientId string, clientSecret string) ServerOptions {
 	return func(s *Server) {
 		s.oauthClientID = clientId
+		s.oauthClientSecret = clientSecret
 	}
 }
 func WithGeniusAPI(token string) ServerOptions {

@@ -110,6 +110,10 @@ jobs:
         ports:
           - 27017:27017
 
+    env:
+      SPOTIFY_ID: ${{ secrets.SPOTIFY_ID }}
+      SPOTIFY_SECRET: ${{ secrets.SPOTIFY_SECRET }}
+
     steps:
       - uses: actions/checkout@v3
         with:
