@@ -110,6 +110,9 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - data
+                  - meta
                 properties:
                   meta:
                     $ref: '#/components/schemas/PaginationMetadata'
