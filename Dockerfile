@@ -13,7 +13,7 @@ RUN sed -i "s/dev-build/${BUILD_NUMBER}/" assets/App.vue && \
     make build-linux
 
 # frontend build
-FROM node:14-alpine as frontend_builder
+FROM node:18-alpine as frontend_builder
 
 WORKDIR /build
 
