@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	jwt2 "github.com/imba28/spolyr/pkg/jwt"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2"

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/imba28/spolyr/pkg/db"
 	"github.com/imba28/spolyr/pkg/lyrics"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"github.com/imba28/spolyr/pkg/spotify"
 	"log"
 	"net/http"
