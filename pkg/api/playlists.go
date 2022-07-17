@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	spotify2 "github.com/zmb3/spotify/v2"
 	"net/http"
 )

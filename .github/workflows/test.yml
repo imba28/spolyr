@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
+      - run: make clean
       - run: make openapi-spec
 
       - uses: actions/upload-artifact@v3
@@ -96,17 +97,12 @@ jobs:
     needs: [backend, frontend]
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        mongodb_image: [ 'mongo:4', 'mongo:5' ]
-
     services:
       mongodb:
         env:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: example
-        image: ${{ matrix.mongodb_image }}
+        image: 'mongo:5'
         ports:
           - 27017:27017
 

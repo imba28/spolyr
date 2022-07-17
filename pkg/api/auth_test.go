@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	jwt2 "github.com/imba28/spolyr/pkg/jwt"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/zmb3/spotify/v2"

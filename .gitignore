@@ -6,8 +6,6 @@ cover.out
 /spolyr.exe
 node_modules
 public
-pkg/openapi
-assets/openapi
 assets/coverage
 
 !/**/.gitkeep

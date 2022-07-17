@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"github.com/imba28/spolyr/pkg/db"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"

@@ -5,7 +5,7 @@ import (
 	"github.com/imba28/spolyr/pkg/db"
 	jwt2 "github.com/imba28/spolyr/pkg/jwt"
 	"github.com/imba28/spolyr/pkg/lyrics"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"github.com/rs/cors"
 	"net/http"
 	"sync"

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/imba28/spolyr/pkg/db"
-	"github.com/imba28/spolyr/pkg/openapi/openapi"
+	"github.com/imba28/spolyr/pkg/openapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/mongo"
