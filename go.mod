@@ -1,6 +1,6 @@
 module github.com/imba28/spolyr
 
-go 1.16
+go 1.19
 
 require (
 	github.com/dmolesUC/go-spinner v0.0.0-20190903171623-0c332afb0926
