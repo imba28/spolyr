@@ -102,7 +102,7 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: root
           MONGO_INITDB_ROOT_PASSWORD: example
-        image: 'mongo:5'
+        image: 'mongo:6'
         ports:
           - 27017:27017
 
