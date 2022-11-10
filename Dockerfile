@@ -26,7 +26,7 @@ COPY . .
 RUN npm run build
 
 # runtime
-FROM alpine:3
+FROM alpine:20221110
 
 LABEL maintainer="lukas.gruber1@gmail.com"
 
