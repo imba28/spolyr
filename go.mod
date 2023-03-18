@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/dmolesUC/go-spinner v0.0.0-20190903171623-0c332afb0926
-	github.com/golang-jwt/jwt/v4 v4.1.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.7.4
