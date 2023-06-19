@@ -22,7 +22,7 @@
     "mutationobserver-shim": "^0.3.7",
     "nprogress": "^0.2.0",
     "pinia": "^2.0.14",
-    "pinia-plugin-persistedstate": "^2.0.0",
+    "pinia-plugin-persistedstate": "^3.0.0",
     "popper.js": "^1.16.1",
     "portal-vue": "^2.1.7",
     "querystring-es3": "^0.2.1",
