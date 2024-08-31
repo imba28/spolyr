@@ -28,7 +28,7 @@
     "querystring-es3": "^0.2.1",
     "superagent": "^7.1.6",
     "vue": "^2.6.14",
-    "vue-router": "^3.5.1",
+    "vue-router": "^4.0.0",
     "vue-toastification": "^1.7.14",
     "vue-word-highlighter": "^1.2.4"
   },
