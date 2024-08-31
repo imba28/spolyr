@@ -1,5 +1,7 @@
 .PHONY: all clean bundle build test frontend
 
+open_api_tools_version=v6.2.0
+
 build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -tags netgo -o spolyr ./main.go
 
@@ -52,10 +54,10 @@ test-frontend: node_modules
 	npm run test:unit
 
 openapi-spec:
-	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/pkg/openapi/:/local/pkg/openapi/openapi" openapitools/openapi-generator-cli generate -g go-server -i /local/oapi-spec.yaml -o /local/pkg/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
+	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/pkg/openapi/:/local/pkg/openapi/openapi" openapitools/openapi-generator-cli:$(open_api_tools_version) generate -g go-server -i /local/oapi-spec.yaml -o /local/pkg/openapi --additional-properties=outputAsLibrary=true,onlyInterfaces=true,sourceFolder=openapi,addResponseHeaders=true
 	sudo chown -R $(USER): pkg/openapi/
 	sed -i -e 's/"github.com\/gorilla\/mux"//g' pkg/openapi/api_auth.go
 	sed -i -e 's/"encoding\/json"//g' pkg/openapi/api_import.go
 	sed -i -e 's/"encoding\/json"//g' -e 's/"github.com\/gorilla\/mux"//g' pkg/openapi/api_playlists.go
-	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/assets/openapi/:/local/assets/openapi/src" openapitools/openapi-generator-cli generate -g javascript -i /local/oapi-spec.yaml -o /local/assets/openapi --additional-properties=usePromises=true,moduleName=@/openapi --global-property models,modelTests=false --global-property apis,apiTests=false --global-property supportingFiles
+	docker run --rm -v "${PWD}/oapi-spec.yaml:/local/oapi-spec.yaml" -v "${PWD}/assets/openapi/:/local/assets/openapi/src" openapitools/openapi-generator-cli:$(open_api_tools_version) generate -g javascript -i /local/oapi-spec.yaml -o /local/assets/openapi --additional-properties=usePromises=true,moduleName=@/openapi --global-property models,modelTests=false --global-property apis,apiTests=false --global-property supportingFiles
 
