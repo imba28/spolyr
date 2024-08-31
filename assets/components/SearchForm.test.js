@@ -8,7 +8,7 @@ describe('SearchForm', () => {
 
     await fireEvent.click(getByRole('button'));
 
-    expect(emitted().search).toHaveLength(1);
+    expect(emitted().input).toHaveLength(1);
   });
 
   test('Emitted event contains the entered input value', async () => {
@@ -18,6 +18,6 @@ describe('SearchForm', () => {
     await fireEvent.update(getByRole('textbox'), query);
     await fireEvent.click(getByRole('button'));
 
-    expect(emitted().search[0][0]).toEqual(query);
+    expect(emitted().input[0][0]).toEqual(query);
   });
 });

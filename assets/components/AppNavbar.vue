@@ -16,7 +16,10 @@
       is-nav
     >
       <b-navbar-nav class="ml-auto">
-        <search-form @search="search" />
+        <search-form
+          :value="searchStore.keywords"
+          @input="search"
+        />
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto">
@@ -55,7 +58,7 @@
 import SearchForm from './SearchForm.vue';
 import {AuthApi} from '@/openapi';
 import querystring from 'querystring';
-import {useAuthStore} from '@/stores/auth';
+import {useAuthStore, useSearchStore} from '@/stores';
 import {mapStores} from 'pinia';
 
 const authClient = new AuthApi();
@@ -65,10 +68,11 @@ export default {
     SearchForm,
   },
   computed: {
-    ...mapStores(useAuthStore),
+    ...mapStores(useAuthStore, useSearchStore),
   },
   methods: {
     search(query) {
+      this.searchStore.keywords = query;
       this.$router.push({name: 'search', params: {q: query}}).catch(() => {});
     },
     async logout() {

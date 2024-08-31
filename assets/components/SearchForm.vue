@@ -1,7 +1,7 @@
 <template>
   <b-nav-form
     class="search-form"
-    @submit.prevent="$emit('search', query)"
+    @submit.prevent="$emit('input', query)"
   >
     <b-input-group>
       <b-form-input
@@ -25,10 +25,19 @@
 
 <script>
 export default {
+  props: {
+    value: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
       query: '',
     };
+  },
+  mounted() {
+    this.query = this.value;
   },
 };
 </script>

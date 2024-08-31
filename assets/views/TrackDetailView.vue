@@ -125,7 +125,12 @@
                   :style="textareaStyle"
                 />
                 <div v-else-if="track.lyrics">
-                  <span class="lyrics-text">{{ track.lyrics }}</span>
+                  <HighlightWords
+                    :keywords="searchStore.keywords"
+                    class="lyrics-text"
+                  >
+                    {{ track.lyrics }}
+                  </HighlightWords>
                 </div>
                 <div v-else-if="track.lyricsImportErrorCount > maxImportErrorCount">
                   <small class="text-warning">Lyrics not found. Import
@@ -151,14 +156,15 @@
 import {ImportApi, Lyrics, TracksApi} from '@/openapi';
 import ErrorBox from '@/components/ErrorBox';
 import {mapStores} from 'pinia';
-import {useAuthStore} from '@/stores/auth';
+import {useAuthStore, useSearchStore} from '@/stores';
 import LoadingButton from '@/components/LoadingButton';
+import HighlightWords from '@/components/HighlightWords';
 
 const api = new TracksApi();
 const importApi = new ImportApi();
 
 export default {
-  components: {LoadingButton, ErrorBox},
+  components: {LoadingButton, ErrorBox, HighlightWords},
   data: () => ({
     track: null,
     notFound: false,
@@ -167,7 +173,7 @@ export default {
     importingLyrics: false,
   }),
   computed: {
-    ...mapStores(useAuthStore),
+    ...mapStores(useAuthStore, useSearchStore),
     textareaStyle() {
       const lineBreaks = this.track.lyrics.match(/\n/g);
       if (!lineBreaks) {
