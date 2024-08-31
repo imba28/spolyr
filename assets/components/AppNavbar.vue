@@ -16,7 +16,10 @@
       is-nav
     >
       <b-navbar-nav class="ml-auto">
-        <search-form :value="searchStore.keywords" @input="search" />
+        <search-form
+          :value="searchStore.keywords"
+          @input="search"
+        />
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto">

@@ -125,7 +125,10 @@
                   :style="textareaStyle"
                 />
                 <div v-else-if="track.lyrics">
-                  <HighlightWords :keywords="searchStore.keywords" class="lyrics-text">
+                  <HighlightWords
+                    :keywords="searchStore.keywords"
+                    class="lyrics-text"
+                  >
                     {{ track.lyrics }}
                   </HighlightWords>
                 </div>

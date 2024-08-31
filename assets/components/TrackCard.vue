@@ -38,7 +38,7 @@
           target="_blank"
           rel="noopener"
         >
-          <i class="fab fa-spotify"/>
+          <i class="fab fa-spotify" />
           to Spotify
         </a>
       </div>

@@ -1,12 +1,12 @@
 <template>
   <WordHighlighter
     :query="keywords"
-    :caseSensitive="false"
-    :splitBySpace="true"
-    :diacriticsSensitive="true"
-    highlightClass="mark"
+    :case-sensitive="false"
+    :split-by-space="true"
+    :diacritics-sensitive="true"
+    highlight-class="mark"
   >
-    <slot></slot>
+    <slot />
   </WordHighlighter>
 </template>
 
@@ -18,6 +18,7 @@ export default {
   props: {
     keywords: {
       type: String,
+      required: true,
     },
   },
 };

@@ -26,7 +26,10 @@
 <script>
 export default {
   props: {
-    value: String,
+    value: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
