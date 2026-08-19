@@ -1,4 +1,4 @@
-FROM golang:1.18 as builder
+FROM golang:1.27 as builder
 
 ARG BUILD_NUMBER=dev
 
